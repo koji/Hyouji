@@ -12,10 +12,14 @@
   },
   "license": "MIT",
   "keywords": [
-    "github lables",
+    "github labels manager",
+    "github labels",
     "labels api",
     "github",
-    "labels"
+    "labels",
+    "hyouji",
+    "cli",
+    "表示"
   ],
   "scripts": {
     "start": "node dist/index.js",
