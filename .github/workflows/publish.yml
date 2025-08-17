@@ -241,16 +241,16 @@ jobs:
             echo "Error: dist directory not found"
             exit 1
           fi
-          if [ ! -f "dist/index.cjs" ]; then
-            echo "Error: dist/index.cjs not found"
+          if [ ! -f "dist/index.js" ]; then
+            echo "Error: dist/index.js not found"
             exit 1
           fi
           echo "✓ Build artifacts verified"
 
       - name: Test CLI binary execution
         run: |
-          chmod +x dist/index.cjs
-          node dist/index.cjs --help || echo "CLI help command executed"
+          chmod +x dist/index.js
+          node dist/index.js --help || echo "CLI help command executed"
           echo "✓ CLI binary execution verified"
 
       # Version consistency checks
