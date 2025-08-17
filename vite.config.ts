@@ -14,6 +14,8 @@ export default defineConfig({
         '@octokit/core',
         'prompts',
         'chalk',
+        'figlet',
+        'oh-my-logo',
         'fs',
         'path',
         'os',
