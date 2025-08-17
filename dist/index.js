@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import chalk from "chalk";
-import { renderFilled } from "oh-my-logo";
+import { render } from "oh-my-logo";
 import * as fs from "fs";
 import { promises, existsSync } from "fs";
 import { homedir } from "os";
@@ -224,8 +224,10 @@ const labels = (
   ]
 );
 const initialText = `Please input your GitHub info`;
-const getAsciiText = () => renderFilled("Hyouji", {
-  palette: ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57"]
+const getAsciiText = () => render("Hyouji", {
+  palette: ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57"],
+  font: "Big",
+  direction: "diagonal"
 });
 const extraGuideText = `If you don't see action selector, please hit space key.`;
 const linkToPersonalToken = "https://github.com/settings/tokens";

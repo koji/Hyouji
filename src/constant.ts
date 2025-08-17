@@ -1,4 +1,4 @@
-import { renderFilled } from 'oh-my-logo';
+import { render } from 'oh-my-logo';
 
 // for github configs
 export const githubConfigs = [
@@ -224,10 +224,11 @@ export const labels =
 
 export const initialText = `Please input your GitHub info`;
 
-export const getAsciiText = () =>
-  renderFilled('Hyouji', {
-    palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
-  });
+export const getAsciiText = () => render('Hyouji', {
+  palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
+  font: 'Big',
+  direction: 'diagonal',
+});
 
 export const extraGuideText = `If you don't see action selector, please hit space key.`;
 
