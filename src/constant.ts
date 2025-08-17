@@ -224,11 +224,12 @@ export const labels =
 
 export const initialText = `Please input your GitHub info`;
 
-export const getAsciiText = () => render('Hyouji', {
-  palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
-  font: 'Big',
-  direction: 'diagonal',
-});
+export const getAsciiText = () =>
+  render('Hyouji', {
+    palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
+    font: 'Big',
+    direction: 'diagonal',
+  });
 
 export const extraGuideText = `If you don't see action selector, please hit space key.`;
 
