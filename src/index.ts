@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import { AsciiText, initialText, linkToPersonalToken } from './constant.js';
+import { getAsciiText, initialText, linkToPersonalToken } from './constant.js';
 import {
   createLabel,
   createLabels,
@@ -132,7 +132,8 @@ const main = async () => {
   }
 
   if (firstStart) {
-    log(AsciiText);
+    const asciiText = await getAsciiText();
+    log(asciiText);
     try {
       configs = await setupConfigs();
       if (configs.fromSavedConfig) {

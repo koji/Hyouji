@@ -1,10 +1,10 @@
 {
   "name": "hyouji",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Hyouji (表示) — A command-line tool for organizing and displaying GitHub labels with clarity and harmony.",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "bin": {
-    "hyouji": "dist/index.cjs"
+    "hyouji": "dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
     "labels"
   ],
   "scripts": {
-    "start": "node dist/index.cjs",
+    "start": "node dist/index.js",
     "build": "vite build",
     "dev": "vite build --watch",
     "fix": "run-s fix:*",
@@ -45,11 +45,10 @@
   "dependencies": {
     "@octokit/core": "^7.0.3",
     "chalk": "^5.4.1",
-    "figlet": "^1.8.1",
+    "oh-my-logo": "^0.3.0",
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@types/figlet": "^1.7.0",
     "@types/node": "^24.0.13",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",

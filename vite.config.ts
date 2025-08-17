@@ -7,7 +7,7 @@ export default defineConfig({
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'GitHubLabelManager',
       fileName: 'index',
-      formats: ['cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       external: [
@@ -15,11 +15,22 @@ export default defineConfig({
         'prompts',
         'chalk',
         'figlet',
+        'oh-my-logo',
         'fs',
         'path',
         'os',
         'util',
         'crypto',
+        'node:process',
+        'node:stream',
+        'node:buffer',
+        'node:events',
+        'node:fs',
+        'assert',
+        'events',
+        'child_process',
+        'tty',
+        'module',
       ],
       output: {
         banner: '#!/usr/bin/env node',
@@ -28,5 +39,9 @@ export default defineConfig({
     },
     target: 'node14',
     outDir: 'dist',
+    ssr: true,
+  },
+  ssr: {
+    noExternal: [],
   },
 });

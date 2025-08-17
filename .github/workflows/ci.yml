@@ -197,11 +197,11 @@ jobs:
           echo "Building package..."
 
           # Check if build is cached and up to date
-          if [ -d "dist" ] && [ -f "dist/index.cjs" ]; then
+          if [ -d "dist" ] && [ -f "dist/index.js" ]; then
             echo "📦 Found cached build artifacts, checking if rebuild needed..."
             
             # Check if source files are newer than build
-            if [ "dist/index.cjs" -nt "src" ] && [ "dist/index.cjs" -nt "package.json" ] && [ "dist/index.cjs" -nt "tsconfig.json" ]; then
+            if [ "dist/index.js" -nt "src" ] && [ "dist/index.js" -nt "package.json" ] && [ "dist/index.js" -nt "tsconfig.json" ]; then
               echo "✅ Build artifacts are up to date, skipping build"
               exit 0
             else
@@ -233,8 +233,8 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f "dist/index.cjs" ]; then
-            echo "❌ Error: dist/index.cjs not found"
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Error: dist/index.js not found"
             echo "Expected build output file is missing"
             echo "Verify build script generates the correct output files"
             ls -la dist/ || echo "dist directory is empty"
@@ -242,8 +242,8 @@ jobs:
           fi
 
           # Check file size to ensure it's not empty
-          if [ ! -s "dist/index.cjs" ]; then
-            echo "❌ Error: dist/index.cjs is empty"
+          if [ ! -s "dist/index.js" ]; then
+            echo "❌ Error: dist/index.js is empty"
             echo "Build output file exists but has no content"
             exit 1
           fi
@@ -256,16 +256,16 @@ jobs:
         run: |
           echo "Testing CLI binary execution..."
 
-          if [ ! -f "dist/index.cjs" ]; then
-            echo "❌ Error: CLI binary not found at dist/index.cjs"
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Error: CLI binary not found at dist/index.js"
             exit 1
           fi
 
           # Make binary executable
-          chmod +x dist/index.cjs
+          chmod +x dist/index.js
 
           # Test basic CLI execution
-          if node dist/index.cjs --help > /dev/null 2>&1; then
+          if node dist/index.js --help > /dev/null 2>&1; then
             echo "✅ CLI help command executed successfully"
           else
             echo "⚠️  Warning: CLI help command failed, but this may be expected"
@@ -273,7 +273,7 @@ jobs:
           fi
 
           # Verify the binary is a valid Node.js script
-          if head -1 dist/index.cjs | grep -q "node"; then
+          if head -1 dist/index.js | grep -q "node"; then
             echo "✅ CLI binary has valid Node.js shebang"
           fi
 
@@ -298,8 +298,8 @@ jobs:
           fi
 
           # Build status
-          if [ -f "dist/index.cjs" ]; then
-            BUILD_SIZE=$(du -h dist/index.cjs | cut -f1)
+          if [ -f "dist/index.js" ]; then
+            BUILD_SIZE=$(du -h dist/index.js | cut -f1)
             echo "📦 **Build:** Success (size: $BUILD_SIZE)" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Build:** Failed" >> $GITHUB_STEP_SUMMARY

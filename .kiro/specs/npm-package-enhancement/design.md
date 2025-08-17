@@ -164,15 +164,7 @@ export default defineConfig({
       formats: ['cjs'],
     },
     rollupOptions: {
-      external: [
-        '@octokit/core',
-        'prompts',
-        'chalk',
-        'figlet',
-        'fs',
-        'path',
-        'os',
-      ],
+      external: ['@octokit/core', 'prompts', 'chalk', 'fs', 'path', 'os'],
       output: {
         banner: '#!/usr/bin/env node',
       },

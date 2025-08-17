@@ -14,7 +14,7 @@ A simple CLI tool to create/delete labels with GitHub Labels API. Now available 
 
 https://levelup.gitconnected.com/create-github-labels-from-terminal-158d4868fab
 
-<img width="846" alt="Screen Shot 2021-08-23 at 1 02 53 AM" src="https://user-images.githubusercontent.com/474225/130393065-3f2a6fed-f6a3-4b1b-8e5f-ee4fee43d70f.png">
+<img width="1023" height="263" alt="Image" src="https://private-user-images.githubusercontent.com/474225/478702834-8082b045-1ce4-46a7-996b-7ff3d5944c1f.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTUzNjgzMDYsIm5iZiI6MTc1NTM2ODAwNiwicGF0aCI6Ii80NzQyMjUvNDc4NzAyODM0LTgwODJiMDQ1LTFjZTQtNDZhNy05OTZiLTdmZjNkNTk0NGMxZi5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwODE2JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDgxNlQxODEzMjZaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT03ZjU0ZDUwZjAxM2E5ZTkzYzE1NmZjNjVjMDg2MjYwMWZkMjEwNTFjYjBhNDJmMDA0ZTI5Mjg2NWE3MTUyYmM3JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.5SzQX41VgBouxi1sk7srLJMZZ6Zur0JeK-P1hhN21PU" />
 
 https://user-images.githubusercontent.com/474225/130368605-b5c6410f-53f6-4ef0-b321-8950edeebf7d.mov
 
@@ -195,7 +195,8 @@ npm install
 npm run build
 npm start
 ```
-You can use `pnpm`, `yarn` or `bun`.  
+
+You can use `pnpm`, `yarn` or `bun`.
 
 ### Predefined Labels
 
