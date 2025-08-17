@@ -42,13 +42,13 @@ https://docs.github.com/en/rest/reference/issues#labels
 Install globally via npm:
 
 ```bash
-npm install -g github-label-manager
+npm install -g hyouji
 ```
 
 Or use with npx (no installation required):
 
 ```bash
-npx github-label-manager
+npx hyouji
 ```
 
 ## Features
@@ -68,13 +68,7 @@ This tool provides the following functionality:
 After installation, run the tool from anywhere:
 
 ```bash
-github-label-manager
-```
-
-Or use the short alias:
-
-```bash
-glm
+hyouji
 ```
 
 ### First Time Setup
@@ -156,13 +150,20 @@ module.exports = Object.freeze([
 1. Install the package globally:
 
    ```bash
-   npm install -g github-label-manager
+   # npm
+   npm install -g hyouji
+   # pnpm
+   pnpm install -g hyouji
+   # yarn
+   yarn global add hyouji
+   # bun
+   bun install -g hyouji
    ```
 
 2. Run the tool:
 
    ```bash
-   github-label-manager
+   hyouji
    ```
 
 3. On first run, enter your GitHub credentials when prompted
@@ -174,9 +175,6 @@ module.exports = Object.freeze([
 ### Example Usage
 
 ```bash
-# Install globally
-npm i -g hyouji
-
 # Run the tool
 hyouji
 
