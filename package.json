@@ -1,6 +1,6 @@
 {
   "name": "hyouji",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Hyouji (表示) — A command-line tool for organizing and displaying GitHub labels with clarity and harmony.",
   "main": "dist/index.js",
   "bin": {
