@@ -258,7 +258,7 @@ If you encounter file permission errors:
 
 ## Requirements
 
-- Node.js 10 or higher
+- Node.js 20 or higher
 - GitHub Personal Access Token with `repo` scope
 
 https://user-images.githubusercontent.com/474225/130368605-b5c6410f-53f6-4ef0-b321-8950edeebf7d.mov
