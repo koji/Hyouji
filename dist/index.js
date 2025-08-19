@@ -1,13 +1,13 @@
 #!/usr/bin/env node
+import { Octokit } from "@octokit/core";
 import chalk from "chalk";
-import { render } from "oh-my-logo";
+import prompts from "prompts";
+import { renderFilled } from "oh-my-logo";
 import * as fs from "fs";
 import { promises, existsSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { createHash, randomBytes, createCipheriv, createDecipheriv } from "crypto";
-import prompts from "prompts";
-import { Octokit } from "@octokit/core";
 const githubConfigs = [
   {
     type: "password",
@@ -224,11 +224,25 @@ const labels = (
   ]
 );
 const initialText = `Please input your GitHub info`;
-const getAsciiText = () => render("Hyouji", {
-  palette: ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57"],
-  font: "Big",
-  direction: "diagonal"
-});
+const getAsciiText = async () => {
+  try {
+    const result = await renderFilled("Hyouji", {
+      palette: ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57"],
+      direction: "diagonal"
+    });
+    return result;
+  } catch (error) {
+    console.error("Error rendering ASCII art:", error);
+    return `
+╔══════════════════════════════════════════════════════════════╗
+║                     Hyouji                                   ║
+║              GitHub Label Manager CLI Tool                   ║
+╚══════════════════════════════════════════════════════════════╝
+Please report this issue to https://github.com/koji/Hyouji/issues
+Thank you!
+`;
+  }
+};
 const extraGuideText = `If you don't see action selector, please hit space key.`;
 const linkToPersonalToken = "https://github.com/settings/tokens";
 const log$2 = console.log;
@@ -1234,30 +1248,78 @@ const displaySettings = async () => {
 };
 let configs;
 const main = async () => {
-  const confirmation = await getConfirmation();
-  if (!confirmation) {
-    log(
-      chalk.redBright(
-        `Please go to ${linkToPersonalToken} and generate a personal token!`
-      )
-    );
-    return;
-  }
-  if (firstStart) {
-    const asciiText = await getAsciiText();
-    log(asciiText);
+  let hasValidConfig = false;
+  if (firstStart && configManager.configExists()) {
     try {
-      configs = await setupConfigs();
-      if (configs.fromSavedConfig) {
-        log(chalk.green(`Using saved configuration for ${configs.owner}`));
+      const existingConfig = await configManager.loadValidatedConfig();
+      if (existingConfig && existingConfig.config && !existingConfig.shouldPromptForCredentials) {
+        hasValidConfig = true;
       }
     } catch (error) {
+      console.error("Error loading config:", error);
+      hasValidConfig = false;
+    }
+  }
+  if (!hasValidConfig) {
+    const confirmation = await getConfirmation();
+    if (!confirmation) {
       log(
-        chalk.red(
-          `Configuration error: ${error instanceof Error ? error.message : "Unknown error"}`
+        chalk.redBright(
+          `Please go to ${linkToPersonalToken} and generate a personal token!`
         )
       );
       return;
+    }
+  }
+  if (firstStart) {
+    try {
+      const asciiText = await getAsciiText();
+      if (asciiText != null) {
+        log(asciiText);
+      }
+    } catch (error) {
+      console.warn("Failed to display ASCII art, continuing...");
+      console.error("Error:", error);
+    }
+    if (hasValidConfig) {
+      try {
+        const existingConfig = await configManager.loadValidatedConfig();
+        if (existingConfig && existingConfig.config) {
+          const repoResponse = await prompts([
+            {
+              type: "text",
+              name: "repo",
+              message: "Please type your target repo name"
+            }
+          ]);
+          configs = {
+            octokit: new Octokit({ auth: existingConfig.config.token }),
+            owner: existingConfig.config.owner,
+            repo: repoResponse.repo,
+            fromSavedConfig: true
+          };
+          log(chalk.green(`Using saved configuration for ${configs.owner}`));
+        } else {
+          configs = await setupConfigs();
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        configs = await setupConfigs();
+      }
+    } else {
+      try {
+        configs = await setupConfigs();
+        if (configs.fromSavedConfig) {
+          log(chalk.green(`Using saved configuration for ${configs.owner}`));
+        }
+      } catch (error) {
+        log(
+          chalk.red(
+            `Configuration error: ${error instanceof Error ? error.message : "Unknown error"}`
+          )
+        );
+        return;
+      }
     }
   }
   let selectedIndex = await selectAction();

@@ -1,4 +1,6 @@
+import { Octokit } from '@octokit/core';
 import chalk from 'chalk';
+import prompts from 'prompts';
 
 import { getAsciiText, initialText, linkToPersonalToken } from './constant.js';
 import {
@@ -17,6 +19,7 @@ import { getJsonFilePath } from './lib/inputJsonFile.js';
 import { getNewLabel } from './lib/inputNewLabel.js';
 import { selectAction } from './lib/selectPrompts.js';
 import { ConfigType } from './types/index.js';
+
 const log = console.log;
 
 let firstStart = true;
@@ -121,31 +124,96 @@ const displaySettings = async () => {
 // first call setupConfigs
 let configs: ConfigType;
 const main = async () => {
-  const confirmation = await getConfirmation();
-  if (!confirmation) {
-    log(
-      chalk.redBright(
-        `Please go to ${linkToPersonalToken} and generate a personal token!`,
-      ),
-    );
-    return;
-  }
+  // Check if we have a valid saved configuration before asking for confirmation
+  let hasValidConfig = false;
 
-  if (firstStart) {
-    const asciiText = await getAsciiText();
-    log(asciiText);
+  if (firstStart && configManager.configExists()) {
     try {
-      configs = await setupConfigs();
-      if (configs.fromSavedConfig) {
-        log(chalk.green(`Using saved configuration for ${configs.owner}`));
+      const existingConfig = await configManager.loadValidatedConfig();
+      if (
+        existingConfig &&
+        existingConfig.config &&
+        !existingConfig.shouldPromptForCredentials
+      ) {
+        hasValidConfig = true;
       }
     } catch (error) {
+      // If there's an error loading config, assume we need to ask for confirmation
+      console.error('Error loading config:', error);
+      hasValidConfig = false;
+    }
+  }
+
+  // Only ask for confirmation if we don't have a valid saved configuration
+  if (!hasValidConfig) {
+    const confirmation = await getConfirmation();
+    if (!confirmation) {
       log(
-        chalk.red(
-          `Configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        chalk.redBright(
+          `Please go to ${linkToPersonalToken} and generate a personal token!`,
         ),
       );
       return;
+    }
+  }
+
+  if (firstStart) {
+    try {
+      const asciiText = await getAsciiText();
+      if (asciiText != null) {
+        log(asciiText);
+      }
+    } catch (error) {
+      // If ASCII art fails, continue without it
+      console.warn('Failed to display ASCII art, continuing...');
+      console.error('Error:', error);
+    }
+
+    if (hasValidConfig) {
+      // Use existing valid config, just prompt for repo
+      try {
+        const existingConfig = await configManager.loadValidatedConfig();
+        if (existingConfig && existingConfig.config) {
+          const repoResponse = await prompts([
+            {
+              type: 'text',
+              name: 'repo',
+              message: 'Please type your target repo name',
+            },
+          ]);
+
+          configs = {
+            octokit: new Octokit({ auth: existingConfig.config.token }),
+            owner: existingConfig.config.owner,
+            repo: repoResponse.repo,
+            fromSavedConfig: true,
+          };
+
+          log(chalk.green(`Using saved configuration for ${configs.owner}`));
+        } else {
+          // Fallback to normal flow
+          configs = await setupConfigs();
+        }
+      } catch (error) {
+        // Fallback to normal flow
+        console.error('Error:', error);
+        configs = await setupConfigs();
+      }
+    } else {
+      // Normal flow for new config or invalid existing config
+      try {
+        configs = await setupConfigs();
+        if (configs.fromSavedConfig) {
+          log(chalk.green(`Using saved configuration for ${configs.owner}`));
+        }
+      } catch (error) {
+        log(
+          chalk.red(
+            `Configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ),
+        );
+        return;
+      }
     }
   }
 
