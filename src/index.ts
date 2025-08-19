@@ -1,3 +1,4 @@
+import { Octokit } from '@octokit/core';
 import chalk from 'chalk';
 import prompts from 'prompts';
 
@@ -18,7 +19,7 @@ import { getJsonFilePath } from './lib/inputJsonFile.js';
 import { getNewLabel } from './lib/inputNewLabel.js';
 import { selectAction } from './lib/selectPrompts.js';
 import { ConfigType } from './types/index.js';
-import { Octokit } from '@octokit/core';
+
 const log = console.log;
 
 let firstStart = true;
@@ -138,6 +139,7 @@ const main = async () => {
       }
     } catch (error) {
       // If there's an error loading config, assume we need to ask for confirmation
+      console.error('Error loading config:', error);
       hasValidConfig = false;
     }
   }
@@ -156,9 +158,16 @@ const main = async () => {
   }
 
   if (firstStart) {
-    const asciiText = await getAsciiText();
-    // to avoid display undefined
-    if (asciiText != null) log(asciiText);
+    try {
+      const asciiText = await getAsciiText();
+      if (asciiText != null) {
+        log(asciiText);
+      }
+    } catch (error) {
+      // If ASCII art fails, continue without it
+      console.warn('Failed to display ASCII art, continuing...');
+      console.error('Error:', error);
+    }
 
     if (hasValidConfig) {
       // Use existing valid config, just prompt for repo
@@ -187,6 +196,7 @@ const main = async () => {
         }
       } catch (error) {
         // Fallback to normal flow
+        console.error('Error:', error);
         configs = await setupConfigs();
       }
     } else {
