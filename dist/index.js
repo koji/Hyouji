@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { Octokit } from "@octokit/core";
 import chalk from "chalk";
 import prompts from "prompts";
 import { renderFilled } from "oh-my-logo";
@@ -7,7 +8,6 @@ import { promises, existsSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { createHash, randomBytes, createCipheriv, createDecipheriv } from "crypto";
-import { Octokit } from "@octokit/core";
 const githubConfigs = [
   {
     type: "password",
@@ -1256,6 +1256,7 @@ const main = async () => {
         hasValidConfig = true;
       }
     } catch (error) {
+      console.error("Error loading config:", error);
       hasValidConfig = false;
     }
   }
@@ -1271,8 +1272,15 @@ const main = async () => {
     }
   }
   if (firstStart) {
-    const asciiText = await getAsciiText();
-    if (asciiText != null) log(asciiText);
+    try {
+      const asciiText = await getAsciiText();
+      if (asciiText != null) {
+        log(asciiText);
+      }
+    } catch (error) {
+      console.warn("Failed to display ASCII art, continuing...");
+      console.error("Error:", error);
+    }
     if (hasValidConfig) {
       try {
         const existingConfig = await configManager.loadValidatedConfig();
@@ -1295,6 +1303,7 @@ const main = async () => {
           configs = await setupConfigs();
         }
       } catch (error) {
+        console.error("Error:", error);
         configs = await setupConfigs();
       }
     } else {
