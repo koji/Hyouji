@@ -5,7 +5,7 @@
  * Tests requirements 2.1, 2.2, 2.3, and 2.4 from the spec
  */
 
-import { importLabelsFromJson } from './build/main/lib/importJson.js';
+import { importLabelsFromJson } from '../../../src/lib/importJson.js';
 import chalk from 'chalk';
 import fs from 'fs';
 
@@ -22,21 +22,21 @@ const mockConfigs = {
 const testScenarios = [
   {
     name: 'Non-existent file paths',
-    filePath: 'test-data/non-existent-file.json',
+    filePath: 'tests/fixtures/json/non-existent-file.json',
     requirement: '2.1',
     description: 'Should display error message when file is not found',
     expectedError: 'File not found at path',
   },
   {
     name: 'Invalid JSON syntax',
-    filePath: 'test-data/invalid-json-syntax.json',
+    filePath: 'tests/fixtures/json/invalid-json-syntax.json',
     requirement: '2.2',
     description: 'Should display parsing error message for invalid JSON',
     expectedError: 'Invalid JSON syntax',
   },
   {
     name: 'Invalid data structures (not array)',
-    filePath: 'test-data/invalid-structure-not-array.json',
+    filePath: 'tests/fixtures/json/invalid-structure-not-array.json',
     requirement: '2.3',
     description:
       'Should display format validation error when JSON is not an array',
@@ -44,14 +44,14 @@ const testScenarios = [
   },
   {
     name: 'Missing required fields',
-    filePath: 'test-data/missing-required-fields.json',
+    filePath: 'tests/fixtures/json/missing-required-fields.json',
     requirement: '2.4',
     description: 'Should display validation error for missing required fields',
     expectedError: 'missing required',
   },
   {
     name: 'Invalid field types',
-    filePath: 'test-data/invalid-field-types.json',
+    filePath: 'tests/fixtures/json/invalid-field-types.json',
     requirement: '2.4',
     description: 'Should display validation error for invalid field types',
     expectedError: 'invalid',
@@ -83,7 +83,7 @@ async function runErrorHandlingTests() {
   let passedTests = 0;
   let totalTests = testScenarios.length;
 
-  for (let i = 0; i < testScenarios.length; i++) {
+  for (let i = 0;i < testScenarios.length;i++) {
     const scenario = testScenarios[i];
 
     log(chalk.cyan(`Test ${i + 1}: ${scenario.name}`));
@@ -181,7 +181,7 @@ async function testErrorMessageQuality() {
         startCapture();
         await importLabelsFromJson(
           mockConfigs,
-          'test-data/missing-required-fields.json',
+          'tests/fixtures/json/missing-required-fields.json',
         );
         const output = stopCapture();
         return output.includes('index') && output.includes('missing required');

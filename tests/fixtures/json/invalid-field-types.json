@@ -1,0 +1,24 @@
+[
+  {
+    "name": 123,
+    "color": "FF0000",
+    "description": "Name is not a string"
+  },
+  {
+    "name": "Valid Name",
+    "color": 456,
+    "description": "Color is not a string"
+  },
+  {
+    "name": "Another Valid Name",
+    "color": "00FF00",
+    "description": 789
+  },
+  "This is not an object",
+  null,
+  {
+    "name": "Valid Name",
+    "color": "",
+    "description": "Empty color field"
+  }
+]

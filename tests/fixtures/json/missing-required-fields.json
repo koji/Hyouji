@@ -1,0 +1,16 @@
+[
+  {
+    "color": "FF0000",
+    "description": "Missing name field"
+  },
+  {
+    "name": "",
+    "color": "00FF00",
+    "description": "Empty name field"
+  },
+  {
+    "name": "   ",
+    "color": "0000FF",
+    "description": "Whitespace-only name field"
+  }
+]

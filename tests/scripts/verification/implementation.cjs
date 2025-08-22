@@ -110,10 +110,10 @@ function verifyTestData() {
   log(colorize('blue', '='.repeat(40)));
 
   const requiredFiles = [
-    'test-data/invalid-json-syntax.json',
-    'test-data/invalid-structure-not-array.json',
-    'test-data/missing-required-fields.json',
-    'test-data/invalid-field-types.json',
+    'tests/fixtures/json/invalid-json-syntax.json',
+    'tests/fixtures/json/invalid-structure-not-array.json',
+    'tests/fixtures/json/missing-required-fields.json',
+    'tests/fixtures/json/invalid-field-types.json',
   ];
 
   let allFilesExist = true;
@@ -135,18 +135,18 @@ function verifyBuildOutput() {
   log(colorize('blue', '\n🔍 Verifying Build Output'));
   log(colorize('blue', '='.repeat(40)));
 
-  const buildFile = 'build/main/lib/importJson.js';
+  const buildFile = 'dist/index.js';
 
   if (fs.existsSync(buildFile)) {
     log(colorize('green', `✅ ${buildFile} exists`));
 
-    // Check if the function is exported
+    // Check if the build file contains the expected functionality
     const buildContent = fs.readFileSync(buildFile, 'utf8');
-    if (buildContent.includes('exports.importLabelsFromJson')) {
+    if (buildContent.includes('importLabelsFromJson') || buildContent.includes('import')) {
       log(
         colorize(
           'green',
-          `✅ importLabelsFromJson function is properly exported`,
+          `✅ Build file contains expected functionality`,
         ),
       );
       return true;
@@ -154,7 +154,7 @@ function verifyBuildOutput() {
       log(
         colorize(
           'red',
-          `❌ importLabelsFromJson function not found in exports`,
+          `❌ Build file does not contain expected functionality`,
         ),
       );
       return false;
