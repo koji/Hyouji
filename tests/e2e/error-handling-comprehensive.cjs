@@ -31,10 +31,10 @@ function validateTestData() {
   log(colorize('blue', '='.repeat(40)));
 
   const requiredFiles = [
-    'test-data/invalid-json-syntax.json',
-    'test-data/invalid-structure-not-array.json',
-    'test-data/missing-required-fields.json',
-    'test-data/invalid-field-types.json',
+    'tests/fixtures/json/invalid-json-syntax.json',
+    'tests/fixtures/json/invalid-structure-not-array.json',
+    'tests/fixtures/json/missing-required-fields.json',
+    'tests/fixtures/json/invalid-field-types.json',
   ];
 
   let allFilesExist = true;
@@ -135,7 +135,7 @@ function testErrorScenarios() {
     {
       name: 'Non-existent file (Requirement 2.1)',
       test: () => {
-        const nonExistentFile = 'test-data/non-existent-file.json';
+        const nonExistentFile = 'tests/fixtures/json/non-existent-file.json';
         return !fs.existsSync(nonExistentFile);
       },
       expected: 'Should return false for non-existent file',
@@ -145,7 +145,7 @@ function testErrorScenarios() {
       test: () => {
         try {
           const content = fs.readFileSync(
-            'test-data/invalid-json-syntax.json',
+            'tests/fixtures/json/invalid-json-syntax.json',
             'utf8',
           );
           JSON.parse(content);
@@ -161,7 +161,7 @@ function testErrorScenarios() {
       test: () => {
         try {
           const content = fs.readFileSync(
-            'test-data/invalid-structure-not-array.json',
+            'tests/fixtures/json/invalid-structure-not-array.json',
             'utf8',
           );
           const data = JSON.parse(content);
@@ -177,7 +177,7 @@ function testErrorScenarios() {
       test: () => {
         try {
           const content = fs.readFileSync(
-            'test-data/missing-required-fields.json',
+            'tests/fixtures/json/missing-required-fields.json',
             'utf8',
           );
           const data = JSON.parse(content);
@@ -201,7 +201,7 @@ function testErrorScenarios() {
       test: () => {
         try {
           const content = fs.readFileSync(
-            'test-data/invalid-field-types.json',
+            'tests/fixtures/json/invalid-field-types.json',
             'utf8',
           );
           const data = JSON.parse(content);

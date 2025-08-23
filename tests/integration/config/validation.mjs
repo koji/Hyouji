@@ -12,7 +12,7 @@ import {
   ConfigManager,
   ConfigError,
   ConfigErrorType,
-} from './src/lib/configManager.ts';
+} from '../../../src/lib/configManager.ts';
 
 // Color functions for output
 const colorize = (color, text) => {

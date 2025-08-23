@@ -123,7 +123,7 @@ function provideVerificationInstructions(testDir, scenarios) {
   log('');
 
   log('2. Run the application:');
-  log(colorize('cyan', '   npm run build && node dist/index.cjs'));
+  log(colorize('cyan', '   npm run build && node dist/index.js'));
   log('');
 
   log('3. Observe the error handling behavior for each scenario:');

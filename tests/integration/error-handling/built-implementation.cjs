@@ -35,27 +35,27 @@ const mockConfigs = {
 const testScenarios = [
   {
     name: 'Non-existent file path',
-    filePath: 'test-data/non-existent-file.json',
+    filePath: 'tests/fixtures/json/non-existent-file.json',
     requirement: '2.1',
   },
   {
     name: 'Invalid JSON syntax',
-    filePath: 'test-data/invalid-json-syntax.json',
+    filePath: 'tests/fixtures/json/invalid-json-syntax.json',
     requirement: '2.2',
   },
   {
     name: 'Invalid structure (not array)',
-    filePath: 'test-data/invalid-structure-not-array.json',
+    filePath: 'tests/fixtures/json/invalid-structure-not-array.json',
     requirement: '2.3',
   },
   {
     name: 'Missing required fields',
-    filePath: 'test-data/missing-required-fields.json',
+    filePath: 'tests/fixtures/json/missing-required-fields.json',
     requirement: '2.4',
   },
   {
     name: 'Invalid field types',
-    filePath: 'test-data/invalid-field-types.json',
+    filePath: 'tests/fixtures/json/invalid-field-types.json',
     requirement: '2.4',
   },
 ];
@@ -74,7 +74,7 @@ async function testWithActualImplementation() {
   let importLabelsFromJson;
   try {
     // Try different ways to import the function
-    const importModule = require('./build/main/lib/importJson.js');
+    const importModule = await import('../../../src/lib/importJson.ts');
     importLabelsFromJson = importModule.importLabelsFromJson;
 
     if (!importLabelsFromJson) {

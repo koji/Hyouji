@@ -104,7 +104,9 @@ async function testConfigErrorHandling() {
 
         // Import and test the ConfigManager
         // Note: We need to use dynamic import since this is a CommonJS file testing ES modules
-        const { ConfigManager } = await import('./dist/index.cjs');
+        const { ConfigManager } = await import(
+          '../../../src/lib/configManager.ts'
+        );
 
         // Create a ConfigManager instance with custom paths for testing
         const configManager = new ConfigManager();
