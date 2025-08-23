@@ -127,7 +127,7 @@ const main = async () => {
   // Check if we have a valid saved configuration before asking for confirmation
   let hasValidConfig = false;
 
-  if (firstStart && configManager.configExists()) {
+  if (configManager.configExists()) {
     try {
       const existingConfig = await configManager.loadValidatedConfig();
       if (

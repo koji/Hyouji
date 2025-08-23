@@ -1249,7 +1249,7 @@ const displaySettings = async () => {
 let configs;
 const main = async () => {
   let hasValidConfig = false;
-  if (firstStart && configManager.configExists()) {
+  if (configManager.configExists()) {
     try {
       const existingConfig = await configManager.loadValidatedConfig();
       if (existingConfig && existingConfig.config && !existingConfig.shouldPromptForCredentials) {
