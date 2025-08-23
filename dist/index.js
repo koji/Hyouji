@@ -280,17 +280,38 @@ const createLabels = async (configs2) => {
   log$2("Created all labels");
   log$2(chalk.bgBlueBright(extraGuideText));
 };
-const deleteLabel = (configs2, labelNames) => {
-  labelNames.forEach(async (labelName) => {
-    await configs2.octokit.request(
-      "DELETE /repos/{owner}/{repo}/labels/{name}",
-      {
-        owner: configs2.owner,
-        repo: configs2.repo,
-        name: labelName
+const deleteLabel = async (configs2, labelNames) => {
+  for (const labelName of labelNames) {
+    try {
+      const resp = await configs2.octokit.request(
+        "DELETE /repos/{owner}/{repo}/labels/{name}",
+        {
+          owner: configs2.owner,
+          repo: configs2.repo,
+          name: labelName
+        }
+      );
+      switch (resp.status) {
+        case 204:
+          log$2(chalk.green(`${resp.status}: Deleted ${labelName}`));
+          break;
+        case 404:
+          log$2(chalk.red(`${resp.status}: Label "${labelName}" not found`));
+          break;
+        default:
+          log$2(
+            chalk.yellow(`${resp.status}: Something wrong with ${labelName}`)
+          );
+          break;
       }
-    );
-  });
+    } catch (error) {
+      log$2(
+        chalk.red(
+          `Error deleting label "${labelName}": ${error instanceof Error ? error.message : "Unknown error"}`
+        )
+      );
+    }
+  }
 };
 const getLabels = async (configs2) => {
   const resp = await configs2.octokit.request(
@@ -310,18 +331,41 @@ const getLabels = async (configs2) => {
 };
 const deleteLabels = async (configs2) => {
   const names = await getLabels(configs2);
-  names.forEach(async (name) => {
-    await configs2.octokit.request(
-      "DELETE /repos/{owner}/{repo}/labels/{name}",
-      {
-        owner: configs2.owner,
-        repo: configs2.repo,
-        name
+  if (names.length === 0) {
+    log$2(chalk.yellow("No labels found to delete"));
+    return;
+  }
+  log$2(chalk.blue(`Deleting ${names.length} labels...`));
+  for (const name of names) {
+    try {
+      const resp = await configs2.octokit.request(
+        "DELETE /repos/{owner}/{repo}/labels/{name}",
+        {
+          owner: configs2.owner,
+          repo: configs2.repo,
+          name
+        }
+      );
+      switch (resp.status) {
+        case 204:
+          log$2(chalk.green(`${resp.status}: Deleted ${name}`));
+          break;
+        case 404:
+          log$2(chalk.red(`${resp.status}: Label "${name}" not found`));
+          break;
+        default:
+          log$2(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
+          break;
       }
-    );
-  });
-  log$2("");
-  names.forEach((label) => log$2(chalk.bgGreen(`deleted ${label}`)));
+    } catch (error) {
+      log$2(
+        chalk.red(
+          `Error deleting label "${name}": ${error instanceof Error ? error.message : "Unknown error"}`
+        )
+      );
+    }
+  }
+  log$2(chalk.blue("Finished deleting labels"));
   log$2(chalk.bgBlueBright(extraGuideText));
 };
 const _CryptoUtils = class _CryptoUtils {
@@ -1247,7 +1291,7 @@ const displaySettings = async () => {
   log(chalk.cyan("========================\n"));
 };
 let configs;
-const main = async () => {
+const initializeConfigs = async () => {
   let hasValidConfig = false;
   if (configManager.configExists()) {
     try {
@@ -1268,58 +1312,66 @@ const main = async () => {
           `Please go to ${linkToPersonalToken} and generate a personal token!`
         )
       );
-      return;
+      return null;
     }
   }
-  if (firstStart) {
+  try {
+    const asciiText = await getAsciiText();
+    if (asciiText != null) {
+      log(asciiText);
+    }
+  } catch (error) {
+    console.warn("Failed to display ASCII art, continuing...");
+    console.error("Error:", error);
+  }
+  if (hasValidConfig) {
     try {
-      const asciiText = await getAsciiText();
-      if (asciiText != null) {
-        log(asciiText);
+      const existingConfig = await configManager.loadValidatedConfig();
+      if (existingConfig && existingConfig.config) {
+        const repoResponse = await prompts([
+          {
+            type: "text",
+            name: "repo",
+            message: "Please type your target repo name"
+          }
+        ]);
+        const config = {
+          octokit: new Octokit({ auth: existingConfig.config.token }),
+          owner: existingConfig.config.owner,
+          repo: repoResponse.repo,
+          fromSavedConfig: true
+        };
+        log(chalk.green(`Using saved configuration for ${config.owner}`));
+        return config;
+      } else {
+        return await setupConfigs();
       }
     } catch (error) {
-      console.warn("Failed to display ASCII art, continuing...");
       console.error("Error:", error);
+      return await setupConfigs();
     }
-    if (hasValidConfig) {
-      try {
-        const existingConfig = await configManager.loadValidatedConfig();
-        if (existingConfig && existingConfig.config) {
-          const repoResponse = await prompts([
-            {
-              type: "text",
-              name: "repo",
-              message: "Please type your target repo name"
-            }
-          ]);
-          configs = {
-            octokit: new Octokit({ auth: existingConfig.config.token }),
-            owner: existingConfig.config.owner,
-            repo: repoResponse.repo,
-            fromSavedConfig: true
-          };
-          log(chalk.green(`Using saved configuration for ${configs.owner}`));
-        } else {
-          configs = await setupConfigs();
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        configs = await setupConfigs();
+  } else {
+    try {
+      const config = await setupConfigs();
+      if (config.fromSavedConfig) {
+        log(chalk.green(`Using saved configuration for ${config.owner}`));
       }
-    } else {
-      try {
-        configs = await setupConfigs();
-        if (configs.fromSavedConfig) {
-          log(chalk.green(`Using saved configuration for ${configs.owner}`));
-        }
-      } catch (error) {
-        log(
-          chalk.red(
-            `Configuration error: ${error instanceof Error ? error.message : "Unknown error"}`
-          )
-        );
-        return;
-      }
+      return config;
+    } catch (error) {
+      log(
+        chalk.red(
+          `Configuration error: ${error instanceof Error ? error.message : "Unknown error"}`
+        )
+      );
+      return null;
+    }
+  }
+};
+const main = async () => {
+  if (firstStart) {
+    configs = await initializeConfigs();
+    if (!configs) {
+      return;
     }
   }
   let selectedIndex = await selectAction();
@@ -1329,23 +1381,23 @@ const main = async () => {
   switch (selectedIndex) {
     case 0: {
       const newLabel2 = await getNewLabel();
-      createLabel(configs, newLabel2);
+      await createLabel(configs, newLabel2);
       firstStart = firstStart && false;
       break;
     }
     case 1: {
-      createLabels(configs);
+      await createLabels(configs);
       firstStart = firstStart && false;
       break;
     }
     case 2: {
       const targetLabel = await getTargetLabel();
-      deleteLabel(configs, targetLabel);
+      await deleteLabel(configs, targetLabel);
       firstStart = firstStart && false;
       break;
     }
     case 3: {
-      deleteLabels(configs);
+      await deleteLabels(configs);
       firstStart = firstStart && false;
       break;
     }

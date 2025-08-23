@@ -53,20 +53,42 @@ export const createLabels = async (configs: ConfigType) => {
   log(chalk.bgBlueBright(extraGuideText));
 };
 
-export const deleteLabel = (
+export const deleteLabel = async (
   configs: ConfigType,
   labelNames: readonly string[],
 ) => {
-  labelNames.forEach(async (labelName: string) => {
-    await configs.octokit.request(
-      'DELETE /repos/{owner}/{repo}/labels/{name}',
-      {
-        owner: configs.owner,
-        repo: configs.repo,
-        name: labelName,
-      },
-    );
-  });
+  for (const labelName of labelNames) {
+    try {
+      const resp = await configs.octokit.request(
+        'DELETE /repos/{owner}/{repo}/labels/{name}',
+        {
+          owner: configs.owner,
+          repo: configs.repo,
+          name: labelName,
+        },
+      );
+
+      switch (resp.status) {
+        case 204:
+          log(chalk.green(`${resp.status}: Deleted ${labelName}`));
+          break;
+        case 404:
+          log(chalk.red(`${resp.status}: Label "${labelName}" not found`));
+          break;
+        default:
+          log(
+            chalk.yellow(`${resp.status}: Something wrong with ${labelName}`),
+          );
+          break;
+      }
+    } catch (error) {
+      log(
+        chalk.red(
+          `Error deleting label "${labelName}": ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ),
+      );
+    }
+  }
 };
 
 // get labels
@@ -91,17 +113,45 @@ const getLabels = async (configs: ConfigType): Promise<readonly string[]> => {
 export const deleteLabels = async (configs: ConfigType) => {
   // get all labels
   const names = await getLabels(configs);
-  names.forEach(async (name: string) => {
-    await configs.octokit.request(
-      'DELETE /repos/{owner}/{repo}/labels/{name}',
-      {
-        owner: configs.owner,
-        repo: configs.repo,
-        name: name,
-      },
-    );
-  });
-  log('');
-  names.forEach((label: string) => log(chalk.bgGreen(`deleted ${label}`)));
+
+  if (names.length === 0) {
+    log(chalk.yellow('No labels found to delete'));
+    return;
+  }
+
+  log(chalk.blue(`Deleting ${names.length} labels...`));
+
+  for (const name of names) {
+    try {
+      const resp = await configs.octokit.request(
+        'DELETE /repos/{owner}/{repo}/labels/{name}',
+        {
+          owner: configs.owner,
+          repo: configs.repo,
+          name: name,
+        },
+      );
+
+      switch (resp.status) {
+        case 204:
+          log(chalk.green(`${resp.status}: Deleted ${name}`));
+          break;
+        case 404:
+          log(chalk.red(`${resp.status}: Label "${name}" not found`));
+          break;
+        default:
+          log(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
+          break;
+      }
+    } catch (error) {
+      log(
+        chalk.red(
+          `Error deleting label "${name}": ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ),
+      );
+    }
+  }
+
+  log(chalk.blue('Finished deleting labels'));
   log(chalk.bgBlueBright(extraGuideText));
 };

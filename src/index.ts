@@ -123,7 +123,8 @@ const displaySettings = async () => {
 // steps
 // first call setupConfigs
 let configs: ConfigType;
-const main = async () => {
+
+const initializeConfigs = async () => {
   // Check if we have a valid saved configuration before asking for confirmation
   let hasValidConfig = false;
 
@@ -153,67 +154,76 @@ const main = async () => {
           `Please go to ${linkToPersonalToken} and generate a personal token!`,
         ),
       );
-      return;
+      return null;
     }
   }
 
-  if (firstStart) {
+  try {
+    const asciiText = await getAsciiText();
+    if (asciiText != null) {
+      log(asciiText);
+    }
+  } catch (error) {
+    // If ASCII art fails, continue without it
+    console.warn('Failed to display ASCII art, continuing...');
+    console.error('Error:', error);
+  }
+
+  if (hasValidConfig) {
+    // Use existing valid config, just prompt for repo
     try {
-      const asciiText = await getAsciiText();
-      if (asciiText != null) {
-        log(asciiText);
+      const existingConfig = await configManager.loadValidatedConfig();
+      if (existingConfig && existingConfig.config) {
+        const repoResponse = await prompts([
+          {
+            type: 'text',
+            name: 'repo',
+            message: 'Please type your target repo name',
+          },
+        ]);
+
+        const config = {
+          octokit: new Octokit({ auth: existingConfig.config.token }),
+          owner: existingConfig.config.owner,
+          repo: repoResponse.repo,
+          fromSavedConfig: true,
+        };
+
+        log(chalk.green(`Using saved configuration for ${config.owner}`));
+        return config;
+      } else {
+        // Fallback to normal flow
+        return await setupConfigs();
       }
     } catch (error) {
-      // If ASCII art fails, continue without it
-      console.warn('Failed to display ASCII art, continuing...');
+      // Fallback to normal flow
       console.error('Error:', error);
+      return await setupConfigs();
     }
-
-    if (hasValidConfig) {
-      // Use existing valid config, just prompt for repo
-      try {
-        const existingConfig = await configManager.loadValidatedConfig();
-        if (existingConfig && existingConfig.config) {
-          const repoResponse = await prompts([
-            {
-              type: 'text',
-              name: 'repo',
-              message: 'Please type your target repo name',
-            },
-          ]);
-
-          configs = {
-            octokit: new Octokit({ auth: existingConfig.config.token }),
-            owner: existingConfig.config.owner,
-            repo: repoResponse.repo,
-            fromSavedConfig: true,
-          };
-
-          log(chalk.green(`Using saved configuration for ${configs.owner}`));
-        } else {
-          // Fallback to normal flow
-          configs = await setupConfigs();
-        }
-      } catch (error) {
-        // Fallback to normal flow
-        console.error('Error:', error);
-        configs = await setupConfigs();
+  } else {
+    // Normal flow for new config or invalid existing config
+    try {
+      const config = await setupConfigs();
+      if (config.fromSavedConfig) {
+        log(chalk.green(`Using saved configuration for ${config.owner}`));
       }
-    } else {
-      // Normal flow for new config or invalid existing config
-      try {
-        configs = await setupConfigs();
-        if (configs.fromSavedConfig) {
-          log(chalk.green(`Using saved configuration for ${configs.owner}`));
-        }
-      } catch (error) {
-        log(
-          chalk.red(
-            `Configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          ),
-        );
-        return;
-      }
+      return config;
+    } catch (error) {
+      log(
+        chalk.red(
+          `Configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ),
+      );
+      return null;
+    }
+  }
+};
+
+const main = async () => {
+  if (firstStart) {
+    configs = await initializeConfigs();
+    if (!configs) {
+      return; // Exit if configuration failed
     }
   }
 
@@ -225,14 +235,14 @@ const main = async () => {
   switch (selectedIndex) {
     case 0: {
       const newLabel = await getNewLabel();
-      createLabel(configs, newLabel);
+      await createLabel(configs, newLabel);
       firstStart = firstStart && false;
       break;
     }
 
     case 1: {
       // console.log('create labels');
-      createLabels(configs);
+      await createLabels(configs);
       firstStart = firstStart && false;
       break;
     }
@@ -240,14 +250,14 @@ const main = async () => {
     case 2: {
       // console.log('delete a label');
       const targetLabel = await getTargetLabel();
-      deleteLabel(configs, targetLabel);
+      await deleteLabel(configs, targetLabel);
       firstStart = firstStart && false;
       break;
     }
 
     case 3: {
       // console.log('delete all labels');
-      deleteLabels(configs);
+      await deleteLabels(configs);
       firstStart = firstStart && false;
       break;
     }
