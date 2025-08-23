@@ -77,9 +77,10 @@ async function testErrorScenario(scenario) {
     if (scenario.setupFile && !fs.existsSync(scenario.filePath)) {
       log(colorize('red', `❌ Test file ${scenario.filePath} does not exist`));
       resolve({
-        success: false, error: 'Test file m;
+        success: false, error: 'Test file missing'
+      });
       return;
-      }
+    }
 
     log(
         colorize(

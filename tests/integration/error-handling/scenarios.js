@@ -5,7 +5,7 @@
  * Tests requirements 2.1, 2.2, 2.3, and 2.4 from the spec
  */
 
-import { importLabelsFromJson } from '../../../src/lib/importJson.js';
+import { importLabelsFromJson } from '../../../src/lib/importJson.ts';
 import chalk from 'chalk';
 import fs from 'fs';
 
@@ -83,7 +83,7 @@ async function runErrorHandlingTests() {
   let passedTests = 0;
   let totalTests = testScenarios.length;
 
-  for (let i = 0;i < testScenarios.length;i++) {
+  for (let i = 0; i < testScenarios.length; i++) {
     const scenario = testScenarios[i];
 
     log(chalk.cyan(`Test ${i + 1}: ${scenario.name}`));

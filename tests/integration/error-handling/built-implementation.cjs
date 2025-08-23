@@ -74,7 +74,7 @@ async function testWithActualImplementation() {
   let importLabelsFromJson;
   try {
     // Try different ways to import the function
-    const importModule = await import('../../../src/lib/importJson.js');
+    const importModule = await import('../../../src/lib/importJson.ts');
     importLabelsFromJson = importModule.importLabelsFromJson;
 
     if (!importLabelsFromJson) {
