@@ -68,25 +68,26 @@ export const deleteLabel = async (
         },
       );
 
-      switch (resp.status) {
-        case 204:
-          log(chalk.green(`${resp.status}: Deleted ${labelName}`));
-          break;
-        case 404:
-          log(chalk.red(`${resp.status}: Label "${labelName}" not found`));
-          break;
-        default:
-          log(
-            chalk.yellow(`${resp.status}: Something wrong with ${labelName}`),
-          );
-          break;
+      if (resp.status === 204) {
+        log(chalk.green(`${resp.status}: Deleted ${labelName}`));
+      } else {
+        log(chalk.yellow(`${resp.status}: Something wrong with ${labelName}`));
       }
     } catch (error) {
-      log(
-        chalk.red(
-          `Error deleting label "${labelName}": ${error instanceof Error ? error.message : 'Unknown error'}`,
-        ),
-      );
+      if (
+        error &&
+        typeof error === 'object' &&
+        'status' in error &&
+        error.status === 404
+      ) {
+        log(chalk.red(`404: Label "${labelName}" not found`));
+      } else {
+        log(
+          chalk.red(
+            `Error deleting label "${labelName}": ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ),
+        );
+      }
     }
   }
 };
@@ -132,23 +133,26 @@ export const deleteLabels = async (configs: ConfigType) => {
         },
       );
 
-      switch (resp.status) {
-        case 204:
-          log(chalk.green(`${resp.status}: Deleted ${name}`));
-          break;
-        case 404:
-          log(chalk.red(`${resp.status}: Label "${name}" not found`));
-          break;
-        default:
-          log(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
-          break;
+      if (resp.status === 204) {
+        log(chalk.green(`${resp.status}: Deleted ${name}`));
+      } else {
+        log(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
       }
     } catch (error) {
-      log(
-        chalk.red(
-          `Error deleting label "${name}": ${error instanceof Error ? error.message : 'Unknown error'}`,
-        ),
-      );
+      if (
+        error &&
+        typeof error === 'object' &&
+        'status' in error &&
+        error.status === 404
+      ) {
+        log(chalk.red(`404: Label "${name}" not found`));
+      } else {
+        log(
+          chalk.red(
+            `Error deleting label "${name}": ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ),
+        );
+      }
     }
   }
 
