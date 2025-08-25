@@ -77,6 +77,9 @@ hyouji
 On your first run, you'll be prompted to enter:
 
 - **GitHub Personal Token** - Generate one [here](https://github.com/settings/tokens) with `repo` scope
+<img width="792" height="564" alt="github_token" src="https://github.com/user-attachments/assets/e460738f-833a-4158-a8ba-61752beaad72" />
+
+  
 - **GitHub Username** - Your GitHub account name
 
 These credentials will be securely saved and reused for future sessions.
