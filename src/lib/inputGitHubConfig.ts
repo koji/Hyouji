@@ -1,10 +1,12 @@
 import { Octokit } from '@octokit/core';
 import prompts from 'prompts';
+import chalk from 'chalk';
 
 import { githubConfigs } from '../constant.js';
 import { ConfigType } from '../types/index.js';
 
 import { ConfigError, ConfigManager } from './configManager.js';
+import { GitRepositoryDetector } from './gitRepositoryDetector.js';
 
 export const getGitHubConfigs = async (): Promise<ConfigType> => {
   const configManager = new ConfigManager();
@@ -32,7 +34,43 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
   }
 
   if (validationResult.config && !validationResult.shouldPromptForCredentials) {
-    // We have valid saved config, but we still need to prompt for repo
+    // We have valid saved config, try auto-detection first
+    try {
+      const detectionResult = await GitRepositoryDetector.detectRepository();
+
+      if (detectionResult.isGitRepository && detectionResult.repositoryInfo) {
+        // Auto-detection successful - provide user feedback
+        console.log(chalk.green(`✓ Detected repository: ${detectionResult.repositoryInfo.owner}/${detectionResult.repositoryInfo.repo}`));
+        console.log(chalk.gray(`  Detection method: ${detectionResult.repositoryInfo.detectionMethod === 'origin' ? 'origin remote' : 'first available remote'}`));
+
+        const octokit = new Octokit({
+          auth: validationResult.config.token,
+        });
+
+        return {
+          octokit,
+          owner: detectionResult.repositoryInfo.owner,
+          repo: detectionResult.repositoryInfo.repo,
+          fromSavedConfig: true,
+          autoDetected: true,
+          detectionMethod: detectionResult.repositoryInfo.detectionMethod,
+        };
+      } else {
+        // Auto-detection failed, provide feedback and fallback to manual input
+        if (detectionResult.error) {
+          console.log(chalk.yellow(`⚠️  Repository auto-detection failed: ${detectionResult.error}`));
+        }
+        console.log(chalk.gray('  Falling back to manual input...'));
+      }
+    } catch (error) {
+      // Handle unexpected errors gracefully
+      console.log(chalk.yellow('⚠️  Repository auto-detection failed, falling back to manual input'));
+      if (error instanceof Error) {
+        console.log(chalk.gray(`  Error: ${error.message}`));
+      }
+    }
+
+    // Fallback to manual input when auto-detection fails
     const repoResponse = await prompts([
       {
         type: 'text',
@@ -50,6 +88,8 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
       owner: validationResult.config.owner,
       repo: repoResponse.repo,
       fromSavedConfig: true,
+      autoDetected: false,
+      detectionMethod: 'manual',
     };
   }
 
@@ -117,5 +157,7 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
     owner: response.owner,
     repo: response.repo,
     fromSavedConfig: false,
+    autoDetected: false,
+    detectionMethod: 'manual',
   };
 };

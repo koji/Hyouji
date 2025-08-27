@@ -1,13 +1,15 @@
 #!/usr/bin/env node
-import { Octokit } from "@octokit/core";
 import chalk from "chalk";
-import prompts from "prompts";
 import { renderFilled } from "oh-my-logo";
 import * as fs from "fs";
 import { promises, existsSync } from "fs";
 import { homedir } from "os";
-import { join } from "path";
+import { join, dirname } from "path";
 import { createHash, randomBytes, createCipheriv, createDecipheriv } from "crypto";
+import prompts from "prompts";
+import { Octokit } from "@octokit/core";
+import { exec } from "child_process";
+import { promisify } from "util";
 const githubConfigs = [
   {
     type: "password",
@@ -1109,6 +1111,170 @@ const getTargetLabel = async () => {
   const response = await prompts(deleteLabel$1);
   return [response.name];
 };
+const execAsync = promisify(exec);
+class GitRepositoryDetector {
+  /**
+   * Detects Git repository information from the current working directory
+   * @param cwd - Current working directory (defaults to process.cwd())
+   * @returns Promise<GitDetectionResult>
+   */
+  static async detectRepository(cwd) {
+    const workingDir = cwd || process.cwd();
+    try {
+      const gitRoot = await this.findGitRoot(workingDir);
+      if (!gitRoot) {
+        return {
+          isGitRepository: false,
+          error: "Not a Git repository"
+        };
+      }
+      const remotes = await this.getAllRemotes(gitRoot);
+      if (remotes.length === 0) {
+        return {
+          isGitRepository: true,
+          error: "No remotes configured"
+        };
+      }
+      let remoteUrl = null;
+      let detectionMethod = "origin";
+      if (remotes.includes("origin")) {
+        remoteUrl = await this.getRemoteUrl(gitRoot, "origin");
+      }
+      if (!remoteUrl && remotes.length > 0) {
+        remoteUrl = await this.getRemoteUrl(gitRoot, remotes[0]);
+        detectionMethod = "first-remote";
+      }
+      if (!remoteUrl) {
+        return {
+          isGitRepository: true,
+          error: "Could not retrieve remote URL"
+        };
+      }
+      const parsedUrl = this.parseGitUrl(remoteUrl);
+      if (!parsedUrl) {
+        return {
+          isGitRepository: true,
+          error: "Could not parse remote URL"
+        };
+      }
+      return {
+        isGitRepository: true,
+        repositoryInfo: {
+          owner: parsedUrl.owner,
+          repo: parsedUrl.repo,
+          remoteUrl,
+          detectionMethod
+        }
+      };
+    } catch (err) {
+      return {
+        isGitRepository: false,
+        error: err instanceof Error ? err.message : "Unknown error occurred"
+      };
+    }
+  }
+  /**
+   * Finds the Git root directory by traversing up the directory tree
+   * @param startPath - Starting directory path
+   * @returns Promise<string | null> - Git root path or null if not found
+   */
+  static async findGitRoot(startPath) {
+    let currentPath = startPath;
+    while (currentPath !== dirname(currentPath)) {
+      const gitPath = join(currentPath, ".git");
+      if (existsSync(gitPath)) {
+        return currentPath;
+      }
+      currentPath = dirname(currentPath);
+    }
+    return null;
+  }
+  /**
+   * Gets the URL for a specific Git remote
+   * @param gitRoot - Git repository root directory
+   * @param remoteName - Name of the remote (e.g., 'origin')
+   * @returns Promise<string | null> - Remote URL or null if not found
+   */
+  static async getRemoteUrl(gitRoot, remoteName) {
+    try {
+      const { stdout } = await execAsync(`git remote get-url ${remoteName}`, {
+        cwd: gitRoot,
+        timeout: 5e3
+      });
+      return stdout.trim() || null;
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * Parses a Git URL to extract owner and repository name
+   * @param url - Git remote URL
+   * @returns Object with owner and repo or null if parsing fails
+   */
+  static parseGitUrl(url) {
+    if (!url || typeof url !== "string" || url.trim().length === 0) {
+      return null;
+    }
+    const trimmedUrl = url.trim();
+    try {
+      const sshMatch = trimmedUrl.match(/^git@github\.com:([^/\s:]+)\/([^/\s:]+?)(?:\.git)?$/);
+      if (sshMatch) {
+        const owner = sshMatch[1];
+        const repo = sshMatch[2];
+        if (this.isValidGitHubIdentifier(owner) && this.isValidGitHubIdentifier(repo)) {
+          return { owner, repo };
+        }
+      }
+      const httpsMatch = trimmedUrl.match(/^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/);
+      if (httpsMatch) {
+        const owner = httpsMatch[1];
+        const repo = httpsMatch[2];
+        if (this.isValidGitHubIdentifier(owner) && this.isValidGitHubIdentifier(repo)) {
+          return { owner, repo };
+        }
+      }
+      const httpMatch = trimmedUrl.match(/^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/);
+      if (httpMatch) {
+        const owner = httpMatch[1];
+        const repo = httpMatch[2];
+        if (this.isValidGitHubIdentifier(owner) && this.isValidGitHubIdentifier(repo)) {
+          return { owner, repo };
+        }
+      }
+    } catch (error) {
+      return null;
+    }
+    return null;
+  }
+  /**
+   * Validates if a string is a valid GitHub identifier (username or repository name)
+   * @param identifier - The identifier to validate
+   * @returns boolean - True if valid, false otherwise
+   */
+  static isValidGitHubIdentifier(identifier) {
+    if (!identifier || typeof identifier !== "string") {
+      return false;
+    }
+    const githubIdentifierRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
+    return identifier.length >= 1 && identifier.length <= 39 && githubIdentifierRegex.test(identifier) && !identifier.includes("--");
+  }
+  /**
+   * Gets all configured Git remotes
+   * @param gitRoot - Git repository root directory
+   * @returns Promise<string[]> - Array of remote names
+   */
+  static async getAllRemotes(gitRoot) {
+    try {
+      const { stdout } = await execAsync("git remote", {
+        cwd: gitRoot,
+        timeout: 5e3
+      });
+      return stdout.trim().split("\n").filter((remote) => remote.length > 0);
+    } catch {
+      return [];
+    }
+  }
+}
 const getGitHubConfigs = async () => {
   var _a, _b;
   const configManager2 = new ConfigManager();
@@ -1130,6 +1296,34 @@ const getGitHubConfigs = async () => {
     };
   }
   if (validationResult.config && !validationResult.shouldPromptForCredentials) {
+    try {
+      const detectionResult = await GitRepositoryDetector.detectRepository();
+      if (detectionResult.isGitRepository && detectionResult.repositoryInfo) {
+        console.log(chalk.green(`✓ Detected repository: ${detectionResult.repositoryInfo.owner}/${detectionResult.repositoryInfo.repo}`));
+        console.log(chalk.gray(`  Detection method: ${detectionResult.repositoryInfo.detectionMethod === "origin" ? "origin remote" : "first available remote"}`));
+        const octokit3 = new Octokit({
+          auth: validationResult.config.token
+        });
+        return {
+          octokit: octokit3,
+          owner: detectionResult.repositoryInfo.owner,
+          repo: detectionResult.repositoryInfo.repo,
+          fromSavedConfig: true,
+          autoDetected: true,
+          detectionMethod: detectionResult.repositoryInfo.detectionMethod
+        };
+      } else {
+        if (detectionResult.error) {
+          console.log(chalk.yellow(`⚠️  Repository auto-detection failed: ${detectionResult.error}`));
+        }
+        console.log(chalk.gray("  Falling back to manual input..."));
+      }
+    } catch (error) {
+      console.log(chalk.yellow("⚠️  Repository auto-detection failed, falling back to manual input"));
+      if (error instanceof Error) {
+        console.log(chalk.gray(`  Error: ${error.message}`));
+      }
+    }
     const repoResponse = await prompts([
       {
         type: "text",
@@ -1144,7 +1338,9 @@ const getGitHubConfigs = async () => {
       octokit: octokit2,
       owner: validationResult.config.owner,
       repo: repoResponse.repo,
-      fromSavedConfig: true
+      fromSavedConfig: true,
+      autoDetected: false,
+      detectionMethod: "manual"
     };
   }
   const promptConfig = [...githubConfigs];
@@ -1196,7 +1392,9 @@ const getGitHubConfigs = async () => {
     octokit,
     owner: response.owner,
     repo: response.repo,
-    fromSavedConfig: false
+    fromSavedConfig: false,
+    autoDetected: false,
+    detectionMethod: "manual"
   };
 };
 const getJsonFilePath = async () => {
@@ -1215,33 +1413,6 @@ const selectAction = async () => {
 const log = console.log;
 let firstStart = true;
 const configManager = new ConfigManager();
-const setupConfigs = async () => {
-  console.log(initialText);
-  if (firstStart) {
-    await configManager.migrateToEncrypted();
-  }
-  const config = await getGitHubConfigs();
-  if (!config.octokit || !config.owner || !config.repo) {
-    throw new Error("Invalid configuration: missing required fields");
-  }
-  try {
-    await config.octokit.request("GET /user");
-  } catch (error) {
-    if (config.fromSavedConfig) {
-      console.log(
-        chalk.yellow(
-          "Saved credentials are invalid. Please provide new credentials."
-        )
-      );
-      await configManager.clearConfig();
-      return setupConfigs();
-    }
-    throw new Error(
-      `GitHub API authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
-  }
-  return config;
-};
 const displaySettings = async () => {
   log(chalk.cyan("\n=== Current Settings ==="));
   const configPath = configManager.getConfigPath();
@@ -1318,47 +1489,50 @@ const initializeConfigs = async () => {
     console.warn("Failed to display ASCII art, continuing...");
     console.error("Error:", error);
   }
-  if (hasValidConfig) {
-    try {
-      const existingConfig = await configManager.loadValidatedConfig();
-      if (existingConfig && existingConfig.config) {
-        const repoResponse = await prompts([
-          {
-            type: "text",
-            name: "repo",
-            message: "Please type your target repo name"
-          }
-        ]);
-        const config = {
-          octokit: new Octokit({ auth: existingConfig.config.token }),
-          owner: existingConfig.config.owner,
-          repo: repoResponse.repo,
-          fromSavedConfig: true
-        };
-        log(chalk.green(`Using saved configuration for ${config.owner}`));
-        return config;
-      } else {
-        return await setupConfigs();
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      return await setupConfigs();
+  try {
+    console.log(initialText);
+    if (firstStart) {
+      await configManager.migrateToEncrypted();
     }
-  } else {
+    const config = await getGitHubConfigs();
+    if (!config.octokit || !config.owner || !config.repo) {
+      throw new Error("Invalid configuration: missing required fields");
+    }
     try {
-      const config = await setupConfigs();
+      await config.octokit.request("GET /user");
+    } catch (error) {
       if (config.fromSavedConfig) {
-        log(chalk.green(`Using saved configuration for ${config.owner}`));
+        console.log(
+          chalk.yellow(
+            "Saved credentials are invalid. Please provide new credentials."
+          )
+        );
+        await configManager.clearConfig();
+        return initializeConfigs();
       }
-      return config;
-    } catch (error) {
-      log(
-        chalk.red(
-          `Configuration error: ${error instanceof Error ? error.message : "Unknown error"}`
-        )
+      throw new Error(
+        `GitHub API authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`
       );
-      return null;
     }
+    if (config.fromSavedConfig) {
+      log(chalk.green(`✓ Using saved configuration for ${config.owner}`));
+    }
+    if (config.autoDetected) {
+      log(chalk.green(`✓ Repository auto-detected: ${config.owner}/${config.repo}`));
+      const detectionMethodText = config.detectionMethod === "origin" ? "origin remote" : config.detectionMethod === "first-remote" ? "first available remote" : "manual input";
+      log(chalk.gray(`  Detection method: ${detectionMethodText}`));
+    } else if (config.detectionMethod === "manual") {
+      log(chalk.blue(`✓ Repository configured: ${config.owner}/${config.repo}`));
+      log(chalk.gray(`  Input method: manual`));
+    }
+    return config;
+  } catch (error) {
+    log(
+      chalk.red(
+        `Configuration error: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    );
+    return null;
   }
 };
 const main = async () => {
