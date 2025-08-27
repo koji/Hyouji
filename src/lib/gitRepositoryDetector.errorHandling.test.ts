@@ -1,26 +1,14 @@
 import { exec, ExecOptions } from 'child_process';
 import { existsSync } from 'fs';
 
-declare namespace NodeJS {
-  interface ErrnoException extends Error {
-    errno?: number;
-    code?: string;
-    path?: string;
-    syscall?: string;
-    stack?: string;
-    signal?: string; // Add signal property here
-  }
-}
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GitRepositoryDetector } from './gitRepositoryDetector';
 
-// Type for exec callback function
+// Type for exec callback function - promisify expects (error, result) format
 type ExecCallback = (
   error: Error | null,
-  stdout: string,
-  stderr: string,
+  result?: { stdout: string; stderr: string },
 ) => void;
 
 // Mock child_process and fs modules
@@ -50,7 +38,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('git: command not found');
             (error as NodeJS.ErrnoException).code = 'ENOENT';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -66,7 +54,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('git: command not found');
             (error as NodeJS.ErrnoException).code = 'ENOENT';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -89,7 +77,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('git: command not found');
             (error as NodeJS.ErrnoException).code = 'ENOENT';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -107,7 +95,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('fatal: not a git repository');
             (error as NodeJS.ErrnoException).code = '128';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -127,7 +115,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
       mockExec.mockImplementation(
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '', ''));
+            process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -144,7 +132,9 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
       mockExec.mockImplementation(
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '   \n  \n  ', ''));
+            process.nextTick(() =>
+              callback(null, { stdout: '   \n  \n  ', stderr: '' }),
+            );
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -166,11 +156,11 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               command.includes('git remote') &&
               !command.includes('get-url')
             ) {
-              process.nextTick(() => callback(null, 'invalid-remote\n', ''));
-            } else if (command.includes('git remote get-url')) {
               process.nextTick(() =>
-                callback(new Error('No such remote'), '', ''),
+                callback(null, { stdout: 'invalid-remote\n', stderr: '' }),
               );
+            } else if (command.includes('git remote get-url')) {
+              process.nextTick(() => callback(new Error('No such remote')));
             }
           }
           return {} as ReturnType<typeof exec>;
@@ -191,7 +181,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('Operation timed out');
             (error as NodeJS.ErrnoException).code = 'ETIMEDOUT';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -210,7 +200,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('Could not resolve hostname');
             (error as NodeJS.ErrnoException).code = 'ENOTFOUND';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -226,7 +216,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('Connection refused');
             (error as NodeJS.ErrnoException).code = 'ECONNREFUSED';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -245,7 +235,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('SSL certificate problem');
             (error as NodeJS.ErrnoException).code = 'CERT_UNTRUSTED';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -267,11 +257,13 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               command.includes('git remote') &&
               !command.includes('get-url')
             ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
+              process.nextTick(() =>
+                callback(null, { stdout: 'origin\n', stderr: '' }),
+              );
             } else if (command.includes('git remote get-url')) {
               const error = new Error('Authentication failed');
               (error as NodeJS.ErrnoException).code = 'EAUTH';
-              process.nextTick(() => callback(error, '', ''));
+              process.nextTick(() => callback(error));
             }
           }
           return {} as ReturnType<typeof exec>;
@@ -301,7 +293,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               'fatal: not a git repository (or any of the parent directories)',
             );
             (error as NodeJS.ErrnoException).code = '128';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -336,7 +328,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('No space left on device');
             (error as NodeJS.ErrnoException).code = 'ENOSPC';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -354,7 +346,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('Interrupted system call');
             (error as NodeJS.ErrnoException).code = 'EINTR';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -369,8 +361,8 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             const error = new Error('Process killed');
-            (error as NodeJS.ErrnoException).signal = 'SIGKILL';
-            process.nextTick(() => callback(error, '', ''));
+            (error as any).signal = 'SIGKILL'; // eslint-disable-line @typescript-eslint/no-explicit-any
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -389,7 +381,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('Cannot allocate memory');
             (error as NodeJS.ErrnoException).code = 'ENOMEM';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -405,7 +397,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('Too many open files');
             (error as NodeJS.ErrnoException).code = 'EMFILE';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -424,7 +416,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
           if (typeof callback === 'function') {
             const error = new Error('Broken pipe');
             (error as NodeJS.ErrnoException).code = 'EPIPE';
-            process.nextTick(() => callback(error, '', ''));
+            process.nextTick(() => callback(error));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -446,7 +438,7 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
             setTimeout(() => {
               const error = new Error('Command timeout');
               (error as NodeJS.ErrnoException).code = 'TIMEOUT';
-              callback(error, '', '');
+              callback(error);
             }, 100);
           }
           return {} as ReturnType<typeof exec>;
@@ -471,11 +463,13 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               command.includes('git remote') &&
               !command.includes('get-url')
             ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
+              process.nextTick(() =>
+                callback(null, { stdout: 'origin\n', stderr: '' }),
+              );
             } else if (command.includes('git remote get-url')) {
               const error = new Error('fatal: bad config line');
               (error as NodeJS.ErrnoException).code = '128';
-              process.nextTick(() => callback(error, '', ''));
+              process.nextTick(() => callback(error));
             }
           }
           return {} as ReturnType<typeof exec>;
@@ -501,11 +495,17 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               !command.includes('get-url')
             ) {
               process.nextTick(() =>
-                callback(null, 'origin\n', 'HEAD detached at abc123\n'),
+                callback(null, {
+                  stdout: 'origin\n',
+                  stderr: 'HEAD detached at abc123\n',
+                }),
               );
             } else if (command.includes('git remote get-url origin')) {
               process.nextTick(() =>
-                callback(null, 'https://github.com/owner/repo.git\n', ''),
+                callback(null, {
+                  stdout: 'https://github.com/owner/repo.git\n',
+                  stderr: '',
+                }),
               );
             }
           }
@@ -534,15 +534,18 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               !command.includes('get-url')
             ) {
               process.nextTick(() =>
-                callback(
-                  null,
-                  'origin\n',
-                  'warning: You appear to have cloned an empty repository.\n',
-                ),
+                callback(null, {
+                  stdout: 'origin\n',
+                  stderr:
+                    'warning: You appear to have cloned an empty repository.\n',
+                }),
               );
             } else if (command.includes('git remote get-url origin')) {
               process.nextTick(() =>
-                callback(null, 'https://github.com/owner/repo.git\n', ''),
+                callback(null, {
+                  stdout: 'https://github.com/owner/repo.git\n',
+                  stderr: '',
+                }),
               );
             }
           }
@@ -572,14 +575,15 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               command.includes('git remote') &&
               !command.includes('get-url')
             ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
+              process.nextTick(() =>
+                callback(null, { stdout: 'origin\n', stderr: '' }),
+              );
             } else if (command.includes('git remote get-url origin')) {
               process.nextTick(() =>
-                callback(
-                  null,
-                  'git@github.com:owner/repo-with-@#$%^&*().git\n',
-                  '',
-                ),
+                callback(null, {
+                  stdout: 'git@github.com:owner/repo-with-@#$%^&*().git\n',
+                  stderr: '',
+                }),
               );
             }
           }
@@ -605,10 +609,15 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               command.includes('git remote') &&
               !command.includes('get-url')
             ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
+              process.nextTick(() =>
+                callback(null, { stdout: 'origin\n', stderr: '' }),
+              );
             } else if (command.includes('git remote get-url origin')) {
               process.nextTick(() =>
-                callback(null, 'git@github.com:ownér/repö.git\n', ''),
+                callback(null, {
+                  stdout: 'git@github.com:ownér/repö.git\n',
+                  stderr: '',
+                }),
               );
             }
           }
@@ -637,9 +646,13 @@ describe('GitRepositoryDetector - Error Handling and Edge Cases', () => {
               command.includes('git remote') &&
               !command.includes('get-url')
             ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
+              process.nextTick(() =>
+                callback(null, { stdout: 'origin\n', stderr: '' }),
+              );
             } else if (command.includes('git remote get-url origin')) {
-              process.nextTick(() => callback(null, longUrl + '\n', ''));
+              process.nextTick(() =>
+                callback(null, { stdout: longUrl + '\n', stderr: '' }),
+              );
             }
           }
           return {} as ReturnType<typeof exec>;

@@ -5,11 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GitRepositoryDetector } from './gitRepositoryDetector';
 
-// Type for exec callback function
+// Type for exec callback function - promisify expects (error, result) format
 type ExecCallback = (
   error: Error | null,
-  stdout: string,
-  stderr: string,
+  result?: { stdout: string; stderr: string },
 ) => void;
 
 // Mock child_process and fs modules
@@ -80,7 +79,7 @@ describe('GitRepositoryDetector', () => {
           ) => void,
         ) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, 'origin\nupstream\n', ''));
+            process.nextTick(() => callback(null, { stdout: 'origin\nupstream\n', stderr: '' }));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -94,7 +93,7 @@ describe('GitRepositoryDetector', () => {
       mockExec.mockImplementation(
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '', ''));
+            process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -125,7 +124,7 @@ describe('GitRepositoryDetector', () => {
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() =>
-              callback(null, 'origin\n\nupstream\n\n', ''),
+              callback(null, { stdout: 'origin\n\nupstream\n\n', stderr: '' }),
             );
           }
           return {} as ReturnType<typeof exec>;
@@ -143,7 +142,7 @@ describe('GitRepositoryDetector', () => {
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() =>
-              callback(null, 'git@github.com:owner/repo.git\n', ''),
+              callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }),
             );
           }
           return {} as ReturnType<typeof exec>;
@@ -180,7 +179,7 @@ describe('GitRepositoryDetector', () => {
       mockExec.mockImplementation(
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '', ''));
+            process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -232,11 +231,11 @@ describe('GitRepositoryDetector', () => {
                 !command.includes('get-url')
               ) {
                 process.nextTick(() =>
-                  callback(null, 'origin\nupstream\n', ''),
+                  callback(null, { stdout: 'origin\nupstream\n', stderr: '' }),
                 );
               } else if (command.includes('git remote get-url origin')) {
                 process.nextTick(() =>
-                  callback(null, 'git@github.com:owner/repo.git\n', ''),
+                  callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }),
                 );
               }
             }
@@ -267,10 +266,10 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, 'upstream\nfork\n', ''));
+                process.nextTick(() => callback(null, { stdout: 'upstream\nfork\n', stderr: '' }));
               } else if (command.includes('git remote get-url upstream')) {
                 process.nextTick(() =>
-                  callback(null, 'https://github.com/owner/repo.git\n', ''),
+                  callback(null, { stdout: 'https://github.com/owner/repo.git\n', stderr: '' }),
                 );
               }
             }
@@ -306,9 +305,13 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
+          (
+            _command: string,
+            _options: ExecOptions,
+            callback?: ExecCallback,
+          ) => {
             if (typeof callback === 'function') {
-              process.nextTick(() => callback(null, '', ''));
+              process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
             }
             return {} as ReturnType<typeof exec>;
           },
@@ -326,7 +329,11 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
+          (
+            _command: string,
+            _options: ExecOptions,
+            callback?: ExecCallback,
+          ) => {
             if (typeof callback === 'function') {
               process.nextTick(() =>
                 callback(new Error('git: command not found'), '', ''),
@@ -367,7 +374,7 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, 'origin\n', ''));
+                process.nextTick(() => callback(null, { stdout: 'origin\n', stderr: '' }));
               } else if (command.includes('git remote get-url')) {
                 process.nextTick(() =>
                   callback(new Error('Remote not found'), '', ''),
@@ -396,9 +403,9 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, 'origin\n', ''));
+                process.nextTick(() => callback(null, { stdout: 'origin\n', stderr: '' }));
               } else if (command.includes('git remote get-url origin')) {
-                process.nextTick(() => callback(null, 'invalid-url\n', ''));
+                process.nextTick(() => callback(null, { stdout: 'invalid-url\n', stderr: '' }));
               }
             }
             return {} as ReturnType<typeof exec>;
@@ -474,11 +481,11 @@ describe('GitRepositoryDetector', () => {
                 !command.includes('get-url')
               ) {
                 process.nextTick(() =>
-                  callback(null, 'upstream\norigin\nfork\n', ''),
+                  callback(null, { stdout: 'upstream\norigin\nfork\n', stderr: '' }),
                 );
               } else if (command.includes('git remote get-url origin')) {
                 process.nextTick(() =>
-                  callback(null, 'git@github.com:owner/repo.git\n', ''),
+                  callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }),
                 );
               }
             }
@@ -771,7 +778,11 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
+          (
+            _command: string,
+            _options: ExecOptions,
+            callback?: ExecCallback,
+          ) => {
             // Simulate timeout by calling callback with timeout error after a short delay
             if (typeof callback === 'function') {
               setTimeout(() => {
@@ -844,11 +855,11 @@ describe('GitRepositoryDetector', () => {
                 !command.includes('get-url')
               ) {
                 process.nextTick(() =>
-                  callback(null, 'fork\nupstream\norigin\n', ''),
+                  callback(null, { stdout: 'fork\nupstream\norigin\n', stderr: '' }),
                 );
               } else if (command.includes('git remote get-url origin')) {
                 process.nextTick(() =>
-                  callback(null, 'git@github.com:main/project.git\n', ''),
+                  callback(null, { stdout: 'git@github.com:main/project.git\n', stderr: '' }),
                 );
               }
             }
@@ -876,10 +887,10 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, 'upstream\nfork\n', ''));
+                process.nextTick(() => callback(null, { stdout: 'upstream\nfork\n', stderr: '' }));
               } else if (command.includes('git remote get-url upstream')) {
                 process.nextTick(() =>
-                  callback(null, 'https://github.com/fork/project.git\n', ''),
+                  callback(null, { stdout: 'https://github.com/fork/project.git\n', stderr: '' }),
                 );
               }
             }

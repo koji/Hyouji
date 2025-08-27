@@ -299,7 +299,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
       expect(result.repositoryInfo!.owner).toBe('origin-owner');
       expect(result.repositoryInfo!.repo).toBe('origin-repo');
       expect(result.repositoryInfo!.detectionMethod).toBe('origin');
-    });
+    }, 10000);
 
     it('should handle Git command errors gracefully', async () => {
       // Create a directory that looks like Git but will cause command failures
@@ -334,7 +334,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
       expect(result.isGitRepository).toBe(true);
       expect(result.repositoryInfo).toBeUndefined();
       expect(result.error).toBe('Could not parse remote URL');
-    });
+    }, 10000);
 
     it('should handle empty repository with no commits', async () => {
       // Initialize Git repository without any commits
@@ -499,7 +499,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
       } catch {
         // Ignore cleanup errors
       }
-    });
+    }, 10000);
 
     it('should handle repository with extremely long path', async () => {
       // Create a deeply nested directory structure

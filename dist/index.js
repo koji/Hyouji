@@ -1112,6 +1112,7 @@ const getTargetLabel = async () => {
   return [response.name];
 };
 const execAsync = promisify(exec);
+const GIT_COMMAND_TIMEOUT_MS = 5e3;
 class GitRepositoryDetector {
   /**
    * Detects Git repository information from the current working directory
@@ -1199,7 +1200,7 @@ class GitRepositoryDetector {
     try {
       const { stdout } = await execAsync(`git remote get-url ${remoteName}`, {
         cwd: gitRoot,
-        timeout: 5e3
+        timeout: GIT_COMMAND_TIMEOUT_MS
       });
       return stdout.trim() || null;
     } catch {
@@ -1217,7 +1218,9 @@ class GitRepositoryDetector {
     }
     const trimmedUrl = url.trim();
     try {
-      const sshMatch = trimmedUrl.match(/^git@github\.com:([^/\s:]+)\/([^/\s:]+?)(?:\.git)?$/);
+      const sshMatch = trimmedUrl.match(
+        /^git@github\.com:([^/\s:]+)\/([^/\s:]+?)(?:\.git)?$/
+      );
       if (sshMatch) {
         const owner = sshMatch[1];
         const repo = sshMatch[2];
@@ -1225,7 +1228,9 @@ class GitRepositoryDetector {
           return { owner, repo };
         }
       }
-      const httpsMatch = trimmedUrl.match(/^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/);
+      const httpsMatch = trimmedUrl.match(
+        /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/
+      );
       if (httpsMatch) {
         const owner = httpsMatch[1];
         const repo = httpsMatch[2];
@@ -1233,7 +1238,9 @@ class GitRepositoryDetector {
           return { owner, repo };
         }
       }
-      const httpMatch = trimmedUrl.match(/^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/);
+      const httpMatch = trimmedUrl.match(
+        /^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/
+      );
       if (httpMatch) {
         const owner = httpMatch[1];
         const repo = httpMatch[2];
@@ -1241,7 +1248,7 @@ class GitRepositoryDetector {
           return { owner, repo };
         }
       }
-    } catch (error) {
+    } catch {
       return null;
     }
     return null;
@@ -1267,7 +1274,7 @@ class GitRepositoryDetector {
     try {
       const { stdout } = await execAsync("git remote", {
         cwd: gitRoot,
-        timeout: 5e3
+        timeout: GIT_COMMAND_TIMEOUT_MS
       });
       return stdout.trim().split("\n").filter((remote) => remote.length > 0);
     } catch {
@@ -1299,8 +1306,16 @@ const getGitHubConfigs = async () => {
     try {
       const detectionResult = await GitRepositoryDetector.detectRepository();
       if (detectionResult.isGitRepository && detectionResult.repositoryInfo) {
-        console.log(chalk.green(`✓ Detected repository: ${detectionResult.repositoryInfo.owner}/${detectionResult.repositoryInfo.repo}`));
-        console.log(chalk.gray(`  Detection method: ${detectionResult.repositoryInfo.detectionMethod === "origin" ? "origin remote" : "first available remote"}`));
+        console.log(
+          chalk.green(
+            `✓ Detected repository: ${detectionResult.repositoryInfo.owner}/${detectionResult.repositoryInfo.repo}`
+          )
+        );
+        console.log(
+          chalk.gray(
+            `  Detection method: ${detectionResult.repositoryInfo.detectionMethod === "origin" ? "origin remote" : "first available remote"}`
+          )
+        );
         const octokit3 = new Octokit({
           auth: validationResult.config.token
         });
@@ -1314,12 +1329,20 @@ const getGitHubConfigs = async () => {
         };
       } else {
         if (detectionResult.error) {
-          console.log(chalk.yellow(`⚠️  Repository auto-detection failed: ${detectionResult.error}`));
+          console.log(
+            chalk.yellow(
+              `⚠️  Repository auto-detection failed: ${detectionResult.error}`
+            )
+          );
         }
         console.log(chalk.gray("  Falling back to manual input..."));
       }
     } catch (error) {
-      console.log(chalk.yellow("⚠️  Repository auto-detection failed, falling back to manual input"));
+      console.log(
+        chalk.yellow(
+          "⚠️  Repository auto-detection failed, falling back to manual input"
+        )
+      );
       if (error instanceof Error) {
         console.log(chalk.gray(`  Error: ${error.message}`));
       }
@@ -1518,11 +1541,17 @@ const initializeConfigs = async () => {
       log(chalk.green(`✓ Using saved configuration for ${config.owner}`));
     }
     if (config.autoDetected) {
-      log(chalk.green(`✓ Repository auto-detected: ${config.owner}/${config.repo}`));
+      log(
+        chalk.green(
+          `✓ Repository auto-detected: ${config.owner}/${config.repo}`
+        )
+      );
       const detectionMethodText = config.detectionMethod === "origin" ? "origin remote" : config.detectionMethod === "first-remote" ? "first available remote" : "manual input";
       log(chalk.gray(`  Detection method: ${detectionMethodText}`));
     } else if (config.detectionMethod === "manual") {
-      log(chalk.blue(`✓ Repository configured: ${config.owner}/${config.repo}`));
+      log(
+        chalk.blue(`✓ Repository configured: ${config.owner}/${config.repo}`)
+      );
       log(chalk.gray(`  Input method: manual`));
     }
     return config;

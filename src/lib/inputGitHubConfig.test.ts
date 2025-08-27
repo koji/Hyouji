@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-
 import { getGitHubConfigs } from './inputGitHubConfig.js';
+
+
 
 // Mock dependencies
 vi.mock('prompts');
@@ -35,7 +36,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as any,
+        }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     );
 
     // Mock successful auto-detection
@@ -52,7 +53,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as any;
+    const mockOctokit = { auth: 'test-token' } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     vi.mocked(Octokit).mockImplementation(() => mockOctokit);
 
     const result = await getGitHubConfigs();
@@ -91,7 +92,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as any,
+        }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     );
 
     // Mock failed auto-detection
@@ -108,7 +109,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     });
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as any;
+    const mockOctokit = { auth: 'test-token' } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     vi.mocked(Octokit).mockImplementation(() => mockOctokit);
 
     const result = await getGitHubConfigs();
@@ -154,7 +155,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as any,
+        }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     );
 
     // Mock auto-detection throwing an error
@@ -170,7 +171,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     });
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as any;
+    const mockOctokit = { auth: 'test-token' } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     vi.mocked(Octokit).mockImplementation(() => mockOctokit);
 
     const result = await getGitHubConfigs();
