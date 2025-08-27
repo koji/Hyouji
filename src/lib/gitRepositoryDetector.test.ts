@@ -1,9 +1,12 @@
-import { exec } from 'child_process';
+import { exec, ExecOptions } from 'child_process';
 import { existsSync } from 'fs';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GitRepositoryDetector } from './gitRepositoryDetector';
+
+// Type for exec callback function
+type ExecCallback = (error: Error | null, stdout: string, stderr: string) => void;
 
 // Mock child_process and fs modules
 vi.mock('child_process', () => ({
@@ -62,11 +65,11 @@ describe('GitRepositoryDetector', () => {
 
   describe('getAllRemotes', () => {
     it('should return array of remotes', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: (error: Error | null, stdout: string, stderr: string) => void) => {
         if (typeof callback === 'function') {
-          process.nextTick(() => callback(null, { stdout: 'origin\nupstream\n', stderr: '' }));
+          process.nextTick(() => callback(null, 'origin\nupstream\n', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getAllRemotes('/project');
@@ -74,11 +77,11 @@ describe('GitRepositoryDetector', () => {
     });
 
     it('should return empty array when no remotes', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
         if (typeof callback === 'function') {
-          process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
+          process.nextTick(() => callback(null, '', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getAllRemotes('/project');
@@ -86,11 +89,11 @@ describe('GitRepositoryDetector', () => {
     });
 
     it('should return empty array on git command error', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
         if (typeof callback === 'function') {
-          process.nextTick(() => callback(new Error('Git not found'), null));
+          process.nextTick(() => callback(new Error('Git not found'), '', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getAllRemotes('/project');
@@ -98,11 +101,11 @@ describe('GitRepositoryDetector', () => {
     });
 
     it('should filter out empty remote names', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
         if (typeof callback === 'function') {
-          process.nextTick(() => callback(null, { stdout: 'origin\n\nupstream\n\n', stderr: '' }));
+          process.nextTick(() => callback(null, 'origin\n\nupstream\n\n', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getAllRemotes('/project');
@@ -112,11 +115,11 @@ describe('GitRepositoryDetector', () => {
 
   describe('getRemoteUrl', () => {
     it('should return remote URL for valid remote', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
         if (typeof callback === 'function') {
-          process.nextTick(() => callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }));
+          process.nextTick(() => callback(null, 'git@github.com:owner/repo.git\n', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getRemoteUrl('/project', 'origin');
@@ -124,11 +127,11 @@ describe('GitRepositoryDetector', () => {
     });
 
     it('should return null for non-existent remote', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
         if (typeof callback === 'function') {
-          process.nextTick(() => callback(new Error('No such remote'), null));
+          process.nextTick(() => callback(new Error('No such remote'), '', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getRemoteUrl('/project', 'nonexistent');
@@ -136,11 +139,11 @@ describe('GitRepositoryDetector', () => {
     });
 
     it('should return null for empty stdout', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
         if (typeof callback === 'function') {
-          process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
+          process.nextTick(() => callback(null, '', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getRemoteUrl('/project', 'origin');
@@ -148,13 +151,13 @@ describe('GitRepositoryDetector', () => {
     });
 
     it('should handle timeout errors', async () => {
-      mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+      mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
         if (typeof callback === 'function') {
-          const error = new Error('Command timeout') as any;
+          const error = new Error('Command timeout') as Error & { code: string };
           error.code = 'TIMEOUT';
-          process.nextTick(() => callback(error, null));
+          process.nextTick(() => callback(error, '', ''));
         }
-        return {} as any;
+        return {} as ReturnType<typeof exec>;
       });
 
       const result = await GitRepositoryDetector.getRemoteUrl('/project', 'origin');
@@ -171,15 +174,15 @@ describe('GitRepositoryDetector', () => {
         });
 
         // Mock getAllRemotes and getRemoteUrl
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             if (command.includes('git remote') && !command.includes('get-url')) {
-              process.nextTick(() => callback(null, { stdout: 'origin\nupstream\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'origin\nupstream\n', ''));
             } else if (command.includes('git remote get-url origin')) {
-              process.nextTick(() => callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'git@github.com:owner/repo.git\n', ''));
             }
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -198,15 +201,15 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             if (command.includes('git remote') && !command.includes('get-url')) {
-              process.nextTick(() => callback(null, { stdout: 'upstream\nfork\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'upstream\nfork\n', ''));
             } else if (command.includes('git remote get-url upstream')) {
-              process.nextTick(() => callback(null, { stdout: 'https://github.com/owner/repo.git\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'https://github.com/owner/repo.git\n', ''));
             }
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -236,11 +239,11 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
+            process.nextTick(() => callback(null, '', ''));
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -254,11 +257,11 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(new Error('git: command not found'), null));
+            process.nextTick(() => callback(new Error('git: command not found'), "", ""));
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -285,15 +288,15 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             if (command.includes('git remote') && !command.includes('get-url')) {
-              process.nextTick(() => callback(null, { stdout: 'origin\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'origin\n', ''));
             } else if (command.includes('git remote get-url')) {
-              process.nextTick(() => callback(new Error('Remote not found'), null));
+              process.nextTick(() => callback(new Error('Remote not found'), "", ""));
             }
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -307,15 +310,15 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             if (command.includes('git remote') && !command.includes('get-url')) {
-              process.nextTick(() => callback(null, { stdout: 'origin\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'origin\n', ''));
             } else if (command.includes('git remote get-url origin')) {
-              process.nextTick(() => callback(null, { stdout: 'invalid-url\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'invalid-url\n', ''));
             }
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -377,15 +380,15 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             if (command.includes('git remote') && !command.includes('get-url')) {
-              process.nextTick(() => callback(null, { stdout: 'upstream\norigin\nfork\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'upstream\norigin\nfork\n', ''));
             } else if (command.includes('git remote get-url origin')) {
-              process.nextTick(() => callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'git@github.com:owner/repo.git\n', ''));
             }
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -666,16 +669,16 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           // Simulate timeout by calling callback with timeout error after a short delay
           if (typeof callback === 'function') {
             setTimeout(() => {
-              const error = new Error('Command timeout') as any;
+              const error = new Error('Command timeout') as Error & { code: string };
               error.code = 'TIMEOUT';
-              callback(error, null);
+              callback(error, '', '');
             }, 10);
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         // This should timeout and return empty array for getAllRemotes
@@ -727,15 +730,15 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             if (command.includes('git remote') && !command.includes('get-url')) {
-              process.nextTick(() => callback(null, { stdout: 'fork\nupstream\norigin\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'fork\nupstream\norigin\n', ''));
             } else if (command.includes('git remote get-url origin')) {
-              process.nextTick(() => callback(null, { stdout: 'git@github.com:main/project.git\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'git@github.com:main/project.git\n', ''));
             }
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
@@ -751,15 +754,15 @@ describe('GitRepositoryDetector', () => {
           return path.includes('.git');
         });
 
-        mockExec.mockImplementation((command: string, options: any, callback?: any) => {
+        mockExec.mockImplementation((command: string, options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             if (command.includes('git remote') && !command.includes('get-url')) {
-              process.nextTick(() => callback(null, { stdout: 'upstream\nfork\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'upstream\nfork\n', ''));
             } else if (command.includes('git remote get-url upstream')) {
-              process.nextTick(() => callback(null, { stdout: 'https://github.com/fork/project.git\n', stderr: '' }));
+              process.nextTick(() => callback(null, 'https://github.com/fork/project.git\n', ''));
             }
           }
-          return {} as any;
+          return {} as ReturnType<typeof exec>;
         });
 
         const result = await GitRepositoryDetector.detectRepository('/project');
