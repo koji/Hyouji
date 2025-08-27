@@ -232,12 +232,12 @@ export class GitRepositoryDetector {
     // - Cannot start or end with a hyphen
     // - Cannot contain consecutive hyphens
     // - Must be 1-39 characters long
-    const githubIdentifierRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
+    const GITHUB_IDENTIFIER_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
 
     return (
       identifier.length >= 1 &&
       identifier.length <= 39 &&
-      githubIdentifierRegex.test(identifier) &&
+      GITHUB_IDENTIFIER_REGEX.test(identifier) &&
       !identifier.includes('--') // No consecutive hyphens
     );
   }
