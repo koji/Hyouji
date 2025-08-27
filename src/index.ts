@@ -23,8 +23,6 @@ const log = console.log;
 let firstStart = true;
 const configManager = new ConfigManager();
 
-
-
 // Display current settings
 const displaySettings = async () => {
   log(chalk.cyan('\n=== Current Settings ==='));
@@ -139,7 +137,7 @@ const initializeConfigs = async () => {
 
     // Use the unified getGitHubConfigs function which handles both auto-detection and manual input
     const config = await getGitHubConfigs();
-    
+
     // Validate configuration before use
     if (!config.octokit || !config.owner || !config.repo) {
       throw new Error('Invalid configuration: missing required fields');
@@ -163,25 +161,32 @@ const initializeConfigs = async () => {
         `GitHub API authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
-    
+
     // Display configuration information with detection method
     if (config.fromSavedConfig) {
       log(chalk.green(`✓ Using saved configuration for ${config.owner}`));
     }
-    
+
     if (config.autoDetected) {
-      log(chalk.green(`✓ Repository auto-detected: ${config.owner}/${config.repo}`));
-      const detectionMethodText = config.detectionMethod === 'origin' 
-        ? 'origin remote' 
-        : config.detectionMethod === 'first-remote' 
-          ? 'first available remote' 
-          : 'manual input';
+      log(
+        chalk.green(
+          `✓ Repository auto-detected: ${config.owner}/${config.repo}`,
+        ),
+      );
+      const detectionMethodText =
+        config.detectionMethod === 'origin'
+          ? 'origin remote'
+          : config.detectionMethod === 'first-remote'
+            ? 'first available remote'
+            : 'manual input';
       log(chalk.gray(`  Detection method: ${detectionMethodText}`));
     } else if (config.detectionMethod === 'manual') {
-      log(chalk.blue(`✓ Repository configured: ${config.owner}/${config.repo}`));
+      log(
+        chalk.blue(`✓ Repository configured: ${config.owner}/${config.repo}`),
+      );
       log(chalk.gray(`  Input method: manual`));
     }
-    
+
     return config;
   } catch (error) {
     log(

@@ -40,8 +40,16 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
 
       if (detectionResult.isGitRepository && detectionResult.repositoryInfo) {
         // Auto-detection successful - provide user feedback
-        console.log(chalk.green(`✓ Detected repository: ${detectionResult.repositoryInfo.owner}/${detectionResult.repositoryInfo.repo}`));
-        console.log(chalk.gray(`  Detection method: ${detectionResult.repositoryInfo.detectionMethod === 'origin' ? 'origin remote' : 'first available remote'}`));
+        console.log(
+          chalk.green(
+            `✓ Detected repository: ${detectionResult.repositoryInfo.owner}/${detectionResult.repositoryInfo.repo}`,
+          ),
+        );
+        console.log(
+          chalk.gray(
+            `  Detection method: ${detectionResult.repositoryInfo.detectionMethod === 'origin' ? 'origin remote' : 'first available remote'}`,
+          ),
+        );
 
         const octokit = new Octokit({
           auth: validationResult.config.token,
@@ -58,13 +66,21 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
       } else {
         // Auto-detection failed, provide feedback and fallback to manual input
         if (detectionResult.error) {
-          console.log(chalk.yellow(`⚠️  Repository auto-detection failed: ${detectionResult.error}`));
+          console.log(
+            chalk.yellow(
+              `⚠️  Repository auto-detection failed: ${detectionResult.error}`,
+            ),
+          );
         }
         console.log(chalk.gray('  Falling back to manual input...'));
       }
     } catch (error) {
       // Handle unexpected errors gracefully
-      console.log(chalk.yellow('⚠️  Repository auto-detection failed, falling back to manual input'));
+      console.log(
+        chalk.yellow(
+          '⚠️  Repository auto-detection failed, falling back to manual input',
+        ),
+      );
       if (error instanceof Error) {
         console.log(chalk.gray(`  Error: ${error.message}`));
       }

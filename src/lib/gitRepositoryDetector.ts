@@ -43,7 +43,7 @@ export class GitRepositoryDetector {
       if (!gitRoot) {
         return {
           isGitRepository: false,
-          error: 'Not a Git repository'
+          error: 'Not a Git repository',
         };
       }
 
@@ -52,7 +52,7 @@ export class GitRepositoryDetector {
       if (remotes.length === 0) {
         return {
           isGitRepository: true,
-          error: 'No remotes configured'
+          error: 'No remotes configured',
         };
       }
 
@@ -72,7 +72,7 @@ export class GitRepositoryDetector {
       if (!remoteUrl) {
         return {
           isGitRepository: true,
-          error: 'Could not retrieve remote URL'
+          error: 'Could not retrieve remote URL',
         };
       }
 
@@ -81,7 +81,7 @@ export class GitRepositoryDetector {
       if (!parsedUrl) {
         return {
           isGitRepository: true,
-          error: 'Could not parse remote URL'
+          error: 'Could not parse remote URL',
         };
       }
 
@@ -91,14 +91,13 @@ export class GitRepositoryDetector {
           owner: parsedUrl.owner,
           repo: parsedUrl.repo,
           remoteUrl,
-          detectionMethod
-        }
+          detectionMethod,
+        },
       };
-
     } catch (err) {
       return {
         isGitRepository: false,
-        error: err instanceof Error ? err.message : 'Unknown error occurred'
+        error: err instanceof Error ? err.message : 'Unknown error occurred',
       };
     }
   }
@@ -110,17 +109,17 @@ export class GitRepositoryDetector {
    */
   static async findGitRoot(startPath: string): Promise<string | null> {
     let currentPath = startPath;
-    
+
     while (currentPath !== dirname(currentPath)) {
       const gitPath = join(currentPath, '.git');
-      
+
       if (existsSync(gitPath)) {
         return currentPath;
       }
-      
+
       currentPath = dirname(currentPath);
     }
-    
+
     return null;
   }
 
@@ -130,13 +129,16 @@ export class GitRepositoryDetector {
    * @param remoteName - Name of the remote (e.g., 'origin')
    * @returns Promise<string | null> - Remote URL or null if not found
    */
-  static async getRemoteUrl(gitRoot: string, remoteName: string): Promise<string | null> {
+  static async getRemoteUrl(
+    gitRoot: string,
+    remoteName: string,
+  ): Promise<string | null> {
     try {
       const { stdout } = await execAsync(`git remote get-url ${remoteName}`, {
         cwd: gitRoot,
-        timeout: GIT_COMMAND_TIMEOUT_MS
+        timeout: GIT_COMMAND_TIMEOUT_MS,
       });
-      
+
       return stdout.trim() || null;
     } catch {
       return null;
@@ -158,41 +160,55 @@ export class GitRepositoryDetector {
 
     try {
       // SSH format: git@github.com:owner/repo.git
-      const sshMatch = trimmedUrl.match(/^git@github\.com:([^/\s:]+)\/([^/\s:]+?)(?:\.git)?$/);
+      const sshMatch = trimmedUrl.match(
+        /^git@github\.com:([^/\s:]+)\/([^/\s:]+?)(?:\.git)?$/,
+      );
       if (sshMatch) {
         const owner = sshMatch[1];
         const repo = sshMatch[2];
-        
+
         // Validate extracted values
-        if (this.isValidGitHubIdentifier(owner) && this.isValidGitHubIdentifier(repo)) {
+        if (
+          this.isValidGitHubIdentifier(owner) &&
+          this.isValidGitHubIdentifier(repo)
+        ) {
           return { owner, repo };
         }
       }
 
       // HTTPS format: https://github.com/owner/repo.git or https://github.com/owner/repo
-      const httpsMatch = trimmedUrl.match(/^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/);
+      const httpsMatch = trimmedUrl.match(
+        /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/,
+      );
       if (httpsMatch) {
         const owner = httpsMatch[1];
         const repo = httpsMatch[2];
-        
+
         // Validate extracted values
-        if (this.isValidGitHubIdentifier(owner) && this.isValidGitHubIdentifier(repo)) {
+        if (
+          this.isValidGitHubIdentifier(owner) &&
+          this.isValidGitHubIdentifier(repo)
+        ) {
           return { owner, repo };
         }
       }
 
       // HTTP format (less secure but sometimes used): http://github.com/owner/repo.git
-      const httpMatch = trimmedUrl.match(/^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/);
+      const httpMatch = trimmedUrl.match(
+        /^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/,
+      );
       if (httpMatch) {
         const owner = httpMatch[1];
         const repo = httpMatch[2];
-        
+
         // Validate extracted values
-        if (this.isValidGitHubIdentifier(owner) && this.isValidGitHubIdentifier(repo)) {
+        if (
+          this.isValidGitHubIdentifier(owner) &&
+          this.isValidGitHubIdentifier(repo)
+        ) {
           return { owner, repo };
         }
       }
-
     } catch {
       // Handle regex errors or other parsing issues
       return null;
@@ -217,7 +233,7 @@ export class GitRepositoryDetector {
     // - Cannot contain consecutive hyphens
     // - Must be 1-39 characters long
     const githubIdentifierRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
-    
+
     return (
       identifier.length >= 1 &&
       identifier.length <= 39 &&
@@ -235,10 +251,13 @@ export class GitRepositoryDetector {
     try {
       const { stdout } = await execAsync('git remote', {
         cwd: gitRoot,
-        timeout: GIT_COMMAND_TIMEOUT_MS
+        timeout: GIT_COMMAND_TIMEOUT_MS,
       });
-      
-      return stdout.trim().split('\n').filter(remote => remote.length > 0);
+
+      return stdout
+        .trim()
+        .split('\n')
+        .filter((remote) => remote.length > 0);
     } catch {
       return [];
     }

@@ -18,12 +18,15 @@ describe('GitRepositoryDetector Integration Tests', () => {
 
   beforeEach(async () => {
     // Create a unique temporary directory for each test
-    testDir = join(tmpdir(), `git-test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`);
+    testDir = join(
+      tmpdir(),
+      `git-test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+    );
     mkdirSync(testDir, { recursive: true });
-    
+
     // Store original working directory
     originalCwd = process.cwd();
-    
+
     // Change to test directory
     process.chdir(testDir);
 
@@ -43,12 +46,12 @@ describe('GitRepositoryDetector Integration Tests', () => {
   afterEach(async () => {
     // Restore original working directory
     process.chdir(originalCwd);
-    
+
     // Clean up test directory
     if (existsSync(testDir)) {
       rmSync(testDir, { recursive: true, force: true });
     }
-    
+
     // Clear all mocks
     vi.clearAllMocks();
   });
@@ -59,10 +62,12 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add origin remote in SSH format
-      await execAsync('git remote add origin git@github.com:test-owner/test-repo.git');
-      
+      await execAsync(
+        'git remote add origin git@github.com:test-owner/test-repo.git',
+      );
+
       // Create initial commit
       writeFileSync(join(testDir, 'README.md'), '# Test Repository');
       await execAsync('git add README.md');
@@ -75,7 +80,9 @@ describe('GitRepositoryDetector Integration Tests', () => {
       expect(result.repositoryInfo!.owner).toBe('test-owner');
       expect(result.repositoryInfo!.repo).toBe('test-repo');
       expect(result.repositoryInfo!.detectionMethod).toBe('origin');
-      expect(result.repositoryInfo!.remoteUrl).toBe('git@github.com:test-owner/test-repo.git');
+      expect(result.repositoryInfo!.remoteUrl).toBe(
+        'git@github.com:test-owner/test-repo.git',
+      );
     });
 
     it('should detect repository from origin remote in HTTPS format', async () => {
@@ -83,10 +90,12 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add origin remote in HTTPS format
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
-      
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
+
       // Create initial commit
       writeFileSync(join(testDir, 'README.md'), '# Test Repository');
       await execAsync('git add README.md');
@@ -99,7 +108,9 @@ describe('GitRepositoryDetector Integration Tests', () => {
       expect(result.repositoryInfo!.owner).toBe('test-owner');
       expect(result.repositoryInfo!.repo).toBe('test-repo');
       expect(result.repositoryInfo!.detectionMethod).toBe('origin');
-      expect(result.repositoryInfo!.remoteUrl).toBe('https://github.com/test-owner/test-repo.git');
+      expect(result.repositoryInfo!.remoteUrl).toBe(
+        'https://github.com/test-owner/test-repo.git',
+      );
     });
 
     it('should detect repository from subdirectory', async () => {
@@ -107,10 +118,12 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add origin remote
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
-      
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
+
       // Create subdirectory and change to it
       const subDir = join(testDir, 'src', 'components');
       mkdirSync(subDir, { recursive: true });
@@ -155,11 +168,17 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add multiple remotes - upstream first, then origin
-      await execAsync('git remote add upstream https://github.com/upstream-owner/upstream-repo.git');
-      await execAsync('git remote add origin https://github.com/origin-owner/origin-repo.git');
-      await execAsync('git remote add fork https://github.com/fork-owner/fork-repo.git');
+      await execAsync(
+        'git remote add upstream https://github.com/upstream-owner/upstream-repo.git',
+      );
+      await execAsync(
+        'git remote add origin https://github.com/origin-owner/origin-repo.git',
+      );
+      await execAsync(
+        'git remote add fork https://github.com/fork-owner/fork-repo.git',
+      );
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -175,10 +194,14 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add remotes without origin - order matters for git remote command
-      await execAsync('git remote add upstream https://github.com/upstream-owner/upstream-repo.git');
-      await execAsync('git remote add fork https://github.com/fork-owner/fork-repo.git');
+      await execAsync(
+        'git remote add upstream https://github.com/upstream-owner/upstream-repo.git',
+      );
+      await execAsync(
+        'git remote add fork https://github.com/fork-owner/fork-repo.git',
+      );
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -195,7 +218,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Create initial commit
       writeFileSync(join(testDir, 'README.md'), '# Test Repository');
       await execAsync('git add README.md');
@@ -213,7 +236,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add malformed remote URL
       await execAsync('git remote add origin invalid-url-format');
 
@@ -231,7 +254,9 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      await execAsync('git remote add origin https://github.com/detected-owner/detected-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/detected-owner/detected-repo.git',
+      );
 
       // Test the detection directly
       const result = await GitRepositoryDetector.detectRepository();
@@ -257,10 +282,14 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add multiple remotes - upstream first, then origin
-      await execAsync('git remote add upstream https://github.com/upstream-owner/upstream-repo.git');
-      await execAsync('git remote add origin https://github.com/origin-owner/origin-repo.git');
+      await execAsync(
+        'git remote add upstream https://github.com/upstream-owner/upstream-repo.git',
+      );
+      await execAsync(
+        'git remote add origin https://github.com/origin-owner/origin-repo.git',
+      );
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -275,7 +304,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
     it('should handle Git command errors gracefully', async () => {
       // Create a directory that looks like Git but will cause command failures
       mkdirSync(join(testDir, '.git'), { recursive: true });
-      
+
       // Change to a directory where Git commands might fail
       const invalidGitDir = join(testDir, 'invalid-git');
       mkdirSync(invalidGitDir, { recursive: true });
@@ -296,7 +325,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add an invalid remote URL that can't be parsed
       await execAsync('git remote add origin invalid-url-format');
 
@@ -312,7 +341,9 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -327,10 +358,19 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
 
       // Create deeply nested directory structure
-      const deepDir = join(testDir, 'very', 'deep', 'nested', 'directory', 'structure');
+      const deepDir = join(
+        testDir,
+        'very',
+        'deep',
+        'nested',
+        'directory',
+        'structure',
+      );
       mkdirSync(deepDir, { recursive: true });
       process.chdir(deepDir);
 
@@ -349,7 +389,9 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
 
       const startTime = Date.now();
       const result = await GitRepositoryDetector.detectRepository();
@@ -357,7 +399,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
 
       expect(result.isGitRepository).toBe(true);
       expect(result.repositoryInfo).toBeDefined();
-      
+
       // Should complete within 5 seconds (generous timeout for CI environments)
       expect(endTime - startTime).toBeLessThan(5000);
     });
@@ -367,17 +409,19 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
 
       // Run multiple detection requests concurrently
-      const promises = Array.from({ length: 5 }, () => 
-        GitRepositoryDetector.detectRepository()
+      const promises = Array.from({ length: 5 }, () =>
+        GitRepositoryDetector.detectRepository(),
       );
 
       const results = await Promise.all(promises);
 
       // All results should be consistent
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.isGitRepository).toBe(true);
         expect(result.repositoryInfo).toBeDefined();
         expect(result.repositoryInfo!.owner).toBe('test-owner');
@@ -392,10 +436,12 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add a remote and then corrupt the config
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
-      
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
+
       // Corrupt the git config by writing invalid content
       writeFileSync(join(testDir, '.git', 'config'), 'invalid config content');
 
@@ -409,7 +455,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
     it('should handle repository with missing .git/config file', async () => {
       // Initialize Git repository
       await execAsync('git init');
-      
+
       // Remove the config file
       if (existsSync(join(testDir, '.git', 'config'))) {
         rmSync(join(testDir, '.git', 'config'));
@@ -426,7 +472,9 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
 
       // Make .git directory read-only (this might not work on all systems)
       try {
@@ -455,15 +503,31 @@ describe('GitRepositoryDetector Integration Tests', () => {
 
     it('should handle repository with extremely long path', async () => {
       // Create a deeply nested directory structure
-      const deepPath = join(testDir, 'very', 'very', 'very', 'deep', 'nested', 'directory', 'structure', 'that', 'goes', 'on', 'and', 'on');
+      const deepPath = join(
+        testDir,
+        'very',
+        'very',
+        'very',
+        'deep',
+        'nested',
+        'directory',
+        'structure',
+        'that',
+        'goes',
+        'on',
+        'and',
+        'on',
+      );
       mkdirSync(deepPath, { recursive: true });
-      
+
       // Initialize Git repository in the deep path
       process.chdir(deepPath);
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -479,12 +543,14 @@ describe('GitRepositoryDetector Integration Tests', () => {
       try {
         mkdirSync(specialDir, { recursive: true });
         process.chdir(specialDir);
-        
+
         // Initialize Git repository
         await execAsync('git init');
         await execAsync('git config user.email "test@example.com"');
         await execAsync('git config user.name "Test User"');
-        await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+        await execAsync(
+          'git remote add origin https://github.com/test-owner/test-repo.git',
+        );
 
         const result = await GitRepositoryDetector.detectRepository();
 
@@ -494,7 +560,9 @@ describe('GitRepositoryDetector Integration Tests', () => {
         expect(result.repositoryInfo!.repo).toBe('test-repo');
       } catch {
         // Skip this test if filesystem doesn't support special characters
-        console.warn('Skipping special characters test due to filesystem limitations');
+        console.warn(
+          'Skipping special characters test due to filesystem limitations',
+        );
       }
     });
 
@@ -503,13 +571,17 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add non-GitHub remotes first (alphabetically before 'origin')
-      await execAsync('git remote add bitbucket https://bitbucket.org/user/repo.git');
+      await execAsync(
+        'git remote add bitbucket https://bitbucket.org/user/repo.git',
+      );
       await execAsync('git remote add gitlab https://gitlab.com/user/repo.git');
-      
+
       // Add GitHub remote as 'origin' (should be detected with priority)
-      await execAsync('git remote add origin https://github.com/test-owner/test-repo.git');
+      await execAsync(
+        'git remote add origin https://github.com/test-owner/test-repo.git',
+      );
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -525,10 +597,12 @@ describe('GitRepositoryDetector Integration Tests', () => {
       await execAsync('git init');
       await execAsync('git config user.email "test@example.com"');
       await execAsync('git config user.name "Test User"');
-      
+
       // Add only non-GitHub remotes
       await execAsync('git remote add origin https://gitlab.com/user/repo.git');
-      await execAsync('git remote add upstream https://bitbucket.org/user/repo.git');
+      await execAsync(
+        'git remote add upstream https://bitbucket.org/user/repo.git',
+      );
 
       const result = await GitRepositoryDetector.detectRepository();
 

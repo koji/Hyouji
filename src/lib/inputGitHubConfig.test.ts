@@ -16,7 +16,9 @@ describe('getGitHubConfigs auto-detection integration', () => {
 
   it('should use auto-detected repository when detection succeeds', async () => {
     const { ConfigManager } = await import('./configManager.js');
-    const { GitRepositoryDetector } = await import('./gitRepositoryDetector.js');
+    const { GitRepositoryDetector } = await import(
+      './gitRepositoryDetector.js'
+    );
     const { Octokit } = await import('@octokit/core');
 
     // Mock valid saved config
@@ -24,14 +26,17 @@ describe('getGitHubConfigs auto-detection integration', () => {
       config: {
         token: 'test-token',
         owner: 'saved-owner',
-        lastUpdated: '2024-01-01T00:00:00.000Z'
+        lastUpdated: '2024-01-01T00:00:00.000Z',
       },
-      shouldPromptForCredentials: false
+      shouldPromptForCredentials: false,
     });
 
-    vi.mocked(ConfigManager).mockImplementation(() => ({
-      loadValidatedConfig: mockLoadValidatedConfig
-    } as Partial<ConfigManager>));
+    vi.mocked(ConfigManager).mockImplementation(
+      () =>
+        ({
+          loadValidatedConfig: mockLoadValidatedConfig,
+        }) as Partial<ConfigManager>,
+    );
 
     // Mock successful auto-detection
     const mockDetectRepository = vi.fn().mockResolvedValue({
@@ -40,8 +45,8 @@ describe('getGitHubConfigs auto-detection integration', () => {
         owner: 'detected-owner',
         repo: 'detected-repo',
         remoteUrl: 'git@github.com:detected-owner/detected-repo.git',
-        detectionMethod: 'origin'
-      }
+        detectionMethod: 'origin',
+      },
     });
 
     vi.mocked(GitRepositoryDetector.detectRepository) = mockDetectRepository;
@@ -58,7 +63,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       repo: 'detected-repo',
       fromSavedConfig: true,
       autoDetected: true,
-      detectionMethod: 'origin'
+      detectionMethod: 'origin',
     });
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
@@ -67,7 +72,9 @@ describe('getGitHubConfigs auto-detection integration', () => {
   it('should fallback to manual input when auto-detection fails', async () => {
     const prompts = (await import('prompts')).default;
     const { ConfigManager } = await import('./configManager.js');
-    const { GitRepositoryDetector } = await import('./gitRepositoryDetector.js');
+    const { GitRepositoryDetector } = await import(
+      './gitRepositoryDetector.js'
+    );
     const { Octokit } = await import('@octokit/core');
 
     // Mock valid saved config
@@ -75,26 +82,29 @@ describe('getGitHubConfigs auto-detection integration', () => {
       config: {
         token: 'test-token',
         owner: 'saved-owner',
-        lastUpdated: '2024-01-01T00:00:00.000Z'
+        lastUpdated: '2024-01-01T00:00:00.000Z',
       },
-      shouldPromptForCredentials: false
+      shouldPromptForCredentials: false,
     });
 
-    vi.mocked(ConfigManager).mockImplementation(() => ({
-      loadValidatedConfig: mockLoadValidatedConfig
-    } as Partial<ConfigManager>));
+    vi.mocked(ConfigManager).mockImplementation(
+      () =>
+        ({
+          loadValidatedConfig: mockLoadValidatedConfig,
+        }) as Partial<ConfigManager>,
+    );
 
     // Mock failed auto-detection
     const mockDetectRepository = vi.fn().mockResolvedValue({
       isGitRepository: false,
-      error: 'Not a Git repository'
+      error: 'Not a Git repository',
     });
 
     vi.mocked(GitRepositoryDetector.detectRepository) = mockDetectRepository;
 
     // Mock manual input
     vi.mocked(prompts).mockResolvedValue({
-      repo: 'manual-repo'
+      repo: 'manual-repo',
     });
 
     // Mock Octokit
@@ -109,21 +119,25 @@ describe('getGitHubConfigs auto-detection integration', () => {
       repo: 'manual-repo',
       fromSavedConfig: true,
       autoDetected: false,
-      detectionMethod: 'manual'
+      detectionMethod: 'manual',
     });
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
-    expect(prompts).toHaveBeenCalledWith([{
-      type: 'text',
-      name: 'repo',
-      message: 'Please type your target repo name'
-    }]);
+    expect(prompts).toHaveBeenCalledWith([
+      {
+        type: 'text',
+        name: 'repo',
+        message: 'Please type your target repo name',
+      },
+    ]);
   });
 
   it('should handle auto-detection errors gracefully', async () => {
     const prompts = (await import('prompts')).default;
     const { ConfigManager } = await import('./configManager.js');
-    const { GitRepositoryDetector } = await import('./gitRepositoryDetector.js');
+    const { GitRepositoryDetector } = await import(
+      './gitRepositoryDetector.js'
+    );
     const { Octokit } = await import('@octokit/core');
 
     // Mock valid saved config
@@ -131,23 +145,28 @@ describe('getGitHubConfigs auto-detection integration', () => {
       config: {
         token: 'test-token',
         owner: 'saved-owner',
-        lastUpdated: '2024-01-01T00:00:00.000Z'
+        lastUpdated: '2024-01-01T00:00:00.000Z',
       },
-      shouldPromptForCredentials: false
+      shouldPromptForCredentials: false,
     });
 
-    vi.mocked(ConfigManager).mockImplementation(() => ({
-      loadValidatedConfig: mockLoadValidatedConfig
-    } as Partial<ConfigManager>));
+    vi.mocked(ConfigManager).mockImplementation(
+      () =>
+        ({
+          loadValidatedConfig: mockLoadValidatedConfig,
+        }) as Partial<ConfigManager>,
+    );
 
     // Mock auto-detection throwing an error
-    const mockDetectRepository = vi.fn().mockRejectedValue(new Error('Git command failed'));
+    const mockDetectRepository = vi
+      .fn()
+      .mockRejectedValue(new Error('Git command failed'));
 
     vi.mocked(GitRepositoryDetector.detectRepository) = mockDetectRepository;
 
     // Mock manual input
     vi.mocked(prompts).mockResolvedValue({
-      repo: 'manual-repo'
+      repo: 'manual-repo',
     });
 
     // Mock Octokit
@@ -162,14 +181,16 @@ describe('getGitHubConfigs auto-detection integration', () => {
       repo: 'manual-repo',
       fromSavedConfig: true,
       autoDetected: false,
-      detectionMethod: 'manual'
+      detectionMethod: 'manual',
     });
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
-    expect(prompts).toHaveBeenCalledWith([{
-      type: 'text',
-      name: 'repo',
-      message: 'Please type your target repo name'
-    }]);
+    expect(prompts).toHaveBeenCalledWith([
+      {
+        type: 'text',
+        name: 'repo',
+        message: 'Please type your target repo name',
+      },
+    ]);
   });
 });
