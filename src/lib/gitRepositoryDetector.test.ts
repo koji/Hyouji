@@ -71,8 +71,8 @@ describe('GitRepositoryDetector', () => {
     it('should return array of remotes', async () => {
       mockExec.mockImplementation(
         (
-          command: string,
-          options: ExecOptions,
+          _command: string,
+          _options: ExecOptions,
           callback?: (
             error: Error | null,
             stdout: string,
@@ -92,7 +92,7 @@ describe('GitRepositoryDetector', () => {
 
     it('should return empty array when no remotes', async () => {
       mockExec.mockImplementation(
-        (command: string, options: ExecOptions, callback?: ExecCallback) => {
+        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() => callback(null, '', ''));
           }
@@ -106,7 +106,7 @@ describe('GitRepositoryDetector', () => {
 
     it('should return empty array on git command error', async () => {
       mockExec.mockImplementation(
-        (command: string, options: ExecOptions, callback?: ExecCallback) => {
+        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() =>
               callback(new Error('Git not found'), '', ''),
@@ -122,7 +122,7 @@ describe('GitRepositoryDetector', () => {
 
     it('should filter out empty remote names', async () => {
       mockExec.mockImplementation(
-        (command: string, options: ExecOptions, callback?: ExecCallback) => {
+        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() =>
               callback(null, 'origin\n\nupstream\n\n', ''),
@@ -140,7 +140,7 @@ describe('GitRepositoryDetector', () => {
   describe('getRemoteUrl', () => {
     it('should return remote URL for valid remote', async () => {
       mockExec.mockImplementation(
-        (command: string, options: ExecOptions, callback?: ExecCallback) => {
+        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() =>
               callback(null, 'git@github.com:owner/repo.git\n', ''),
@@ -159,7 +159,7 @@ describe('GitRepositoryDetector', () => {
 
     it('should return null for non-existent remote', async () => {
       mockExec.mockImplementation(
-        (command: string, options: ExecOptions, callback?: ExecCallback) => {
+        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() =>
               callback(new Error('No such remote'), '', ''),
@@ -178,7 +178,7 @@ describe('GitRepositoryDetector', () => {
 
     it('should return null for empty stdout', async () => {
       mockExec.mockImplementation(
-        (command: string, options: ExecOptions, callback?: ExecCallback) => {
+        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() => callback(null, '', ''));
           }
@@ -195,7 +195,7 @@ describe('GitRepositoryDetector', () => {
 
     it('should handle timeout errors', async () => {
       mockExec.mockImplementation(
-        (command: string, options: ExecOptions, callback?: ExecCallback) => {
+        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             const error = new Error('Command timeout') as Error & {
               code: string;
@@ -225,7 +225,7 @@ describe('GitRepositoryDetector', () => {
 
         // Mock getAllRemotes and getRemoteUrl
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               if (
                 command.includes('git remote') &&
@@ -261,7 +261,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               if (
                 command.includes('git remote') &&
@@ -306,7 +306,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               process.nextTick(() => callback(null, '', ''));
             }
@@ -326,7 +326,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               process.nextTick(() =>
                 callback(new Error('git: command not found'), '', ''),
@@ -361,7 +361,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               if (
                 command.includes('git remote') &&
@@ -390,7 +390,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               if (
                 command.includes('git remote') &&
@@ -467,7 +467,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               if (
                 command.includes('git remote') &&
@@ -771,7 +771,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
             // Simulate timeout by calling callback with timeout error after a short delay
             if (typeof callback === 'function') {
               setTimeout(() => {
@@ -837,7 +837,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               if (
                 command.includes('git remote') &&
@@ -870,7 +870,7 @@ describe('GitRepositoryDetector', () => {
         });
 
         mockExec.mockImplementation(
-          (command: string, options: ExecOptions, callback?: ExecCallback) => {
+          (command: string, _options: ExecOptions, callback?: ExecCallback) => {
             if (typeof callback === 'function') {
               if (
                 command.includes('git remote') &&

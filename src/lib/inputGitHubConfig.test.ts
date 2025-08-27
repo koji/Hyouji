@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ConfigManager } from './configManager.js';
+
 import { getGitHubConfigs } from './inputGitHubConfig.js';
 
 // Mock dependencies
@@ -35,7 +35,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as Partial<ConfigManager>,
+        }) as any,
     );
 
     // Mock successful auto-detection
@@ -49,10 +49,10 @@ describe('getGitHubConfigs auto-detection integration', () => {
       },
     });
 
-    vi.mocked(GitRepositoryDetector.detectRepository) = mockDetectRepository;
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' };
+    const mockOctokit = { auth: 'test-token' } as any;
     vi.mocked(Octokit).mockImplementation(() => mockOctokit);
 
     const result = await getGitHubConfigs();
@@ -91,7 +91,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as Partial<ConfigManager>,
+        }) as any,
     );
 
     // Mock failed auto-detection
@@ -100,7 +100,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       error: 'Not a Git repository',
     });
 
-    vi.mocked(GitRepositoryDetector.detectRepository) = mockDetectRepository;
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock manual input
     vi.mocked(prompts).mockResolvedValue({
@@ -108,7 +108,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     });
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' };
+    const mockOctokit = { auth: 'test-token' } as any;
     vi.mocked(Octokit).mockImplementation(() => mockOctokit);
 
     const result = await getGitHubConfigs();
@@ -154,7 +154,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as Partial<ConfigManager>,
+        }) as any,
     );
 
     // Mock auto-detection throwing an error
@@ -162,7 +162,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       .fn()
       .mockRejectedValue(new Error('Git command failed'));
 
-    vi.mocked(GitRepositoryDetector.detectRepository) = mockDetectRepository;
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock manual input
     vi.mocked(prompts).mockResolvedValue({
@@ -170,7 +170,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     });
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' };
+    const mockOctokit = { auth: 'test-token' } as any;
     vi.mocked(Octokit).mockImplementation(() => mockOctokit);
 
     const result = await getGitHubConfigs();
