@@ -192,7 +192,7 @@ export class GitRepositoryDetector {
         }
       }
 
-    } catch (error) {
+    } catch {
       // Handle regex errors or other parsing issues
       return null;
     }

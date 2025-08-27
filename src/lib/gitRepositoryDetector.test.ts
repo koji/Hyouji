@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GitRepositoryDetector } from './gitRepositoryDetector';
 

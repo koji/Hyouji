@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { exec } from 'child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs';
-import { join, resolve } from 'path';
-import { promisify } from 'util';
 import { tmpdir } from 'os';
+import { join } from 'path';
+import { promisify } from 'util';
 
-import { GitRepositoryDetector } from './gitRepositoryDetector.js';
-import { getGitHubConfigs } from './inputGitHubConfig.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { ConfigManager } from './configManager.js';
+import { GitRepositoryDetector } from './gitRepositoryDetector.js';
 
 const execAsync = promisify(exec);
 
@@ -492,7 +492,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
         expect(result.repositoryInfo).toBeDefined();
         expect(result.repositoryInfo!.owner).toBe('test-owner');
         expect(result.repositoryInfo!.repo).toBe('test-repo');
-      } catch (error) {
+      } catch {
         // Skip this test if filesystem doesn't support special characters
         console.warn('Skipping special characters test due to filesystem limitations');
       }

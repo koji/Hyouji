@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/core';
-import prompts from 'prompts';
 import chalk from 'chalk';
+import prompts from 'prompts';
 
 import { githubConfigs } from '../constant.js';
 import { ConfigType } from '../types/index.js';
