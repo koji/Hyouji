@@ -2,8 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getGitHubConfigs } from './inputGitHubConfig.js';
 
-
-
 // Mock dependencies
 vi.mock('prompts');
 vi.mock('./configManager.js');

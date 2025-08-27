@@ -79,7 +79,9 @@ describe('GitRepositoryDetector', () => {
           ) => void,
         ) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, { stdout: 'origin\nupstream\n', stderr: '' }));
+            process.nextTick(() =>
+              callback(null, { stdout: 'origin\nupstream\n', stderr: '' }),
+            );
           }
           return {} as ReturnType<typeof exec>;
         },
@@ -142,7 +144,10 @@ describe('GitRepositoryDetector', () => {
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
             process.nextTick(() =>
-              callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }),
+              callback(null, {
+                stdout: 'git@github.com:owner/repo.git\n',
+                stderr: '',
+              }),
             );
           }
           return {} as ReturnType<typeof exec>;
@@ -235,7 +240,10 @@ describe('GitRepositoryDetector', () => {
                 );
               } else if (command.includes('git remote get-url origin')) {
                 process.nextTick(() =>
-                  callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }),
+                  callback(null, {
+                    stdout: 'git@github.com:owner/repo.git\n',
+                    stderr: '',
+                  }),
                 );
               }
             }
@@ -266,10 +274,15 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, { stdout: 'upstream\nfork\n', stderr: '' }));
+                process.nextTick(() =>
+                  callback(null, { stdout: 'upstream\nfork\n', stderr: '' }),
+                );
               } else if (command.includes('git remote get-url upstream')) {
                 process.nextTick(() =>
-                  callback(null, { stdout: 'https://github.com/owner/repo.git\n', stderr: '' }),
+                  callback(null, {
+                    stdout: 'https://github.com/owner/repo.git\n',
+                    stderr: '',
+                  }),
                 );
               }
             }
@@ -311,7 +324,9 @@ describe('GitRepositoryDetector', () => {
             callback?: ExecCallback,
           ) => {
             if (typeof callback === 'function') {
-              process.nextTick(() => callback(null, { stdout: '', stderr: '' }));
+              process.nextTick(() =>
+                callback(null, { stdout: '', stderr: '' }),
+              );
             }
             return {} as ReturnType<typeof exec>;
           },
@@ -374,7 +389,9 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, { stdout: 'origin\n', stderr: '' }));
+                process.nextTick(() =>
+                  callback(null, { stdout: 'origin\n', stderr: '' }),
+                );
               } else if (command.includes('git remote get-url')) {
                 process.nextTick(() =>
                   callback(new Error('Remote not found'), '', ''),
@@ -403,9 +420,13 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, { stdout: 'origin\n', stderr: '' }));
+                process.nextTick(() =>
+                  callback(null, { stdout: 'origin\n', stderr: '' }),
+                );
               } else if (command.includes('git remote get-url origin')) {
-                process.nextTick(() => callback(null, { stdout: 'invalid-url\n', stderr: '' }));
+                process.nextTick(() =>
+                  callback(null, { stdout: 'invalid-url\n', stderr: '' }),
+                );
               }
             }
             return {} as ReturnType<typeof exec>;
@@ -481,11 +502,17 @@ describe('GitRepositoryDetector', () => {
                 !command.includes('get-url')
               ) {
                 process.nextTick(() =>
-                  callback(null, { stdout: 'upstream\norigin\nfork\n', stderr: '' }),
+                  callback(null, {
+                    stdout: 'upstream\norigin\nfork\n',
+                    stderr: '',
+                  }),
                 );
               } else if (command.includes('git remote get-url origin')) {
                 process.nextTick(() =>
-                  callback(null, { stdout: 'git@github.com:owner/repo.git\n', stderr: '' }),
+                  callback(null, {
+                    stdout: 'git@github.com:owner/repo.git\n',
+                    stderr: '',
+                  }),
                 );
               }
             }
@@ -855,11 +882,17 @@ describe('GitRepositoryDetector', () => {
                 !command.includes('get-url')
               ) {
                 process.nextTick(() =>
-                  callback(null, { stdout: 'fork\nupstream\norigin\n', stderr: '' }),
+                  callback(null, {
+                    stdout: 'fork\nupstream\norigin\n',
+                    stderr: '',
+                  }),
                 );
               } else if (command.includes('git remote get-url origin')) {
                 process.nextTick(() =>
-                  callback(null, { stdout: 'git@github.com:main/project.git\n', stderr: '' }),
+                  callback(null, {
+                    stdout: 'git@github.com:main/project.git\n',
+                    stderr: '',
+                  }),
                 );
               }
             }
@@ -887,10 +920,15 @@ describe('GitRepositoryDetector', () => {
                 command.includes('git remote') &&
                 !command.includes('get-url')
               ) {
-                process.nextTick(() => callback(null, { stdout: 'upstream\nfork\n', stderr: '' }));
+                process.nextTick(() =>
+                  callback(null, { stdout: 'upstream\nfork\n', stderr: '' }),
+                );
               } else if (command.includes('git remote get-url upstream')) {
                 process.nextTick(() =>
-                  callback(null, { stdout: 'https://github.com/fork/project.git\n', stderr: '' }),
+                  callback(null, {
+                    stdout: 'https://github.com/fork/project.git\n',
+                    stderr: '',
+                  }),
                 );
               }
             }
