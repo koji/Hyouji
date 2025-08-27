@@ -18,7 +18,7 @@ describe('GitRepositoryDetector Integration Tests', () => {
 
   beforeEach(async () => {
     // Create a unique temporary directory for each test
-    testDir = join(tmpdir(), `git-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    testDir = join(tmpdir(), `git-test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`);
     mkdirSync(testDir, { recursive: true });
     
     // Store original working directory

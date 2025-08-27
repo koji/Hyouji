@@ -4,6 +4,7 @@ import { dirname, join } from 'path';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
+const GIT_COMMAND_TIMEOUT_MS = 5000;
 
 /**
  * Information about a detected Git repository
@@ -133,7 +134,7 @@ export class GitRepositoryDetector {
     try {
       const { stdout } = await execAsync(`git remote get-url ${remoteName}`, {
         cwd: gitRoot,
-        timeout: 5000
+        timeout: GIT_COMMAND_TIMEOUT_MS
       });
       
       return stdout.trim() || null;
@@ -234,7 +235,7 @@ export class GitRepositoryDetector {
     try {
       const { stdout } = await execAsync('git remote', {
         cwd: gitRoot,
-        timeout: 5000
+        timeout: GIT_COMMAND_TIMEOUT_MS
       });
       
       return stdout.trim().split('\n').filter(remote => remote.length > 0);

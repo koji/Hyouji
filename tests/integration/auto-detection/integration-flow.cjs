@@ -17,7 +17,7 @@ let originalCwd;
 
 function setup() {
   // Create a unique temporary directory
-  testDir = join(tmpdir(), `git-integration-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  testDir = join(tmpdir(), `git-integration-test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`);
   mkdirSync(testDir, { recursive: true });
   
   // Store original working directory
