@@ -2,6 +2,13 @@ import { exec } from 'child_process';
 import type { ExecOptions } from 'child_process';
 // import { promisify } from 'util';
 
+// Define the callback type for exec function
+type ExecCallback = (
+  error: Error | null,
+  stdout: string,
+  stderr: string,
+) => void;
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Create a mock for the promisified exec function using vi.hoisted
