@@ -1,6 +1,6 @@
-import { exec } from 'child_process';
+// import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import { promisify } from 'util';
+// import { promisify } from 'util';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -17,9 +17,9 @@ vi.mock('util', () => ({
   promisify: vi.fn(() => mockExecAsync),
 }));
 
-const mockExec = vi.mocked(exec);
+// const mockExec = vi.mocked(exec);
 const mockExistsSync = vi.mocked(existsSync);
-const mockPromisify = vi.mocked(promisify);
+// const mockPromisify = vi.mocked(promisify);
 
 import { GitRepositoryDetector } from './gitRepositoryDetector';
 

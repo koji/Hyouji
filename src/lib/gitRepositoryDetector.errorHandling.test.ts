@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
-import type { ExecException, ExecOptions } from 'child_process';
-import { promisify } from 'util';
+import type { ExecOptions } from 'child_process';
+// import { promisify } from 'util';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,7 +16,7 @@ vi.mock('util', () => ({
 }));
 
 const mockExec = vi.mocked(exec);
-const mockPromisify = vi.mocked(promisify);
+// const mockPromisify = vi.mocked(promisify);
 
 import { GitRepositoryDetector } from './gitRepositoryDetector.js';
 
