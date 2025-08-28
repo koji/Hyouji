@@ -208,7 +208,7 @@ jobs:
       - name: Run unit tests
         run: |
           echo "Running unit tests for publishing..."
-          if ! bun test; then
+          if ! bun run test; then
             echo "❌ Error: Unit tests failed - cannot publish"
             echo "All tests must pass before publishing"
             exit 1
@@ -327,7 +327,7 @@ jobs:
           # Configure npm to use the token using npm config commands
           npm config set //registry.npmjs.org/:_authToken "${{ secrets.NPM_TOKEN }}"
           npm config set registry https://registry.npmjs.org/
-          
+
           # Verify the configuration was set
           echo "npm configuration after setup:"
           npm config list
@@ -343,12 +343,12 @@ jobs:
           echo "Registry: $(npm config get registry)"
           echo "Auth token configured: $(npm config get //registry.npmjs.org/:_authToken | sed 's/.*/***MASKED***/')"
           echo ""
-          
+
           # Debug: Check npm configuration
           echo "npm configuration:"
           npm config list
           echo ""
-          
+
           # Test authentication by checking whoami (this will fail gracefully if auth is invalid)
           echo "Testing npm authentication..."
           if npm whoami > /dev/null 2>&1; then
