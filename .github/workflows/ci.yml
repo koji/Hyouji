@@ -163,7 +163,7 @@ jobs:
         if: steps.changes.outputs.run_tests == 'true'
         run: |
           echo "Running unit tests..."
-          if ! bun test; then
+          if ! bun run test; then
             echo "❌ Error: Unit tests failed"
             echo "Test failures detected. Please:"
             echo "  - Review failing test cases"
@@ -171,7 +171,7 @@ jobs:
             echo "  - Ensure test data and mocks are up to date"
             echo "  - Verify test environment setup"
             echo ""
-            echo "Run 'bun test' locally to debug failing tests"
+            echo "Run 'bun run test' locally to debug failing tests"
             exit 1
           fi
           echo "✅ All unit tests passed"

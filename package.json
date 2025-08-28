@@ -38,6 +38,7 @@
     "test:error-handling": "node tests/scripts/error-handling/run-all.cjs",
     "test:config": "node tests/scripts/config/run-all.cjs",
     "test:integration": "node tests/scripts/run-integration.cjs",
+    "test:auto-detection": "node tests/integration/auto-detection/integration-flow.cjs",
     "test:verification": "node tests/scripts/verification/run-all.cjs",
     "test:all-custom": "npm run test:error-handling && npm run test:config && npm run test:integration && npm run test:verification",
     "check-cli": "run-s test diff-integration-tests check-integration-tests",

@@ -19,6 +19,8 @@ export type ConfigType = {
   readonly owner: string;
   readonly repo: string;
   readonly fromSavedConfig?: boolean;
+  readonly autoDetected?: boolean;
+  readonly detectionMethod?: 'origin' | 'first-remote' | 'manual';
 };
 
 export type StoredConfigType = {

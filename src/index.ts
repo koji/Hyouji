@@ -1,6 +1,4 @@
-import { Octokit } from '@octokit/core';
 import chalk from 'chalk';
-import prompts from 'prompts';
 
 import { getAsciiText, initialText, linkToPersonalToken } from './constant.js';
 import {
@@ -24,45 +22,6 @@ const log = console.log;
 
 let firstStart = true;
 const configManager = new ConfigManager();
-
-// set up configs to access GitHub repo
-const setupConfigs = async () => {
-  console.log(initialText);
-
-  // Migrate existing configuration to encrypted format if needed
-  if (firstStart) {
-    await configManager.migrateToEncrypted();
-  }
-
-  // Get configuration (either from saved config or prompts)
-  const config = await getGitHubConfigs();
-
-  // Validate configuration before use
-  if (!config.octokit || !config.owner || !config.repo) {
-    throw new Error('Invalid configuration: missing required fields');
-  }
-
-  // Test the configuration by making a simple API call
-  try {
-    await config.octokit.request('GET /user');
-  } catch (error) {
-    // If the token is invalid, clear saved config and prompt again
-    if (config.fromSavedConfig) {
-      console.log(
-        chalk.yellow(
-          'Saved credentials are invalid. Please provide new credentials.',
-        ),
-      );
-      await configManager.clearConfig();
-      return setupConfigs(); // Retry with fresh prompts
-    }
-    throw new Error(
-      `GitHub API authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
-  }
-
-  return config;
-};
 
 // Display current settings
 const displaySettings = async () => {
@@ -120,8 +79,7 @@ const displaySettings = async () => {
   log(chalk.cyan('========================\n'));
 };
 
-// steps
-// first call setupConfigs
+// Global configuration variable
 let configs: ConfigType;
 
 const initializeConfigs = async () => {
@@ -169,53 +127,74 @@ const initializeConfigs = async () => {
     console.error('Error:', error);
   }
 
-  if (hasValidConfig) {
-    // Use existing valid config, just prompt for repo
-    try {
-      const existingConfig = await configManager.loadValidatedConfig();
-      if (existingConfig && existingConfig.config) {
-        const repoResponse = await prompts([
-          {
-            type: 'text',
-            name: 'repo',
-            message: 'Please type your target repo name',
-          },
-        ]);
+  try {
+    console.log(initialText);
 
-        const config = {
-          octokit: new Octokit({ auth: existingConfig.config.token }),
-          owner: existingConfig.config.owner,
-          repo: repoResponse.repo,
-          fromSavedConfig: true,
-        };
-
-        log(chalk.green(`Using saved configuration for ${config.owner}`));
-        return config;
-      } else {
-        // Fallback to normal flow
-        return await setupConfigs();
-      }
-    } catch (error) {
-      // Fallback to normal flow
-      console.error('Error:', error);
-      return await setupConfigs();
+    // Migrate existing configuration to encrypted format if needed
+    if (firstStart) {
+      await configManager.migrateToEncrypted();
     }
-  } else {
-    // Normal flow for new config or invalid existing config
+
+    // Use the unified getGitHubConfigs function which handles both auto-detection and manual input
+    const config = await getGitHubConfigs();
+
+    // Validate configuration before use
+    if (!config.octokit || !config.owner || !config.repo) {
+      throw new Error('Invalid configuration: missing required fields');
+    }
+
+    // Test the configuration by making a simple API call
     try {
-      const config = await setupConfigs();
-      if (config.fromSavedConfig) {
-        log(chalk.green(`Using saved configuration for ${config.owner}`));
-      }
-      return config;
+      await config.octokit.request('GET /user');
     } catch (error) {
+      // If the token is invalid, clear saved config and prompt again
+      if (config.fromSavedConfig) {
+        console.log(
+          chalk.yellow(
+            'Saved credentials are invalid. Please provide new credentials.',
+          ),
+        );
+        await configManager.clearConfig();
+        return initializeConfigs(); // Retry with fresh prompts
+      }
+      throw new Error(
+        `GitHub API authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+
+    // Display configuration information with detection method
+    if (config.fromSavedConfig) {
+      log(chalk.green(`✓ Using saved configuration for ${config.owner}`));
+    }
+
+    if (config.autoDetected) {
       log(
-        chalk.red(
-          `Configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        chalk.green(
+          `✓ Repository auto-detected: ${config.owner}/${config.repo}`,
         ),
       );
-      return null;
+      const detectionMethodText =
+        config.detectionMethod === 'origin'
+          ? 'origin remote'
+          : config.detectionMethod === 'first-remote'
+            ? 'first available remote'
+            : 'manual input';
+      log(chalk.gray(`  Detection method: ${detectionMethodText}`));
+    } else if (config.detectionMethod === 'manual') {
+      log(
+        chalk.blue(`✓ Repository configured: ${config.owner}/${config.repo}`),
+      );
+      log(chalk.gray(`  Input method: manual`));
     }
+
+    return config;
+  } catch (error) {
+    log(
+      chalk.red(
+        `Configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      ),
+    );
+    return null;
   }
 };
 
