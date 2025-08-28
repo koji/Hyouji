@@ -1262,8 +1262,8 @@ class GitRepositoryDetector {
     if (!identifier || typeof identifier !== "string") {
       return false;
     }
-    const githubIdentifierRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
-    return identifier.length >= 1 && identifier.length <= 39 && githubIdentifierRegex.test(identifier) && !identifier.includes("--");
+    const GITHUB_IDENTIFIER_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
+    return identifier.length >= 1 && identifier.length <= 39 && GITHUB_IDENTIFIER_REGEX.test(identifier) && !identifier.includes("--");
   }
   /**
    * Gets all configured Git remotes
