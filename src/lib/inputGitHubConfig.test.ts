@@ -7,6 +7,25 @@ vi.mock('prompts');
 vi.mock('./configManager.js');
 vi.mock('./gitRepositoryDetector.js');
 vi.mock('@octokit/core');
+vi.mock('../constant.js', () => ({
+  githubConfigs: [
+    {
+      type: 'password',
+      name: 'octokit',
+      message: 'Please type your personal token',
+    },
+    {
+      type: 'text',
+      name: 'owner',
+      message: 'Please type your GitHub account',
+    },
+    {
+      type: 'text',
+      name: 'repo',
+      message: 'Please type your target repo name',
+    },
+  ],
+}));
 
 describe('getGitHubConfigs auto-detection integration', () => {
   beforeEach(() => {
