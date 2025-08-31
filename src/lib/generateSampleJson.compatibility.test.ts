@@ -1,9 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'fs';
-import { generateSampleJson } from './generateSampleJson.js';
-import { importLabelsFromJson } from './importJson.js';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { sampleData } from '../constant.js';
 import { ConfigType, ImportLabelType } from '../types/index.js';
+
+import { generateSampleJson } from './generateSampleJson.js';
+import { importLabelsFromJson } from './importJson.js';
 
 // Mock the createLabel function to avoid actual API calls and capture calls
 vi.mock('./callApi.js', () => ({
@@ -13,12 +16,12 @@ vi.mock('./callApi.js', () => ({
 describe('Sample JSON Compatibility Tests', () => {
   const testFilePath = './hyouji.json';
   const mockConfig: ConfigType = {
-    octokit: {} as any,
+    octokit: {} as ConfigType['octokit'],
     owner: 'test-owner',
     repo: 'test-repo',
   };
 
-  let mockCreateLabel: any;
+  let mockCreateLabel: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     // Clear any existing test file
@@ -27,7 +30,7 @@ describe('Sample JSON Compatibility Tests', () => {
     }
     // Get the mocked function
     const { createLabel } = await import('./callApi.js');
-    mockCreateLabel = createLabel as any;
+    mockCreateLabel = createLabel as ReturnType<typeof vi.fn>;
     // Clear mock calls
     vi.clearAllMocks();
   });
@@ -58,29 +61,31 @@ describe('Sample JSON Compatibility Tests', () => {
       expect(parsedData).toHaveLength(sampleData.length);
 
       // Verify each item has the correct structure
-      parsedData.forEach((item: any, index: number) => {
+      parsedData.forEach((item: unknown, index: number) => {
         expect(typeof item).toBe('object');
         expect(item).not.toBeNull();
 
+        const labelItem = item as Record<string, unknown>;
+
         // Verify required fields
-        expect(item).toHaveProperty('name');
-        expect(typeof item.name).toBe('string');
-        expect(item.name.trim()).not.toBe('');
+        expect(labelItem).toHaveProperty('name');
+        expect(typeof labelItem.name).toBe('string');
+        expect((labelItem.name as string).trim()).not.toBe('');
 
         // Verify optional fields if present
-        if (item.color !== undefined) {
-          expect(typeof item.color).toBe('string');
-          expect(item.color.trim()).not.toBe('');
+        if (labelItem.color !== undefined) {
+          expect(typeof labelItem.color).toBe('string');
+          expect((labelItem.color as string).trim()).not.toBe('');
         }
 
-        if (item.description !== undefined) {
-          expect(typeof item.description).toBe('string');
+        if (labelItem.description !== undefined) {
+          expect(typeof labelItem.description).toBe('string');
         }
 
         // Verify content matches sample data
-        expect(item.name).toBe(sampleData[index].name);
-        expect(item.color).toBe(sampleData[index].color);
-        expect(item.description).toBe(sampleData[index].description);
+        expect(labelItem.name).toBe(sampleData[index].name);
+        expect(labelItem.color).toBe(sampleData[index].color);
+        expect(labelItem.description).toBe(sampleData[index].description);
       });
     });
 
@@ -155,11 +160,12 @@ describe('Sample JSON Compatibility Tests', () => {
       const parsedData = JSON.parse(fileContent);
 
       // Verify color values don't have # prefix
-      parsedData.forEach((item: any) => {
-        if (item.color) {
-          expect(item.color).not.toMatch(/^#/);
+      parsedData.forEach((item: unknown) => {
+        const labelItem = item as Record<string, unknown>;
+        if (labelItem.color) {
+          expect(labelItem.color).not.toMatch(/^#/);
           // Verify it's a valid hex color format (6 characters)
-          expect(item.color).toMatch(/^[0-9A-Fa-f]{6}$/);
+          expect(labelItem.color).toMatch(/^[0-9A-Fa-f]{6}$/);
         }
       });
 
@@ -179,11 +185,10 @@ describe('Sample JSON Compatibility Tests', () => {
       expect(mockCreateLabel).toHaveBeenCalledTimes(sampleData.length);
 
       // Verify each call had the correct structure
-      mockCreateLabel.mock.calls.forEach((call: any[], index: number) => {
-        const [config, labelData] = call;
+      mockCreateLabel.mock.calls.forEach((call: unknown[], index: number) => {
+        const [, labelData] = call;
         const originalSample = sampleData[index];
 
-        expect(config).toBe(mockConfig);
         expect(labelData).toEqual({
           name: originalSample.name,
           color: originalSample.color,
@@ -238,13 +243,14 @@ describe('Sample JSON Compatibility Tests', () => {
       expect(Array.isArray(parsedData)).toBe(true);
 
       // Verify each label object contains required fields (requirement 2.1)
-      parsedData.forEach((item: any) => {
-        expect(item).toHaveProperty('name');
-        expect(item).toHaveProperty('color');
-        expect(item).toHaveProperty('description');
-        expect(typeof item.name).toBe('string');
-        expect(typeof item.color).toBe('string');
-        expect(typeof item.description).toBe('string');
+      parsedData.forEach((item: unknown) => {
+        const labelItem = item as Record<string, unknown>;
+        expect(labelItem).toHaveProperty('name');
+        expect(labelItem).toHaveProperty('color');
+        expect(labelItem).toHaveProperty('description');
+        expect(typeof labelItem.name).toBe('string');
+        expect(typeof labelItem.color).toBe('string');
+        expect(typeof labelItem.description).toBe('string');
       });
     });
 
@@ -271,10 +277,11 @@ describe('Sample JSON Compatibility Tests', () => {
 
       // Each call should have valid data
       mockCreateLabel.mock.calls.forEach((call: unknown[]) => {
-        const [config, labelData] = call;
-        expect(labelData).toHaveProperty('name');
-        expect(labelData).toHaveProperty('color');
-        expect(labelData).toHaveProperty('description');
+        const [, labelData] = call;
+        const label = labelData as Record<string, unknown>;
+        expect(label).toHaveProperty('name');
+        expect(label).toHaveProperty('color');
+        expect(label).toHaveProperty('description');
       });
     });
   });

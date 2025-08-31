@@ -1,8 +1,10 @@
 import * as fs from 'fs';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { sampleData } from '../constant.js';
 
 import { generateSampleJson } from './generateSampleJson';
-import { sampleData } from '../constant.js';
 
 // Mock fs module
 vi.mock('fs');
@@ -79,13 +81,14 @@ describe('generateSampleJson', () => {
       expect(parsedJson).toHaveLength(sampleData.length);
 
       // Verify each label object has required fields
-      parsedJson.forEach((label: any, index: number) => {
-        expect(label).toHaveProperty('name');
-        expect(label).toHaveProperty('color');
-        expect(label).toHaveProperty('description');
-        expect(label.name).toBe(sampleData[index].name);
-        expect(label.color).toBe(sampleData[index].color);
-        expect(label.description).toBe(sampleData[index].description);
+      parsedJson.forEach((label: unknown, index: number) => {
+        const labelItem = label as Record<string, unknown>;
+        expect(labelItem).toHaveProperty('name');
+        expect(labelItem).toHaveProperty('color');
+        expect(labelItem).toHaveProperty('description');
+        expect(labelItem.name).toBe(sampleData[index].name);
+        expect(labelItem.color).toBe(sampleData[index].color);
+        expect(labelItem.description).toBe(sampleData[index].description);
       });
     });
 
@@ -101,9 +104,10 @@ describe('generateSampleJson', () => {
       const [, jsonContent] = mockWriteFileSync.mock.calls[0];
       const parsedJson = JSON.parse(jsonContent as string);
 
-      parsedJson.forEach((label: any) => {
-        expect(label.color).not.toMatch(/^#/); // Should not start with #
-        expect(label.color).toMatch(/^[A-F0-9]{6}$/i); // Should be 6-character hex
+      parsedJson.forEach((label: unknown) => {
+        const labelItem = label as Record<string, unknown>;
+        expect(labelItem.color).not.toMatch(/^#/); // Should not start with #
+        expect(labelItem.color).toMatch(/^[A-F0-9]{6}$/i); // Should be 6-character hex
       });
     });
   });
@@ -323,15 +327,16 @@ describe('generateSampleJson', () => {
 
       // Verify each item has the expected structure
       parsedJson.forEach((item: unknown) => {
+        const labelItem = item as Record<string, unknown>;
         expect(typeof item).toBe('object');
-        expect(typeof item.name).toBe('string');
-        expect(typeof item.color).toBe('string');
-        expect(typeof item.description).toBe('string');
+        expect(typeof labelItem.name).toBe('string');
+        expect(typeof labelItem.color).toBe('string');
+        expect(typeof labelItem.description).toBe('string');
 
         // Verify required fields are present and not empty
-        expect(item.name.length).toBeGreaterThan(0);
-        expect(item.color.length).toBeGreaterThan(0);
-        expect(item.description.length).toBeGreaterThan(0);
+        expect((labelItem.name as string).length).toBeGreaterThan(0);
+        expect((labelItem.color as string).length).toBeGreaterThan(0);
+        expect((labelItem.description as string).length).toBeGreaterThan(0);
       });
     });
 
