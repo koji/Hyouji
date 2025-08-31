@@ -20,7 +20,7 @@ function setup() {
   // Create a unique temporary directory
   testDir = join(
     tmpdir(),
-    `menu-integration-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    `menu-integration-test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
   );
 
   // Store original working directory
