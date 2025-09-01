@@ -37,7 +37,7 @@ vi.mock('chalk', () => ({
 describe('Sample YAML Compatibility Tests', () => {
   const testFilePath = './hyouji.yaml';
   const mockConfig: ConfigType = {
-    octokit: {} as any,
+    octokit: {} as ConfigType['octokit'],
     owner: 'test-owner',
     repo: 'test-repo',
   };
