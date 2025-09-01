@@ -7,6 +7,11 @@ import { ConfigType } from '../types/index.js';
 import * as callApi from './callApi.js';
 import { importLabelsFromFile } from './importLabels.js';
 
+// Mock oh-my-logo to avoid dependency issues in CI
+vi.mock('oh-my-logo', () => ({
+  render: vi.fn().mockResolvedValue('Mocked ASCII Art'),
+}));
+
 // Mock dependencies
 vi.mock('fs');
 vi.mock('./callApi.js');
