@@ -88,8 +88,10 @@ These credentials will be securely saved and reused for future sessions.
 3. **Delete a single label from a specific repo**
 4. **Delete all labels from a specific repo**
 5. **Import labels from JSON or YAML file**
-6. **Display your settings** - View your saved configuration
-7. **Exit**
+6. **Generate sample JSON** - Create a sample JSON file with predefined labels
+7. **Generate sample YAML** - Create a sample YAML file with predefined labels
+8. **Display your settings** - View your saved configuration
+9. **Exit**
 
 ### Settings Management
 
@@ -274,6 +276,15 @@ You can find complete example files in the `examples/` directory:
 - `examples/labels.yaml` - Basic label examples in YAML format
 - `examples/project-labels.json` - Project management labels in JSON format
 - `examples/project-labels.yaml` - Project management labels in YAML format
+
+#### Generate Sample Files
+
+The tool can generate sample files for you:
+
+- **Generate sample JSON** - Creates `hyouji.json` with predefined labels
+- **Generate sample YAML** - Creates `hyouji.yaml` with predefined labels
+
+Both generated files contain the same predefined labels and can be used as starting points for your own label configurations.
 
 ### Predefined Labels
 

@@ -9,6 +9,7 @@ import { join, dirname } from "path";
 import { createHash, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 import prompts from "prompts";
 import * as yaml from "js-yaml";
+import yaml__default from "js-yaml";
 import { Octokit } from "@octokit/core";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -65,10 +66,11 @@ const actionSelector = {
     { title: "create multiple labels", value: 1 },
     { title: "delete a label", value: 2 },
     { title: "delete all labels", value: 3 },
-    { title: "import labels", value: 4 },
+    { title: "import labels from JSON or YAML", value: 4 },
     { title: "Generate sample JSON", value: 5 },
-    { title: "Display your settings", value: 6 },
-    { title: "exit", value: 7 }
+    { title: "Generate sample YAML", value: 6 },
+    { title: "Display your settings", value: 7 },
+    { title: "exit", value: 8 }
   ]
 };
 const holdToken = {
@@ -267,7 +269,7 @@ Thank you!
 };
 const extraGuideText = `If you don't see action selector, please hit space key.`;
 const linkToPersonalToken = "https://github.com/settings/tokens";
-const log$3 = console.log;
+const log$4 = console.log;
 const createLabel = async (configs2, label) => {
   const resp = await configs2.octokit.request(
     "POST /repos/{owner}/{repo}/labels",
@@ -282,16 +284,16 @@ const createLabel = async (configs2, label) => {
   const status = resp.status;
   switch (status) {
     case 201:
-      log$3(chalk.green(`${resp.status}: Created ${label.name}`));
+      log$4(chalk.green(`${resp.status}: Created ${label.name}`));
       break;
     case 404:
-      log$3(chalk.red(`${resp.status}: Resource not found`));
+      log$4(chalk.red(`${resp.status}: Resource not found`));
       break;
     case 422:
-      log$3(chalk.red(`${resp.status}: Validation failed`));
+      log$4(chalk.red(`${resp.status}: Validation failed`));
       break;
     default:
-      log$3(chalk.yellow(`${resp.status}: Something wrong`));
+      log$4(chalk.yellow(`${resp.status}: Something wrong`));
       break;
   }
 };
@@ -299,8 +301,8 @@ const createLabels = async (configs2) => {
   labels.forEach(async (label) => {
     createLabel(configs2, label);
   });
-  log$3("Created all labels");
-  log$3(chalk.bgBlueBright(extraGuideText));
+  log$4("Created all labels");
+  log$4(chalk.bgBlueBright(extraGuideText));
 };
 const deleteLabel = async (configs2, labelNames) => {
   for (const labelName of labelNames) {
@@ -314,15 +316,15 @@ const deleteLabel = async (configs2, labelNames) => {
         }
       );
       if (resp.status === 204) {
-        log$3(chalk.green(`${resp.status}: Deleted ${labelName}`));
+        log$4(chalk.green(`${resp.status}: Deleted ${labelName}`));
       } else {
-        log$3(chalk.yellow(`${resp.status}: Something wrong with ${labelName}`));
+        log$4(chalk.yellow(`${resp.status}: Something wrong with ${labelName}`));
       }
     } catch (error) {
       if (error && typeof error === "object" && "status" in error && error.status === 404) {
-        log$3(chalk.red(`404: Label "${labelName}" not found`));
+        log$4(chalk.red(`404: Label "${labelName}" not found`));
       } else {
-        log$3(
+        log$4(
           chalk.red(
             `Error deleting label "${labelName}": ${error instanceof Error ? error.message : "Unknown error"}`
           )
@@ -343,17 +345,17 @@ const getLabels = async (configs2) => {
     const names = await resp.data.map((label) => label.name);
     return names;
   } else {
-    log$3(chalk.red("something wrong"));
+    log$4(chalk.red("something wrong"));
     return [];
   }
 };
 const deleteLabels = async (configs2) => {
   const names = await getLabels(configs2);
   if (names.length === 0) {
-    log$3(chalk.yellow("No labels found to delete"));
+    log$4(chalk.yellow("No labels found to delete"));
     return;
   }
-  log$3(chalk.blue(`Deleting ${names.length} labels...`));
+  log$4(chalk.blue(`Deleting ${names.length} labels...`));
   for (const name of names) {
     try {
       const resp = await configs2.octokit.request(
@@ -365,15 +367,15 @@ const deleteLabels = async (configs2) => {
         }
       );
       if (resp.status === 204) {
-        log$3(chalk.green(`${resp.status}: Deleted ${name}`));
+        log$4(chalk.green(`${resp.status}: Deleted ${name}`));
       } else {
-        log$3(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
+        log$4(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
       }
     } catch (error) {
       if (error && typeof error === "object" && "status" in error && error.status === 404) {
-        log$3(chalk.red(`404: Label "${name}" not found`));
+        log$4(chalk.red(`404: Label "${name}" not found`));
       } else {
-        log$3(
+        log$4(
           chalk.red(
             `Error deleting label "${name}": ${error instanceof Error ? error.message : "Unknown error"}`
           )
@@ -381,8 +383,8 @@ const deleteLabels = async (configs2) => {
       }
     }
   }
-  log$3(chalk.blue("Finished deleting labels"));
-  log$3(chalk.bgBlueBright(extraGuideText));
+  log$4(chalk.blue("Finished deleting labels"));
+  log$4(chalk.bgBlueBright(extraGuideText));
 };
 const _CryptoUtils = class _CryptoUtils {
   /**
@@ -976,14 +978,14 @@ const getConfirmation = async () => {
   const response = await prompts(holdToken);
   return response.value;
 };
-const log$2 = console.log;
+const log$3 = console.log;
 const generateSampleJson = async () => {
   try {
     const outputPath = "./hyouji.json";
     const jsonContent = JSON.stringify(sampleData, null, 2);
-    log$2(chalk.blue("Generating sample JSON file..."));
+    log$3(chalk.blue("Generating sample JSON file..."));
     fs.writeFileSync(outputPath, jsonContent, "utf8");
-    log$2(
+    log$3(
       chalk.green(
         "✅ Sample JSON file generated successfully at ./hyouji.json"
       )
@@ -992,32 +994,89 @@ const generateSampleJson = async () => {
     if (error instanceof Error) {
       const nodeError = error;
       if (nodeError.code === "EACCES") {
-        log$2(
+        log$3(
           chalk.red(
             "❌ Error generating sample JSON file: Permission denied. Please check write permissions for the current directory."
           )
         );
       } else if (nodeError.code === "ENOSPC") {
-        log$2(
+        log$3(
           chalk.red(
             "❌ Error generating sample JSON file: Insufficient disk space."
           )
         );
       } else if (nodeError.code === "EROFS") {
-        log$2(
+        log$3(
           chalk.red(
             "❌ Error generating sample JSON file: Read-only file system."
           )
         );
       } else {
-        log$2(
+        log$3(
           chalk.red(`❌ Error generating sample JSON file: ${error.message}`)
+        );
+      }
+    } else {
+      log$3(
+        chalk.red(
+          "❌ An unexpected error occurred while generating the sample JSON file"
+        )
+      );
+    }
+  }
+};
+const log$2 = console.log;
+const generateSampleYaml = async () => {
+  try {
+    const outputPath = "./hyouji.yaml";
+    const yamlContent = yaml__default.dump(sampleData, {
+      indent: 2,
+      lineWidth: -1,
+      // Disable line wrapping
+      noRefs: true,
+      // Disable references
+      quotingType: '"',
+      // Use double quotes for strings
+      forceQuotes: false
+      // Only quote when necessary
+    });
+    log$2(chalk.blue("Generating sample YAML file..."));
+    fs.writeFileSync(outputPath, yamlContent, "utf8");
+    log$2(
+      chalk.green(
+        "✅ Sample YAML file generated successfully at ./hyouji.yaml"
+      )
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      const nodeError = error;
+      if (nodeError.code === "EACCES") {
+        log$2(
+          chalk.red(
+            "❌ Error generating sample YAML file: Permission denied. Please check write permissions for the current directory."
+          )
+        );
+      } else if (nodeError.code === "ENOSPC") {
+        log$2(
+          chalk.red(
+            "❌ Error generating sample YAML file: Insufficient disk space."
+          )
+        );
+      } else if (nodeError.code === "EROFS") {
+        log$2(
+          chalk.red(
+            "❌ Error generating sample YAML file: Read-only file system."
+          )
+        );
+      } else {
+        log$2(
+          chalk.red(`❌ Error generating sample YAML file: ${error.message}`)
         );
       }
     } else {
       log$2(
         chalk.red(
-          "❌ An unexpected error occurred while generating the sample JSON file"
+          "❌ An unexpected error occurred while generating the sample YAML file"
         )
       );
     }
@@ -1039,7 +1098,14 @@ const parseJsonContent = (content) => {
   return JSON.parse(content);
 };
 const parseYamlContent = (content) => {
-  return yaml.load(content);
+  try {
+    return yaml.load(content);
+  } catch (error) {
+    if (error instanceof yaml.YAMLException) {
+      throw new Error(`YAMLException: ${error.message}`);
+    }
+    throw error;
+  }
 };
 const getSupportedExtensions = () => {
   return [".json", ".yaml", ".yml"];
@@ -1716,7 +1782,7 @@ const main = async () => {
       } catch (error) {
         log(
           chalk.red(
-            `Error during JSON import: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Error during label import: ${error instanceof Error ? error.message : "Unknown error"}`
           )
         );
       }
@@ -1737,11 +1803,24 @@ const main = async () => {
       break;
     }
     case 6: {
-      await displaySettings();
+      try {
+        await generateSampleYaml();
+      } catch (error) {
+        log(
+          chalk.red(
+            `Error generating sample YAML: ${error instanceof Error ? error.message : "Unknown error"}`
+          )
+        );
+      }
       firstStart = firstStart && false;
       break;
     }
     case 7: {
+      await displaySettings();
+      firstStart = firstStart && false;
+      break;
+    }
+    case 8: {
       console.log("exit");
       process.exit(0);
     }

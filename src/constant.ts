@@ -60,8 +60,9 @@ export const actionSelector = {
     { title: 'delete all labels', value: 3 },
     { title: 'import labels from JSON or YAML', value: 4 },
     { title: 'Generate sample JSON', value: 5 },
-    { title: 'Display your settings', value: 6 },
-    { title: 'exit', value: 7 },
+    { title: 'Generate sample YAML', value: 6 },
+    { title: 'Display your settings', value: 7 },
+    { title: 'exit', value: 8 },
   ],
 };
 

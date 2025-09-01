@@ -47,3 +47,13 @@
   - Update any existing documentation to mention YAML support
   - Add YAML examples to match existing JSON examples
   - _Requirements: 2.1_
+
+- [x] 8. Add YAML sample file generation feature
+  - Create generateSampleYaml.ts function to generate sample YAML files
+  - Add new menu option "Generate sample YAML" to the action selector
+  - Update main index.ts to handle the new YAML generation case
+  - Implement YAML formatting using js-yaml library with proper indentation
+  - Add comprehensive unit tests for YAML generation functionality
+  - Create compatibility tests to ensure generated YAML can be imported
+  - Update README.md to document the new YAML generation feature
+  - _Requirements: 2.1, 4.1_
