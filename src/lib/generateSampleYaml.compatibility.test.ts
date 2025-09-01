@@ -1,6 +1,7 @@
 import * as fs from 'fs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import yaml from 'js-yaml';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sampleData } from '../constant.js';
 import { ConfigType, ImportLabelType } from '../types/index.js';
