@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### [0.0.5](2025-08-18)
 
 - fix bug #56
-- fix oh-my-logo method from render to renderFilled
+- fix oh-my-logo method from renderFilled to render (renderFilled returns void, render returns string)
 
 ### 0.0.4 (2025-08-18)
 

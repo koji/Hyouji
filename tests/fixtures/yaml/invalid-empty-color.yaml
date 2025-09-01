@@ -1,0 +1,7 @@
+# Invalid YAML file with empty color fields
+- name: 'test1'
+  color: ''
+- name: 'test2'
+  color: '   '
+- name: 'valid'
+  color: 'ffffff'

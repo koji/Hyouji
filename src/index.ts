@@ -11,10 +11,11 @@ import { ConfigManager } from './lib/configManager.js';
 import { getConfirmation } from './lib/confirmToken.js';
 import { CryptoUtils } from './lib/cryptoUtils.js';
 import { generateSampleJson } from './lib/generateSampleJson.js';
-import { importLabelsFromJson } from './lib/importJson.js';
+import { generateSampleYaml } from './lib/generateSampleYaml.js';
+import { importLabelsFromFile } from './lib/importLabels.js';
 import { getTargetLabel } from './lib/inputDeleteLabel.js';
 import { getGitHubConfigs } from './lib/inputGitHubConfig.js';
-import { getJsonFilePath } from './lib/inputJsonFile.js';
+import { getLabelFilePath } from './lib/inputLabelFile.js';
 import { getNewLabel } from './lib/inputNewLabel.js';
 import { selectAction } from './lib/selectPrompts.js';
 import { ConfigType } from './types/index.js';
@@ -244,16 +245,16 @@ const main = async () => {
 
     case 4: {
       try {
-        const filePath = await getJsonFilePath();
+        const filePath = await getLabelFilePath();
         if (filePath) {
-          await importLabelsFromJson(configs, filePath);
+          await importLabelsFromFile(configs, filePath);
         } else {
           log(chalk.yellow('No file path provided. Returning to main menu.'));
         }
       } catch (error) {
         log(
           chalk.red(
-            `Error during JSON import: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Error during label import: ${error instanceof Error ? error.message : 'Unknown error'}`,
           ),
         );
       }
@@ -276,12 +277,26 @@ const main = async () => {
     }
 
     case 6: {
-      await displaySettings();
+      try {
+        await generateSampleYaml();
+      } catch (error) {
+        log(
+          chalk.red(
+            `Error generating sample YAML: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ),
+        );
+      }
       firstStart = firstStart && false;
       break;
     }
 
     case 7: {
+      await displaySettings();
+      firstStart = firstStart && false;
+      break;
+    }
+
+    case 8: {
       console.log('exit');
       process.exit(0);
     }

@@ -1,0 +1,6 @@
+- name: 123 # Should be string
+  color: 'd73a4a'
+- name: 'valid'
+  color: true # Should be string
+- name: '' # Empty name
+  color: 'ffffff'

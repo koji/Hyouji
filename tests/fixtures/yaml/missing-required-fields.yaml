@@ -1,0 +1,5 @@
+- color: 'd73a4a'
+  description: 'Missing name field'
+- name: 'valid-label'
+  color: 'a2eeef'
+- description: 'Also missing name field'

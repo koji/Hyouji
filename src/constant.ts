@@ -1,4 +1,4 @@
-import { renderFilled } from 'oh-my-logo';
+import { render } from 'oh-my-logo';
 
 // for github configs
 export const githubConfigs = [
@@ -43,10 +43,10 @@ export const deleteLabel = {
   message: 'Please type label name you want to delete',
 };
 
-export const jsonFilePath = {
+export const labelFilePath = {
   type: 'text',
   name: 'filePath',
-  message: 'Please type the path to your JSON file',
+  message: 'Please type the path to your JSON or YAML file',
 };
 
 export const actionSelector = {
@@ -58,10 +58,11 @@ export const actionSelector = {
     { title: 'create multiple labels', value: 1 },
     { title: 'delete a label', value: 2 },
     { title: 'delete all labels', value: 3 },
-    { title: 'import JSON', value: 4 },
+    { title: 'import labels from JSON or YAML', value: 4 },
     { title: 'Generate sample JSON', value: 5 },
-    { title: 'Display your settings', value: 6 },
-    { title: 'exit', value: 7 },
+    { title: 'Generate sample YAML', value: 6 },
+    { title: 'Display your settings', value: 7 },
+    { title: 'exit', value: 8 },
   ],
 };
 
@@ -245,7 +246,7 @@ export const initialText = `Please input your GitHub info`;
 
 export const getAsciiText = async () => {
   try {
-    const result = await renderFilled('Hyouji', {
+    const result = await render('Hyouji', {
       palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
       direction: 'diagonal',
     });

@@ -2,7 +2,7 @@
 
 /**
  * Verification script to test the actual implementation
- * This script verifies that the built importJson function handles all error scenarios correctly
+ * This script verifies that the built importLabels function handles all error scenarios correctly
  */
 
 const fs = require('fs');
@@ -29,7 +29,7 @@ function verifyImplementation() {
   log(colorize('blue', '🔍 Verifying Implementation Code'));
   log(colorize('blue', '='.repeat(40)));
 
-  const implementationFile = 'src/lib/importJson.ts';
+  const implementationFile = 'src/lib/importLabels.ts';
 
   if (!fs.existsSync(implementationFile)) {
     log(
@@ -142,7 +142,7 @@ function verifyBuildOutput() {
 
     // Check if the build file contains the expected functionality
     const buildContent = fs.readFileSync(buildFile, 'utf8');
-    if (buildContent.includes('importLabelsFromJson') || buildContent.includes('import')) {
+    if (buildContent.includes('importLabelsFromFile') || buildContent.includes('import')) {
       log(
         colorize(
           'green',

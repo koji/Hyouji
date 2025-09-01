@@ -5,7 +5,7 @@
  * Tests requirements 2.1, 2.2, 2.3, and 2.4 from the spec
  */
 
-import { importLabelsFromJson } from '../../../src/lib/importJson.ts';
+import { importLabelsFromFile } from '../../../src/lib/importLabels.ts';
 import chalk from 'chalk';
 import fs from 'fs';
 
@@ -105,7 +105,7 @@ async function runErrorHandlingTests() {
       startCapture();
 
       // Run the import function
-      await importLabelsFromJson(mockConfigs, scenario.filePath);
+      await importLabelsFromFile(mockConfigs, scenario.filePath);
 
       // Stop capturing and get output
       const output = stopCapture();
@@ -170,7 +170,7 @@ async function testErrorMessageQuality() {
       name: 'File path included in error message',
       test: async () => {
         startCapture();
-        await importLabelsFromJson(mockConfigs, 'non-existent.json');
+        await importLabelsFromFile(mockConfigs, 'non-existent.json');
         const output = stopCapture();
         return output.includes('non-existent.json');
       },
@@ -179,7 +179,7 @@ async function testErrorMessageQuality() {
       name: 'Specific validation errors with item indices',
       test: async () => {
         startCapture();
-        await importLabelsFromJson(
+        await importLabelsFromFile(
           mockConfigs,
           'tests/fixtures/json/missing-required-fields.json',
         );
@@ -191,7 +191,7 @@ async function testErrorMessageQuality() {
       name: 'Color-coded error messages',
       test: async () => {
         startCapture();
-        await importLabelsFromJson(mockConfigs, 'non-existent.json');
+        await importLabelsFromFile(mockConfigs, 'non-existent.json');
         const output = stopCapture();
         // Check if chalk colors are being used (ANSI escape codes)
         return output.includes('\x1b[') || output.includes('Error:');

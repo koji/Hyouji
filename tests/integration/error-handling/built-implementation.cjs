@@ -2,7 +2,7 @@
 
 /**
  * Integration test for error handling scenarios in the actual built application
- * This tests the real importLabelsFromJson function from the built code
+ * This tests the real importLabelsFromFile function from the built code
  */
 
 const fs = require('fs');
@@ -71,24 +71,24 @@ async function testWithActualImplementation() {
   log('');
 
   // Try to load the actual implementation
-  let importLabelsFromJson;
+  let importLabelsFromFile;
   try {
     // Try different ways to import the function
-    const importModule = await import('../../../src/lib/importJson.ts');
-    importLabelsFromJson = importModule.importLabelsFromJson;
+    const importModule = await import('../../../src/lib/importLabels.ts');
+    importLabelsFromFile = importModule.importLabelsFromFile;
 
-    if (!importLabelsFromJson) {
+    if (!importLabelsFromFile) {
       log(
         colorize(
           'red',
-          '❌ Could not load importLabelsFromJson function from built code',
+          '❌ Could not load importLabelsFromFile function from built code',
         ),
       );
       return false;
     }
 
     log(
-      colorize('green', '✅ Successfully loaded importLabelsFromJson function'),
+      colorize('green', '✅ Successfully loaded importLabelsFromFile function'),
     );
   } catch (error) {
     log(
@@ -123,7 +123,7 @@ async function testWithActualImplementation() {
       };
 
       // Call the actual function
-      await importLabelsFromJson(mockConfigs, scenario.filePath);
+      await importLabelsFromFile(mockConfigs, scenario.filePath);
 
       // Restore console.log
       console.log = originalLog;
