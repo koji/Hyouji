@@ -7,6 +7,11 @@ import { sampleData } from '../constant.js';
 
 import { generateSampleYaml } from './generateSampleYaml';
 
+// Mock oh-my-logo to avoid dependency issues in CI
+vi.mock('oh-my-logo', () => ({
+  render: vi.fn().mockResolvedValue('Mocked ASCII Art'),
+}));
+
 // Mock fs module
 vi.mock('fs');
 

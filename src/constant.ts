@@ -1,4 +1,4 @@
-import { renderFilled } from 'oh-my-logo';
+import { render } from 'oh-my-logo';
 
 // for github configs
 export const githubConfigs = [
@@ -246,7 +246,7 @@ export const initialText = `Please input your GitHub info`;
 
 export const getAsciiText = async () => {
   try {
-    const result = await renderFilled('Hyouji', {
+    const result = await render('Hyouji', {
       palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
       direction: 'diagonal',
     });

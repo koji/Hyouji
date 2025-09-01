@@ -9,6 +9,11 @@ import { ConfigType, ImportLabelType } from '../types/index.js';
 import { generateSampleYaml } from './generateSampleYaml.js';
 import { importLabelsFromFile } from './importLabels.js';
 
+// Mock oh-my-logo to avoid dependency issues in CI
+vi.mock('oh-my-logo', () => ({
+  render: vi.fn().mockResolvedValue('Mocked ASCII Art'),
+}));
+
 // Mock the createLabel function to avoid actual API calls and capture calls
 let mockCreateLabel: ReturnType<typeof vi.fn>;
 

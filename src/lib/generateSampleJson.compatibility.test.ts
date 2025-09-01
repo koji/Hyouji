@@ -15,7 +15,7 @@ vi.mock('./callApi.js', () => ({
 
 // Mock oh-my-logo to avoid dependency issues in CI
 vi.mock('oh-my-logo', () => ({
-  renderFilled: vi.fn().mockResolvedValue('Mocked ASCII Art'),
+  render: vi.fn().mockResolvedValue('Mocked ASCII Art'),
 }));
 
 describe('Sample JSON Compatibility Tests', () => {
