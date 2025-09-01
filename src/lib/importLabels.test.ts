@@ -2,6 +2,8 @@ import * as fs from 'fs';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ConfigType } from '../types/index.js';
+
 import * as callApi from './callApi.js';
 import { importLabelsFromFile } from './importLabels.js';
 
