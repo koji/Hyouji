@@ -10,6 +10,7 @@ import {
 import { ConfigManager } from './lib/configManager.js';
 import { getConfirmation } from './lib/confirmToken.js';
 import { CryptoUtils } from './lib/cryptoUtils.js';
+import { generateSampleJson } from './lib/generateSampleJson.js';
 import { importLabelsFromJson } from './lib/importJson.js';
 import { getTargetLabel } from './lib/inputDeleteLabel.js';
 import { getGitHubConfigs } from './lib/inputGitHubConfig.js';
@@ -261,12 +262,26 @@ const main = async () => {
     }
 
     case 5: {
-      await displaySettings();
+      try {
+        await generateSampleJson();
+      } catch (error) {
+        log(
+          chalk.red(
+            `Error generating sample JSON: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ),
+        );
+      }
       firstStart = firstStart && false;
       break;
     }
 
     case 6: {
+      await displaySettings();
+      firstStart = firstStart && false;
+      break;
+    }
+
+    case 7: {
       console.log('exit');
       process.exit(0);
     }

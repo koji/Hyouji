@@ -59,8 +59,9 @@ export const actionSelector = {
     { title: 'delete a label', value: 2 },
     { title: 'delete all labels', value: 3 },
     { title: 'import JSON', value: 4 },
-    { title: 'Display your settings', value: 5 },
-    { title: 'exit', value: 6 },
+    { title: 'Generate sample JSON', value: 5 },
+    { title: 'Display your settings', value: 6 },
+    { title: 'exit', value: 7 },
   ],
 };
 
@@ -70,6 +71,24 @@ export const holdToken = {
   message: 'Do you have a personal token?',
   initial: true,
 };
+
+export const sampleData = [
+  {
+    name: 'Type: Bug Fix',
+    color: 'FF8A65',
+    description: 'Fix features that are not working',
+  },
+  {
+    name: 'Type: Enhancement',
+    color: '64B5F7',
+    description: 'Add new features',
+  },
+  {
+    name: 'Type: Improvement',
+    color: '4DB6AC',
+    description: 'Improve existing functionality',
+  },
+];
 
 export const labels =
   // the following labels are based on this post
