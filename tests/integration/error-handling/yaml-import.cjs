@@ -200,7 +200,7 @@ async function testYamlErrorScenario(scenario) {
         let hasValidationErrors = false;
         let validLabels = 0;
 
-        for (let i = 0;i < yamlData.length;i++) {
+        for (let i = 0; i < yamlData.length; i++) {
           const item = yamlData[i];
 
           // Check if item is an object
