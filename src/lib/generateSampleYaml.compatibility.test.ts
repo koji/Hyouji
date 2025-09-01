@@ -37,7 +37,7 @@ vi.mock('chalk', () => ({
 describe('Sample YAML Compatibility Tests', () => {
   const testFilePath = './hyouji.yaml';
   const mockConfig: ConfigType = {
-    octokit: {} as unknown,
+    octokit: {} as any,
     owner: 'test-owner',
     repo: 'test-repo',
   };
@@ -48,7 +48,7 @@ describe('Sample YAML Compatibility Tests', () => {
     // Setup mock for createLabel to simulate successful API calls
     const mockFs = vi.mocked(fs);
     mockFs.existsSync = vi.fn().mockReturnValue(true);
-    mockFs.readFileSync = vi.fn();
+    mockFs.readFileSync = vi.fn().mockReturnValue('');
     mockFs.writeFileSync = vi.fn();
 
     // Mock successful label creation

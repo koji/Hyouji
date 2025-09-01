@@ -14,7 +14,7 @@ const mockCallApi = vi.mocked(callApi);
 
 describe('importLabelsFromFile', () => {
   const mockConfig = {
-    octokit: {} as unknown, // Mock Octokit instance
+    octokit: {} as any, // Mock Octokit instance
     owner: 'test-owner',
     repo: 'test-repo',
   };
