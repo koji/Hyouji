@@ -18,6 +18,11 @@ vi.mock('chalk', () => ({
   },
 }));
 
+// Mock oh-my-logo to avoid dependency issues in CI
+vi.mock('oh-my-logo', () => ({
+  renderFilled: vi.fn().mockResolvedValue('Mocked ASCII Art'),
+}));
+
 describe('generateSampleJson', () => {
   beforeEach(() => {
     vi.clearAllMocks();
