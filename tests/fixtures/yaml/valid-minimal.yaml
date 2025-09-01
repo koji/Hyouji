@@ -1,0 +1,4 @@
+# Valid YAML file with minimal label configurations (name only)
+- name: 'bug'
+- name: 'enhancement'
+- name: 'documentation'

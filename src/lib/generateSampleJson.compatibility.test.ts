@@ -6,7 +6,7 @@ import { sampleData } from '../constant.js';
 import { ConfigType, ImportLabelType } from '../types/index.js';
 
 import { generateSampleJson } from './generateSampleJson.js';
-import { importLabelsFromJson } from './importJson.js';
+import { importLabelsFromFile } from './importLabels.js';
 
 // Mock the createLabel function to avoid actual API calls and capture calls
 vi.mock('./callApi.js', () => ({
@@ -139,7 +139,7 @@ describe('Sample JSON Compatibility Tests', () => {
 
       // Attempt to import the generated file - should not throw
       await expect(
-        importLabelsFromJson(mockConfig, testFilePath),
+        importLabelsFromFile(mockConfig, testFilePath),
       ).resolves.not.toThrow();
 
       // Verify createLabel was called for each sample data item (indicating successful processing)
@@ -151,7 +151,7 @@ describe('Sample JSON Compatibility Tests', () => {
 
       // Import should complete without throwing errors
       await expect(
-        importLabelsFromJson(mockConfig, testFilePath),
+        importLabelsFromFile(mockConfig, testFilePath),
       ).resolves.not.toThrow();
 
       // Verify all labels were processed (createLabel called for each)
@@ -176,7 +176,7 @@ describe('Sample JSON Compatibility Tests', () => {
 
       // Import should succeed with these color values
       await expect(
-        importLabelsFromJson(mockConfig, testFilePath),
+        importLabelsFromFile(mockConfig, testFilePath),
       ).resolves.not.toThrow();
       expect(mockCreateLabel).toHaveBeenCalledTimes(sampleData.length);
     });
@@ -184,7 +184,7 @@ describe('Sample JSON Compatibility Tests', () => {
     it('should create valid ImportLabelType objects during import', async () => {
       await generateSampleJson();
 
-      await importLabelsFromJson(mockConfig, testFilePath);
+      await importLabelsFromFile(mockConfig, testFilePath);
 
       // Verify createLabel was called for each sample data item
       expect(mockCreateLabel).toHaveBeenCalledTimes(sampleData.length);
@@ -218,7 +218,7 @@ describe('Sample JSON Compatibility Tests', () => {
 
       // File should still be importable
       await expect(
-        importLabelsFromJson(mockConfig, testFilePath),
+        importLabelsFromFile(mockConfig, testFilePath),
       ).resolves.not.toThrow();
       expect(mockCreateLabel).toHaveBeenCalledTimes(sampleData.length);
     });
@@ -230,7 +230,7 @@ describe('Sample JSON Compatibility Tests', () => {
 
         await generateSampleJson();
         await expect(
-          importLabelsFromJson(mockConfig, testFilePath),
+          importLabelsFromFile(mockConfig, testFilePath),
         ).resolves.not.toThrow();
         expect(mockCreateLabel).toHaveBeenCalledTimes(sampleData.length);
       }
@@ -274,7 +274,7 @@ describe('Sample JSON Compatibility Tests', () => {
 
       // Import should work without errors (requirement 2.4)
       await expect(
-        importLabelsFromJson(mockConfig, testFilePath),
+        importLabelsFromFile(mockConfig, testFilePath),
       ).resolves.not.toThrow();
 
       // All labels should be processed successfully

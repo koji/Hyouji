@@ -1,0 +1,12 @@
+# Valid YAML file with mixed field configurations
+- name: 'name-only'
+- name: 'with-color'
+  color: 'ffffff'
+- name: 'with-description'
+  description: 'Has description but no color'
+- name: 'with-all'
+  color: 'aaaaaa'
+  description: 'Has all fields'
+- name: 'empty-description'
+  color: 'bbbbbb'
+  description: ''

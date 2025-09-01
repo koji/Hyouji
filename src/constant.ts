@@ -43,10 +43,10 @@ export const deleteLabel = {
   message: 'Please type label name you want to delete',
 };
 
-export const jsonFilePath = {
+export const labelFilePath = {
   type: 'text',
   name: 'filePath',
-  message: 'Please type the path to your JSON file',
+  message: 'Please type the path to your JSON or YAML file',
 };
 
 export const actionSelector = {
@@ -58,7 +58,7 @@ export const actionSelector = {
     { title: 'create multiple labels', value: 1 },
     { title: 'delete a label', value: 2 },
     { title: 'delete all labels', value: 3 },
-    { title: 'import JSON', value: 4 },
+    { title: 'import labels from JSON or YAML', value: 4 },
     { title: 'Generate sample JSON', value: 5 },
     { title: 'Display your settings', value: 6 },
     { title: 'exit', value: 7 },

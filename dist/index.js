@@ -4,9 +4,11 @@ import { renderFilled } from "oh-my-logo";
 import * as fs from "fs";
 import { promises, existsSync } from "fs";
 import { homedir } from "os";
+import * as path from "path";
 import { join, dirname } from "path";
 import { createHash, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 import prompts from "prompts";
+import * as yaml from "js-yaml";
 import { Octokit } from "@octokit/core";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -49,10 +51,10 @@ const deleteLabel$1 = {
   name: "name",
   message: "Please type label name you want to delete"
 };
-const jsonFilePath = {
+const labelFilePath = {
   type: "text",
   name: "filePath",
-  message: "Please type the path to your JSON file"
+  message: "Please type the path to your JSON or YAML file"
 };
 const actionSelector = {
   type: "multiselect",
@@ -63,7 +65,7 @@ const actionSelector = {
     { title: "create multiple labels", value: 1 },
     { title: "delete a label", value: 2 },
     { title: "delete all labels", value: 3 },
-    { title: "import JSON", value: 4 },
+    { title: "import labels", value: 4 },
     { title: "Generate sample JSON", value: 5 },
     { title: "Display your settings", value: 6 },
     { title: "exit", value: 7 }
@@ -930,9 +932,9 @@ class ConfigManager {
   /**
    * Check if file exists
    */
-  async fileExists(path) {
+  async fileExists(path2) {
     try {
-      await promises.access(path);
+      await promises.access(path2);
       return true;
     } catch {
       return false;
@@ -1021,19 +1023,59 @@ const generateSampleJson = async () => {
     }
   }
 };
+const detectFileFormat = (filePath) => {
+  const extension = path.extname(filePath).toLowerCase();
+  switch (extension) {
+    case ".json":
+      return "json";
+    case ".yaml":
+    case ".yml":
+      return "yaml";
+    default:
+      return null;
+  }
+};
+const parseJsonContent = (content) => {
+  return JSON.parse(content);
+};
+const parseYamlContent = (content) => {
+  return yaml.load(content);
+};
+const getSupportedExtensions = () => {
+  return [".json", ".yaml", ".yml"];
+};
+const formatSupportedExtensions = () => {
+  return getSupportedExtensions().join(", ");
+};
 const log$1 = console.log;
-const importLabelsFromJson = async (configs2, filePath) => {
+const importLabelsFromFile = async (configs2, filePath) => {
   try {
     if (!fs.existsSync(filePath)) {
       log$1(chalk.red(`Error: File not found at path: ${filePath}`));
       return;
     }
+    const format = detectFileFormat(filePath);
+    if (!format) {
+      log$1(
+        chalk.red(
+          `Error: Unsupported file format. Supported formats: ${formatSupportedExtensions()}`
+        )
+      );
+      return;
+    }
     const fileContent = fs.readFileSync(filePath, "utf8");
-    let jsonData;
+    let parsedData;
     try {
-      jsonData = JSON.parse(fileContent);
+      if (format === "json") {
+        parsedData = parseJsonContent(fileContent);
+      } else if (format === "yaml") {
+        parsedData = parseYamlContent(fileContent);
+      }
     } catch (parseError) {
-      log$1(chalk.red(`Error: Invalid JSON syntax in file: ${filePath}`));
+      const formatName = format.toUpperCase();
+      log$1(
+        chalk.red(`Error: Invalid ${formatName} syntax in file: ${filePath}`)
+      );
       log$1(
         chalk.red(
           `Parse error: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
@@ -1041,13 +1083,13 @@ const importLabelsFromJson = async (configs2, filePath) => {
       );
       return;
     }
-    if (!Array.isArray(jsonData)) {
-      log$1(chalk.red("Error: JSON file must contain an array of label objects"));
+    if (!Array.isArray(parsedData)) {
+      log$1(chalk.red("Error: File must contain an array of label objects"));
       return;
     }
     const validLabels = [];
-    for (let i = 0; i < jsonData.length; i++) {
-      const item = jsonData[i];
+    for (let i = 0; i < parsedData.length; i++) {
+      const item = parsedData[i];
       if (typeof item !== "object" || item === null) {
         log$1(chalk.red(`Error: Item at index ${i} is not a valid object`));
         continue;
@@ -1128,7 +1170,7 @@ const importLabelsFromJson = async (configs2, filePath) => {
       validLabels.push(validLabel);
     }
     if (validLabels.length === 0) {
-      log$1(chalk.red("Error: No valid labels found in JSON file"));
+      log$1(chalk.red("Error: No valid labels found in file"));
       return;
     }
     log$1(chalk.blue(`Starting import of ${validLabels.length} labels...`));
@@ -1485,8 +1527,8 @@ const getGitHubConfigs = async () => {
     detectionMethod: "manual"
   };
 };
-const getJsonFilePath = async () => {
-  const response = await prompts(jsonFilePath);
+const getLabelFilePath = async () => {
+  const response = await prompts(labelFilePath);
   return response.filePath;
 };
 const getNewLabel = async () => {
@@ -1665,9 +1707,9 @@ const main = async () => {
     }
     case 4: {
       try {
-        const filePath = await getJsonFilePath();
+        const filePath = await getLabelFilePath();
         if (filePath) {
-          await importLabelsFromJson(configs, filePath);
+          await importLabelsFromFile(configs, filePath);
         } else {
           log(chalk.yellow("No file path provided. Returning to main menu."));
         }

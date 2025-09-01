@@ -5,10 +5,16 @@ import chalk from 'chalk';
 import { ConfigType, ImportLabelType } from '../types/index.js';
 
 import { createLabel } from './callApi.js';
+import {
+  detectFileFormat,
+  formatSupportedExtensions,
+  parseJsonContent,
+  parseYamlContent,
+} from './fileFormatUtils.js';
 
 const log = console.log;
 
-export const importLabelsFromJson = async (
+export const importLabelsFromFile = async (
   configs: ConfigType,
   filePath: string,
 ): Promise<void> => {
@@ -19,15 +25,33 @@ export const importLabelsFromJson = async (
       return;
     }
 
+    // Detect file format based on extension
+    const format = detectFileFormat(filePath);
+    if (!format) {
+      log(
+        chalk.red(
+          `Error: Unsupported file format. Supported formats: ${formatSupportedExtensions()}`,
+        ),
+      );
+      return;
+    }
+
     // Read file content
     const fileContent = fs.readFileSync(filePath, 'utf8');
 
-    // Parse JSON
-    let jsonData: unknown;
+    // Parse content based on detected format
+    let parsedData: unknown;
     try {
-      jsonData = JSON.parse(fileContent);
+      if (format === 'json') {
+        parsedData = parseJsonContent(fileContent);
+      } else if (format === 'yaml') {
+        parsedData = parseYamlContent(fileContent);
+      }
     } catch (parseError) {
-      log(chalk.red(`Error: Invalid JSON syntax in file: ${filePath}`));
+      const formatName = format.toUpperCase();
+      log(
+        chalk.red(`Error: Invalid ${formatName} syntax in file: ${filePath}`),
+      );
       log(
         chalk.red(
           `Parse error: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
@@ -36,16 +60,16 @@ export const importLabelsFromJson = async (
       return;
     }
 
-    // Validate JSON structure (must be array)
-    if (!Array.isArray(jsonData)) {
-      log(chalk.red('Error: JSON file must contain an array of label objects'));
+    // Validate structure (must be array)
+    if (!Array.isArray(parsedData)) {
+      log(chalk.red('Error: File must contain an array of label objects'));
       return;
     }
 
     // Validate each label object
     const validLabels: ImportLabelType[] = [];
-    for (let i = 0; i < jsonData.length; i++) {
-      const item = jsonData[i];
+    for (let i = 0; i < parsedData.length; i++) {
+      const item = parsedData[i];
 
       // Check if item is an object
       if (typeof item !== 'object' || item === null) {
@@ -143,7 +167,7 @@ export const importLabelsFromJson = async (
 
     // Check if we have any valid labels to import
     if (validLabels.length === 0) {
-      log(chalk.red('Error: No valid labels found in JSON file'));
+      log(chalk.red('Error: No valid labels found in file'));
       return;
     }
 

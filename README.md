@@ -18,7 +18,6 @@ https://levelup.gitconnected.com/create-github-labels-from-terminal-158d4868fab
 
 https://github.com/user-attachments/assets/739f185a-1bd0-411b-8947-dd4600c452c8
 
-
 ### Labels API
 
 https://docs.github.com/en/rest/reference/issues#labels
@@ -60,7 +59,7 @@ This tool provides the following functionality:
 2. Create multiple labels on a specific repo
 3. Delete a single label from a specific repo
 4. Delete all labels from a specific repo
-5. Import labels from JSON file
+5. Import labels from JSON or YAML file
 6. **Display your saved settings** - View your stored GitHub configuration
 7. **Persistent configuration** - Save your GitHub token and username for future use
 
@@ -77,9 +76,7 @@ hyouji
 On your first run, you'll be prompted to enter:
 
 - **GitHub Personal Token** - Generate one [here](https://github.com/settings/tokens) with `repo` scope
-<img width="792" height="564" alt="github_token" src="https://github.com/user-attachments/assets/e460738f-833a-4158-a8ba-61752beaad72" />
-
-  
+  <img width="792" height="564" alt="github_token" src="https://github.com/user-attachments/assets/e460738f-833a-4158-a8ba-61752beaad72" />
 - **GitHub Username** - Your GitHub account name
 
 These credentials will be securely saved and reused for future sessions.
@@ -90,7 +87,7 @@ These credentials will be securely saved and reused for future sessions.
 2. **Create multiple labels on a specific repo**
 3. **Delete a single label from a specific repo**
 4. **Delete all labels from a specific repo**
-5. **Import labels from JSON file**
+5. **Import labels from JSON or YAML file**
 6. **Display your settings** - View your saved configuration
 7. **Exit**
 
@@ -199,6 +196,84 @@ npm start
 ```
 
 You can use `pnpm`, `yarn` or `bun`.
+
+### File Import Support
+
+The "Import labels from JSON or YAML file" option allows you to import multiple labels from external files. Both JSON and YAML formats are supported.
+
+#### Supported File Formats
+
+- **JSON files** (`.json` extension)
+- **YAML files** (`.yaml` or `.yml` extension)
+
+#### Label Structure
+
+Both formats support the same label structure:
+
+- `name` (required): The label name
+- `color` (optional): Hex color code without the `#` symbol
+- `description` (optional): Label description
+
+#### JSON Example
+
+```json
+[
+  {
+    "name": "bug",
+    "color": "d73a4a",
+    "description": "Something isn't working"
+  },
+  {
+    "name": "enhancement",
+    "color": "a2eeef",
+    "description": "New feature or request"
+  },
+  {
+    "name": "documentation",
+    "color": "0075ca",
+    "description": "Improvements or additions to documentation"
+  }
+]
+```
+
+#### YAML Example
+
+```yaml
+# Sample YAML file for importing GitHub labels
+- name: 'bug'
+  color: 'd73a4a'
+  description: "Something isn't working"
+
+- name: 'enhancement'
+  color: 'a2eeef'
+  description: 'New feature or request'
+
+- name: 'documentation'
+  color: '0075ca'
+  description: 'Improvements or additions to documentation'
+
+# Labels with minimal configuration (name only)
+- name: 'good first issue'
+  color: '7057ff'
+  description: 'Good for newcomers'
+
+# Labels without description (optional field)
+- name: 'wontfix'
+  color: 'ffffff'
+
+# Labels without color (will use GitHub default)
+- name: 'question'
+  description: 'Further information is requested'
+```
+
+#### Sample Files
+
+You can find complete example files in the `examples/` directory:
+
+- `examples/labels.json` - Basic label examples in JSON format
+- `examples/labels.yaml` - Basic label examples in YAML format
+- `examples/project-labels.json` - Project management labels in JSON format
+- `examples/project-labels.yaml` - Project management labels in YAML format
 
 ### Predefined Labels
 

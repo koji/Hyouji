@@ -1,0 +1,7 @@
+# Valid YAML file with unknown fields that should be ignored
+- name: 'test-label'
+  color: 'ffffff'
+  description: 'Test description'
+  unknownField: 'should be ignored'
+  anotherUnknown: 123
+  priority: 'high'

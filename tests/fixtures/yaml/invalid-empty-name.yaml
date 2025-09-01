@@ -1,0 +1,7 @@
+# Invalid YAML file with empty and whitespace-only names
+- name: ''
+  color: 'ffffff'
+- name: '   '
+  color: 'aaaaaa'
+- name: 'valid'
+  color: 'bbbbbb'

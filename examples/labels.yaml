@@ -1,0 +1,38 @@
+# Sample YAML file for importing GitHub labels
+# This file demonstrates the supported YAML format for label import
+
+# Basic labels with all fields
+- name: 'bug'
+  color: 'd73a4a'
+  description: "Something isn't working"
+
+- name: 'enhancement'
+  color: 'a2eeef'
+  description: 'New feature or request'
+
+- name: 'documentation'
+  color: '0075ca'
+  description: 'Improvements or additions to documentation'
+
+# Labels with minimal configuration (name only)
+- name: 'good first issue'
+  color: '7057ff'
+  description: 'Good for newcomers'
+
+- name: 'help wanted'
+  color: '008672'
+  description: 'Extra attention is needed'
+
+# Labels without description (optional field)
+- name: 'wontfix'
+  color: 'ffffff'
+
+- name: 'duplicate'
+  color: 'cfd3d7'
+
+# Labels without color (will use GitHub default)
+- name: 'question'
+  description: 'Further information is requested'
+
+- name: 'invalid'
+  description: 'This does not seem right'

@@ -1,0 +1,9 @@
+# Invalid YAML file with non-object items
+- 'string-item'
+- 123
+- null
+- name: 'valid'
+  color: 'ffffff'
+- []
+- name: 'also-valid'
+  color: 'aaaaaa'

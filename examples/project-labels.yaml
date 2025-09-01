@@ -1,0 +1,62 @@
+# Project Management Labels - YAML Format
+# Based on the predefined labels from Hyouji
+
+# Type Labels
+- name: 'Type: Bug Fix'
+  color: 'FF8A65'
+  description: 'Fix features that are not working'
+
+- name: 'Type: Enhancement'
+  color: '64B5F7'
+  description: 'Add new features'
+
+- name: 'Type: Improvement'
+  color: '4DB6AC'
+  description: 'Improve existing functionality'
+
+- name: 'Type: Security Fix'
+  color: 'FF8A65'
+  description: 'Fix security issue'
+
+# Status Labels
+- name: 'Status: Available'
+  color: '81C784'
+  description: 'Waiting for working on it'
+
+- name: 'Status: In Progress'
+  color: '64B5F7'
+  description: 'Currently working on it'
+
+- name: 'Status: Completed'
+  color: '4DB6AC'
+  description: 'Worked on it and completed'
+
+- name: 'Status: Canceled'
+  color: 'E57373'
+  description: 'Worked on it, but canceled'
+
+# Priority Labels
+- name: 'Priority: High'
+  color: 'FFB74D'
+  description: 'We must work on it'
+
+- name: 'Priority: Medium'
+  color: 'FFF177'
+  description: 'We need to work on it'
+
+- name: 'Priority: Low'
+  color: 'DCE775'
+  description: 'We should work on it'
+
+# Effort Labels
+- name: 'Effort Light'
+  color: 'DCE775'
+  description: 'Light efforts are expected'
+
+- name: 'Effort Normal'
+  color: 'FFF177'
+  description: 'Normal efforts are expected'
+
+- name: 'Effort Heavy'
+  color: 'FFB74D'
+  description: 'Heavy efforts are expected'
