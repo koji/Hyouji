@@ -125,6 +125,7 @@ Before using Hyouji, you need a GitHub Personal Access Token with appropriate pe
    - **Required**: Select the `repo` scope for full repository access
    - This includes: `repo:status`, `repo_deployment`, `public_repo`, and `repo:invite`
    - **Why this scope?** Hyouji needs to read repository information and manage labels
+   - **Security Note:** The `repo` scope grants full access to your repositories, which may be more permissions than necessary for label management. If you only need to manage labels on public repositories, consider using the `public_repo` scope, or review if more limited scopes (such as `repo:issues`) are sufficient for your use case. Always follow the principle of least privilege.
 
 4. **Save Your Token**
    - Click "Generate token"
