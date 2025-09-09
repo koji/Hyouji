@@ -496,7 +496,7 @@ JSON format is perfect for programmatic generation and integration with other to
   },
   {
     "name": "wontfix",
-    "color": "ffffff"
+    "color": "cfd3d7"
   },
   {
     "name": "question",
