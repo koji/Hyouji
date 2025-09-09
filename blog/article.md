@@ -73,7 +73,7 @@ Hyouji supports all major Node.js package managers, giving you flexibility in ho
 npm install -g hyouji
 
 # yarn (Facebook's Package Manager)
-yarn global add hyouji
+# (Yarn no longer supports global installs; use 'yarn dlx hyouji' to run without installing)
 
 # pnpm (Performant npm)
 pnpm install -g hyouji
