@@ -2,7 +2,8 @@
 
 ### article
 
-https://levelup.gitconnected.com/create-github-labels-from-terminal-158d4868fab
+https://levelup.gitconnected.com/create-github-labels-from-terminal-158d4868fab  
+https://github.com/koji/Hyouji/blob/main/blog/article.md  
 
 [![CI](https://github.com/koji/github-label-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/koji/github-label-manager/actions/workflows/ci.yml)
 [![Publish](https://github.com/koji/github-label-manager/actions/workflows/publish.yml/badge.svg)](https://github.com/koji/github-label-manager/actions/workflows/publish.yml)
