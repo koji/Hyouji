@@ -1,18 +1,17 @@
-import * as fs from 'fs';
+import chalk from 'chalk'
+import * as fs from 'fs'
 
-import chalk from 'chalk';
+import { ConfigType, ImportLabelType } from '../types/index.js'
 
-import { ConfigType, ImportLabelType } from '../types/index.js';
-
-import { createLabel } from './callApi.js';
+import { createLabel } from './callApi.js'
 import {
   detectFileFormat,
   formatSupportedExtensions,
   parseJsonContent,
   parseYamlContent,
-} from './fileFormatUtils.js';
+} from './fileFormatUtils.js'
 
-const log = console.log;
+const log = console.log
 
 export const importLabelsFromFile = async (
   configs: ConfigType,
@@ -21,63 +20,61 @@ export const importLabelsFromFile = async (
   try {
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      log(chalk.red(`Error: File not found at path: ${filePath}`));
-      return;
+      log(chalk.red(`Error: File not found at path: ${filePath}`))
+      return
     }
 
     // Detect file format based on extension
-    const format = detectFileFormat(filePath);
+    const format = detectFileFormat(filePath)
     if (!format) {
       log(
         chalk.red(
           `Error: Unsupported file format. Supported formats: ${formatSupportedExtensions()}`,
         ),
-      );
-      return;
+      )
+      return
     }
 
     // Read file content
-    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const fileContent = fs.readFileSync(filePath, 'utf8')
 
     // Parse content based on detected format
-    let parsedData: unknown;
+    let parsedData: unknown
     try {
       if (format === 'json') {
-        parsedData = parseJsonContent(fileContent);
+        parsedData = parseJsonContent(fileContent)
       } else if (format === 'yaml') {
-        parsedData = parseYamlContent(fileContent);
+        parsedData = parseYamlContent(fileContent)
       }
     } catch (parseError) {
-      const formatName = format.toUpperCase();
-      log(
-        chalk.red(`Error: Invalid ${formatName} syntax in file: ${filePath}`),
-      );
+      const formatName = format.toUpperCase()
+      log(chalk.red(`Error: Invalid ${formatName} syntax in file: ${filePath}`))
       log(
         chalk.red(
           `Parse error: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
         ),
-      );
-      return;
+      )
+      return
     }
 
     // Validate structure (must be array)
     if (!Array.isArray(parsedData)) {
-      log(chalk.red('Error: File must contain an array of label objects'));
-      return;
+      log(chalk.red('Error: File must contain an array of label objects'))
+      return
     }
 
     // Validate each label object
-    const validLabels: ImportLabelType[] = [];
+    const validLabels: ImportLabelType[] = []
     for (let i = 0; i < parsedData.length; i++) {
-      const item = parsedData[i];
+      const item = parsedData[i]
 
       // Check if item is an object
       if (typeof item !== 'object' || item === null) {
-        log(chalk.red(`Error: Item at index ${i} is not a valid object`));
-        continue;
+        log(chalk.red(`Error: Item at index ${i} is not a valid object`))
+        continue
       }
 
-      const labelObj = item as Record<string, unknown>;
+      const labelObj = item as Record<string, unknown>
 
       // Validate required name field
       if (!labelObj.name) {
@@ -85,24 +82,24 @@ export const importLabelsFromFile = async (
           chalk.red(
             `Error: Item at index ${i} is missing required 'name' field`,
           ),
-        );
-        continue;
+        )
+        continue
       }
       if (typeof labelObj.name !== 'string') {
         log(
           chalk.red(
             `Error: Item at index ${i} has invalid 'name' field (must be a non-empty string)`,
           ),
-        );
-        continue;
+        )
+        continue
       }
       if (labelObj.name.trim() === '') {
         log(
           chalk.red(
             `Error: Item at index ${i} has empty 'name' field (name cannot be empty)`,
           ),
-        );
-        continue;
+        )
+        continue
       }
 
       // Validate optional color field
@@ -112,16 +109,16 @@ export const importLabelsFromFile = async (
             chalk.red(
               `Error: Item at index ${i} has invalid 'color' field (must be a string)`,
             ),
-          );
-          continue;
+          )
+          continue
         }
         if (labelObj.color.trim() === '') {
           log(
             chalk.red(
               `Error: Item at index ${i} has empty 'color' field (color cannot be empty if provided)`,
             ),
-          );
-          continue;
+          )
+          continue
         }
       }
 
@@ -132,23 +129,23 @@ export const importLabelsFromFile = async (
             chalk.red(
               `Error: Item at index ${i} has invalid 'description' field (must be a string)`,
             ),
-          );
-          continue;
+          )
+          continue
         }
         // Note: Empty description is allowed as it's a valid use case
       }
 
       // Check for unknown fields and warn user
-      const knownFields = ['name', 'color', 'description'];
+      const knownFields = ['name', 'color', 'description']
       const unknownFields = Object.keys(labelObj).filter(
         (key) => !knownFields.includes(key),
-      );
+      )
       if (unknownFields.length > 0) {
         log(
           chalk.yellow(
             `Warning: Item at index ${i} contains unknown fields that will be ignored: ${unknownFields.join(', ')}`,
           ),
-        );
+        )
       }
 
       // Create valid label object
@@ -160,63 +157,63 @@ export const importLabelsFromFile = async (
         ...(labelObj.description !== undefined && {
           description: labelObj.description as string,
         }),
-      };
+      }
 
-      validLabels.push(validLabel);
+      validLabels.push(validLabel)
     }
 
     // Check if we have any valid labels to import
     if (validLabels.length === 0) {
-      log(chalk.red('Error: No valid labels found in file'));
-      return;
+      log(chalk.red('Error: No valid labels found in file'))
+      return
     }
 
     // Display number of labels to be imported
-    log(chalk.blue(`Starting import of ${validLabels.length} labels...`));
-    log(''); // Empty line for better readability
+    log(chalk.blue(`Starting import of ${validLabels.length} labels...`))
+    log('') // Empty line for better readability
 
     // Import each label using existing createLabel function with progress reporting
-    let successCount = 0;
-    let errorCount = 0;
+    let successCount = 0
+    let errorCount = 0
 
     for (let i = 0; i < validLabels.length; i++) {
-      const label = validLabels[i];
-      const progress = `[${i + 1}/${validLabels.length}]`;
+      const label = validLabels[i]
+      const progress = `[${i + 1}/${validLabels.length}]`
 
       try {
-        log(chalk.cyan(`${progress} Processing: ${label.name}`));
-        await createLabel(configs, label);
-        successCount++;
+        log(chalk.cyan(`${progress} Processing: ${label.name}`))
+        await createLabel(configs, label)
+        successCount++
       } catch (error) {
-        errorCount++;
+        errorCount++
         log(
           chalk.red(
             `${progress} Failed to create label "${label.name}": ${error instanceof Error ? error.message : 'Unknown error'}`,
           ),
-        );
+        )
         // Continue processing remaining labels
       }
     }
 
     // Display completion message with summary
-    log(''); // Empty line for better readability
+    log('') // Empty line for better readability
     if (errorCount === 0) {
       log(
         chalk.green(
           `✅ Import completed successfully! Created ${successCount} labels.`,
         ),
-      );
+      )
     } else {
-      log(chalk.yellow(`⚠️  Import completed with some errors:`));
-      log(chalk.green(`  • Successfully created: ${successCount} labels`));
-      log(chalk.red(`  • Failed to create: ${errorCount} labels`));
-      log(chalk.blue(`  • Total processed: ${validLabels.length} labels`));
+      log(chalk.yellow(`⚠️  Import completed with some errors:`))
+      log(chalk.green(`  • Successfully created: ${successCount} labels`))
+      log(chalk.red(`  • Failed to create: ${errorCount} labels`))
+      log(chalk.blue(`  • Total processed: ${validLabels.length} labels`))
     }
   } catch (error) {
     log(
       chalk.red(
         `Error reading file: ${error instanceof Error ? error.message : 'Unknown error'}`,
       ),
-    );
+    )
   }
-};
+}

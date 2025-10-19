@@ -2,15 +2,16 @@
 // create a label/labels
 // delete a label/labels
 
-import chalk from 'chalk';
+import chalk from 'chalk'
 
-import { extraGuideText, labels } from '../constant.js';
+import { extraGuideText, labels } from '../constant.js'
 import {
   ConfigType,
   CreateLabelResponseType,
   ImportLabelType,
-} from '../types/index.js';
-const log = console.log;
+} from '../types/index.js'
+
+const log = console.log
 
 export const createLabel = async (
   configs: ConfigType,
@@ -25,33 +26,33 @@ export const createLabel = async (
       color: label.color,
       description: label.description,
     },
-  );
+  )
 
-  const status = resp.status as CreateLabelResponseType;
+  const status = resp.status as CreateLabelResponseType
 
   switch (status) {
     case 201:
-      log(chalk.green(`${resp.status}: Created ${label.name}`));
-      break;
+      log(chalk.green(`${resp.status}: Created ${label.name}`))
+      break
     case 404:
-      log(chalk.red(`${resp.status}: Resource not found`));
-      break;
+      log(chalk.red(`${resp.status}: Resource not found`))
+      break
     case 422:
-      log(chalk.red(`${resp.status}: Validation failed`));
-      break;
+      log(chalk.red(`${resp.status}: Validation failed`))
+      break
     default:
-      log(chalk.yellow(`${resp.status}: Something wrong`));
-      break;
+      log(chalk.yellow(`${resp.status}: Something wrong`))
+      break
   }
-};
+}
 
 export const createLabels = async (configs: ConfigType) => {
   labels.forEach(async (label) => {
-    createLabel(configs, label);
-  });
-  log('Created all labels');
-  log(chalk.bgBlueBright(extraGuideText));
-};
+    createLabel(configs, label)
+  })
+  log('Created all labels')
+  log(chalk.bgBlueBright(extraGuideText))
+}
 
 export const deleteLabel = async (
   configs: ConfigType,
@@ -66,12 +67,12 @@ export const deleteLabel = async (
           repo: configs.repo,
           name: labelName,
         },
-      );
+      )
 
       if (resp.status === 204) {
-        log(chalk.green(`${resp.status}: Deleted ${labelName}`));
+        log(chalk.green(`${resp.status}: Deleted ${labelName}`))
       } else {
-        log(chalk.yellow(`${resp.status}: Something wrong with ${labelName}`));
+        log(chalk.yellow(`${resp.status}: Something wrong with ${labelName}`))
       }
     } catch (error) {
       if (
@@ -80,17 +81,17 @@ export const deleteLabel = async (
         'status' in error &&
         error.status === 404
       ) {
-        log(chalk.red(`404: Label "${labelName}" not found`));
+        log(chalk.red(`404: Label "${labelName}" not found`))
       } else {
         log(
           chalk.red(
             `Error deleting label "${labelName}": ${error instanceof Error ? error.message : 'Unknown error'}`,
           ),
-        );
+        )
       }
     }
   }
-};
+}
 
 // get labels
 const getLabels = async (configs: ConfigType): Promise<readonly string[]> => {
@@ -100,27 +101,27 @@ const getLabels = async (configs: ConfigType): Promise<readonly string[]> => {
       owner: configs.owner,
       repo: configs.repo,
     },
-  );
+  )
 
   if (resp.status === 200) {
-    const names = await resp.data.map((label) => label.name);
-    return names;
+    const names = await resp.data.map((label) => label.name)
+    return names
   } else {
-    log(chalk.red('something wrong'));
-    return [];
+    log(chalk.red('something wrong'))
+    return []
   }
-};
+}
 
 export const deleteLabels = async (configs: ConfigType) => {
   // get all labels
-  const names = await getLabels(configs);
+  const names = await getLabels(configs)
 
   if (names.length === 0) {
-    log(chalk.yellow('No labels found to delete'));
-    return;
+    log(chalk.yellow('No labels found to delete'))
+    return
   }
 
-  log(chalk.blue(`Deleting ${names.length} labels...`));
+  log(chalk.blue(`Deleting ${names.length} labels...`))
 
   for (const name of names) {
     try {
@@ -131,12 +132,12 @@ export const deleteLabels = async (configs: ConfigType) => {
           repo: configs.repo,
           name: name,
         },
-      );
+      )
 
       if (resp.status === 204) {
-        log(chalk.green(`${resp.status}: Deleted ${name}`));
+        log(chalk.green(`${resp.status}: Deleted ${name}`))
       } else {
-        log(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
+        log(chalk.yellow(`${resp.status}: Something wrong with ${name}`))
       }
     } catch (error) {
       if (
@@ -145,17 +146,17 @@ export const deleteLabels = async (configs: ConfigType) => {
         'status' in error &&
         error.status === 404
       ) {
-        log(chalk.red(`404: Label "${name}" not found`));
+        log(chalk.red(`404: Label "${name}" not found`))
       } else {
         log(
           chalk.red(
             `Error deleting label "${name}": ${error instanceof Error ? error.message : 'Unknown error'}`,
           ),
-        );
+        )
       }
     }
   }
 
-  log(chalk.blue('Finished deleting labels'));
-  log(chalk.bgBlueBright(extraGuideText));
-};
+  log(chalk.blue('Finished deleting labels'))
+  log(chalk.bgBlueBright(extraGuideText))
+}

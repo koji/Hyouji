@@ -1,5 +1,6 @@
-import { exec } from 'child_process';
-import type { ExecOptions } from 'child_process';
+import type { ExecOptions } from 'child_process'
+import { exec } from 'child_process'
+
 // import { promisify } from 'util';
 
 // Define the callback type for exec function
@@ -7,31 +8,32 @@ type ExecCallback = (
   error: Error | null,
   stdout: string,
   stderr: string,
-) => void;
+) => void
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Create a mock for the promisified exec function using vi.hoisted
-const mockExecAsync = vi.hoisted(() => vi.fn());
+const mockExecAsync = vi.hoisted(() => vi.fn())
 
 // Mock the child_process module
 vi.mock('child_process', () => ({
   exec: vi.fn(),
-}));
+}))
 vi.mock('util', () => ({
   promisify: vi.fn(() => mockExecAsync),
-}));
+}))
 
-const mockExec = vi.mocked(exec);
+const mockExec = vi.mocked(exec)
+
 // const mockPromisify = vi.mocked(promisify);
 
-import { GitRepositoryDetector } from './gitRepositoryDetector.js';
+import { GitRepositoryDetector } from './gitRepositoryDetector.js'
 
 describe('GitRepositoryDetector Error Handling', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockExecAsync.mockReset();
-  });
+    vi.clearAllMocks()
+    mockExecAsync.mockReset()
+  })
 
   describe('Git command availability errors', () => {
     // TODO: Fix these tests - they need to be updated to use the new promise-based mock approach
@@ -39,8 +41,8 @@ describe('GitRepositoryDetector Error Handling', () => {
 
     it('placeholder test - TODO: implement error handling tests', () => {
       // This is a placeholder to prevent empty describe block errors
-      expect(true).toBe(true);
-    });
+      expect(true).toBe(true)
+    })
 
     /*
     it('should handle git command not found error in getAllRemotes', async () => {
@@ -115,42 +117,42 @@ describe('GitRepositoryDetector Error Handling', () => {
       expect(result.error).toBe('Not a Git repository');
     });
     */
-  });
+  })
 
   describe('Remote configuration errors', () => {
     it('should handle no remotes configured', async () => {
       mockExec.mockImplementation(
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '', ''));
+            process.nextTick(() => callback(null, '', ''))
           }
-          return {} as ReturnType<typeof exec>;
+          return {} as ReturnType<typeof exec>
         },
-      );
+      )
 
-      const result = await GitRepositoryDetector.detectRepository();
+      const result = await GitRepositoryDetector.detectRepository()
 
-      expect(result.isGitRepository).toBe(true);
-      expect(result.repositoryInfo).toBeUndefined();
-      expect(result.error).toBe('No remotes configured');
-    });
+      expect(result.isGitRepository).toBe(true)
+      expect(result.repositoryInfo).toBeUndefined()
+      expect(result.error).toBe('No remotes configured')
+    })
 
     it('should handle empty remotes list', async () => {
       mockExec.mockImplementation(
         (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
           if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '   \n  \n  ', ''));
+            process.nextTick(() => callback(null, '   \n  \n  ', ''))
           }
-          return {} as ReturnType<typeof exec>;
+          return {} as ReturnType<typeof exec>
         },
-      );
+      )
 
-      const result = await GitRepositoryDetector.detectRepository();
+      const result = await GitRepositoryDetector.detectRepository()
 
-      expect(result.isGitRepository).toBe(true);
-      expect(result.repositoryInfo).toBeUndefined();
-      expect(result.error).toBe('No remotes configured');
-    });
+      expect(result.isGitRepository).toBe(true)
+      expect(result.repositoryInfo).toBeUndefined()
+      expect(result.error).toBe('No remotes configured')
+    })
 
     /*
     it('should handle invalid remote URL format', async () => {
@@ -179,7 +181,7 @@ describe('GitRepositoryDetector Error Handling', () => {
       expect(result.error).toBe('Could not parse remote URL');
     });
     */
-  });
+  })
 
   // TODO: Re-enable when mock implementation is fixed
   /*
@@ -604,4 +606,4 @@ describe('GitRepositoryDetector Error Handling', () => {
     });
   });
   */
-});
+})

@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { resolve } from 'path'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   build: {
@@ -16,6 +16,7 @@ export default defineConfig({
         'chalk',
         'figlet',
         'oh-my-logo',
+        'js-yaml',
         'fs',
         'path',
         'os',
@@ -44,4 +45,10 @@ export default defineConfig({
   ssr: {
     noExternal: [],
   },
-});
+  optimizeDeps: {
+    esbuildOptions: {
+      charset: 'utf8',
+      platform: 'node',
+    },
+  },
+})

@@ -1,4 +1,4 @@
-import { renderFilled } from 'oh-my-logo';
+import { renderFilled } from 'oh-my-logo'
 
 // for github configs
 export const githubConfigs = [
@@ -17,7 +17,7 @@ export const githubConfigs = [
     name: 'repo',
     message: 'Please type your target repo name',
   },
-];
+]
 
 export const newLabel = [
   {
@@ -35,19 +35,19 @@ export const newLabel = [
     name: 'description',
     message: 'Please type label description',
   },
-];
+]
 
 export const deleteLabel = {
   type: 'text',
   name: 'name',
   message: 'Please type label name you want to delete',
-};
+}
 
 export const labelFilePath = {
   type: 'text',
   name: 'filePath',
   message: 'Please type the path to your JSON or YAML file',
-};
+}
 
 export const actionSelector = {
   type: 'multiselect',
@@ -64,14 +64,14 @@ export const actionSelector = {
     { title: 'Display your settings', value: 7 },
     { title: 'exit', value: 8 },
   ],
-};
+}
 
 export const holdToken = {
   type: 'confirm',
   name: 'value',
   message: 'Do you have a personal token?',
   initial: true,
-};
+}
 
 export const sampleData = [
   {
@@ -89,7 +89,7 @@ export const sampleData = [
     color: '4DB6AC',
     description: 'Improve existing functionality',
   },
-];
+]
 
 export const labels =
   // the following labels are based on this post
@@ -240,19 +240,19 @@ export const labels =
       color: '000',
       description: 'Documentation',
     },
-  ];
+  ]
 
-export const initialText = `Please input your GitHub info`;
+export const initialText = `Please input your GitHub info`
 
 export const getAsciiText = async () => {
   try {
     const result = await renderFilled('Hyouji', {
       palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
       direction: 'diagonal',
-    });
-    return result;
+    })
+    return result
   } catch (error) {
-    console.error('Error rendering ASCII art:', error);
+    console.error('Error rendering ASCII art:', error)
     return `
 ╔══════════════════════════════════════════════════════════════╗
 ║                     Hyouji                                   ║
@@ -260,10 +260,10 @@ export const getAsciiText = async () => {
 ╚══════════════════════════════════════════════════════════════╝
 Please report this issue to https://github.com/koji/Hyouji/issues
 Thank you!
-`;
+`
   }
-};
+}
 
-export const extraGuideText = `If you don't see action selector, please hit space key.`;
+export const extraGuideText = `If you don't see action selector, please hit space key.`
 
-export const linkToPersonalToken = 'https://github.com/settings/tokens';
+export const linkToPersonalToken = 'https://github.com/settings/tokens'

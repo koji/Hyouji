@@ -1,29 +1,36 @@
-import { existsSync, promises as fs } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
+import { existsSync, promises as fs } from "fs";
+import { homedir } from "os";
+import { join } from "path";
 
-import { StoredConfigType } from '../types';
+import { StoredConfigType } from "../types";
 
-import { CryptoUtils } from './cryptoUtils';
+import { CryptoUtils } from "./cryptoUtils";
 
 export enum ConfigErrorType {
-  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
-  PERMISSION_DENIED = 'PERMISSION_DENIED',
-  CORRUPTED_FILE = 'CORRUPTED_FILE',
-  INVALID_FORMAT = 'INVALID_FORMAT',
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  FILE_NOT_FOUND = "FILE_NOT_FOUND",
+  PERMISSION_DENIED = "PERMISSION_DENIED",
+  CORRUPTED_FILE = "CORRUPTED_FILE",
+  INVALID_FORMAT = "INVALID_FORMAT",
+  NETWORK_ERROR = "NETWORK_ERROR",
+  UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
 
 export class ConfigError extends Error {
   constructor(
     public type: ConfigErrorType,
     message: string,
-    public originalError?: Error,
+    public originalError?: Error
   ) {
     super(message);
-    this.name = 'ConfigError';
+    this.name = "ConfigError";
   }
+}
+
+// Interface for API error objects
+interface APIError {
+  status?: number;
+  code?: string;
+  message?: string;
 }
 
 export class ConfigManager {
@@ -33,13 +40,13 @@ export class ConfigManager {
 
   constructor() {
     // Primary location: ~/.config/github-label-manager/config.json
-    this.configDir = join(homedir(), '.config', 'github-label-manager');
-    this.configPath = join(this.configDir, 'config.json');
+    this.configDir = join(homedir(), ".config", "github-label-manager");
+    this.configPath = join(this.configDir, "config.json");
 
     // Fallback location: ~/.github-label-manager-config.json
     this.fallbackConfigPath = join(
       homedir(),
-      '.github-label-manager-config.json',
+      ".github-label-manager-config.json"
     );
   }
 
@@ -48,8 +55,8 @@ export class ConfigManager {
    */
   async loadConfig(): Promise<StoredConfigType | null> {
     const locations = [
-      { path: this.configPath, name: 'primary' },
-      { path: this.fallbackConfigPath, name: 'fallback' },
+      { path: this.configPath, name: "primary" },
+      { path: this.fallbackConfigPath, name: "fallback" },
     ];
 
     for (const location of locations) {
@@ -72,15 +79,15 @@ export class ConfigManager {
    * Load and validate configuration from a specific path
    */
   private async loadConfigFromPath(
-    configPath: string,
+    configPath: string
   ): Promise<StoredConfigType | null> {
     try {
-      const data = await fs.readFile(configPath, 'utf-8');
+      const data = await fs.readFile(configPath, "utf-8");
 
       if (!data.trim()) {
         throw new ConfigError(
           ConfigErrorType.CORRUPTED_FILE,
-          'Configuration file is empty',
+          "Configuration file is empty"
         );
       }
 
@@ -90,8 +97,8 @@ export class ConfigManager {
       } catch (parseError) {
         throw new ConfigError(
           ConfigErrorType.CORRUPTED_FILE,
-          'Configuration file contains invalid JSON',
-          parseError as Error,
+          "Configuration file contains invalid JSON",
+          parseError as Error
         );
       }
 
@@ -105,7 +112,7 @@ export class ConfigManager {
       } else {
         throw new ConfigError(
           ConfigErrorType.INVALID_FORMAT,
-          'Configuration file has invalid format or missing required fields',
+          "Configuration file has invalid format or missing required fields"
         );
       }
     } catch (error) {
@@ -114,26 +121,26 @@ export class ConfigManager {
       }
 
       const nodeError = error as NodeJS.ErrnoException;
-      if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+      if (nodeError.code === "EACCES" || nodeError.code === "EPERM") {
         throw new ConfigError(
           ConfigErrorType.PERMISSION_DENIED,
           `Permission denied accessing configuration file: ${configPath}`,
-          nodeError,
+          nodeError
         );
       }
 
-      if (nodeError.code === 'ENOENT') {
+      if (nodeError.code === "ENOENT") {
         throw new ConfigError(
           ConfigErrorType.FILE_NOT_FOUND,
           `Configuration file not found: ${configPath}`,
-          nodeError,
+          nodeError
         );
       }
 
       throw new ConfigError(
         ConfigErrorType.UNKNOWN_ERROR,
         `Unexpected error loading configuration: ${nodeError.message}`,
-        nodeError,
+        nodeError
       );
     }
   }
@@ -144,17 +151,17 @@ export class ConfigManager {
   private async handleConfigLoadError(
     error: unknown,
     configPath: string,
-    locationName: string,
+    locationName: string
   ): Promise<void> {
     if (error instanceof ConfigError) {
       switch (error.type) {
         case ConfigErrorType.CORRUPTED_FILE:
           console.warn(
-            `⚠️  Configuration file at ${locationName} location is corrupted: ${error.message}`,
+            `⚠️  Configuration file at ${locationName} location is corrupted: ${error.message}`
           );
           console.warn(`   File: ${configPath}`);
           console.warn(
-            `   The file will be ignored and you'll be prompted for credentials.`,
+            `   The file will be ignored and you'll be prompted for credentials.`
           );
 
           // Attempt to backup corrupted file
@@ -163,21 +170,21 @@ export class ConfigManager {
 
         case ConfigErrorType.PERMISSION_DENIED:
           console.warn(
-            `⚠️  Permission denied accessing configuration file at ${locationName} location.`,
+            `⚠️  Permission denied accessing configuration file at ${locationName} location.`
           );
           console.warn(`   File: ${configPath}`);
           console.warn(
-            `   Please check file permissions or run with appropriate privileges.`,
+            `   Please check file permissions or run with appropriate privileges.`
           );
           break;
 
         case ConfigErrorType.INVALID_FORMAT:
           console.warn(
-            `⚠️  Configuration file at ${locationName} location has invalid format.`,
+            `⚠️  Configuration file at ${locationName} location has invalid format.`
           );
           console.warn(`   File: ${configPath}`);
           console.warn(
-            `   The file will be ignored and you'll be prompted for credentials.`,
+            `   The file will be ignored and you'll be prompted for credentials.`
           );
 
           // Attempt to backup invalid file
@@ -186,13 +193,13 @@ export class ConfigManager {
 
         default:
           console.warn(
-            `⚠️  Failed to load configuration from ${locationName} location: ${error.message}`,
+            `⚠️  Failed to load configuration from ${locationName} location: ${error.message}`
           );
           console.warn(`   File: ${configPath}`);
       }
     } else {
       console.warn(
-        `⚠️  Unexpected error loading configuration from ${locationName} location.`,
+        `⚠️  Unexpected error loading configuration from ${locationName} location.`
       );
       console.warn(`   File: ${configPath}`);
     }
@@ -208,7 +215,9 @@ export class ConfigManager {
       console.warn(`   Corrupted file backed up to: ${backupPath}`);
     } catch (backupError) {
       console.warn(
-        `   Could not backup corrupted file: ${backupError instanceof Error ? backupError.message : 'Unknown error'}`,
+        `   Could not backup corrupted file: ${
+          backupError instanceof Error ? backupError.message : "Unknown error"
+        }`
       );
     }
   }
@@ -237,7 +246,7 @@ export class ConfigManager {
           await fs.unlink(this.fallbackConfigPath);
         } catch {
           console.warn(
-            `⚠️  Could not remove old fallback configuration file: ${this.fallbackConfigPath}`,
+            `⚠️  Could not remove old fallback configuration file: ${this.fallbackConfigPath}`
           );
         }
       }
@@ -246,20 +255,20 @@ export class ConfigManager {
     } catch (primaryError) {
       const nodeError = primaryError as NodeJS.ErrnoException;
 
-      if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+      if (nodeError.code === "EACCES" || nodeError.code === "EPERM") {
         console.warn(
-          `⚠️  Permission denied writing to primary configuration location.`,
+          `⚠️  Permission denied writing to primary configuration location.`
         );
         console.warn(`   Attempted path: ${this.configPath}`);
         console.warn(`   Trying fallback location...`);
-      } else if (nodeError.code === 'ENOSPC') {
+      } else if (nodeError.code === "ENOSPC") {
         throw new ConfigError(
           ConfigErrorType.UNKNOWN_ERROR,
-          'Insufficient disk space to save configuration',
+          "Insufficient disk space to save configuration"
         );
       } else {
         console.warn(
-          `⚠️  Failed to save configuration to primary location: ${nodeError.message}`,
+          `⚠️  Failed to save configuration to primary location: ${nodeError.message}`
         );
         console.warn(`   Trying fallback location...`);
       }
@@ -270,35 +279,35 @@ export class ConfigManager {
           mode: 0o600,
         });
         console.warn(
-          `✓ Configuration saved to fallback location: ${this.fallbackConfigPath}`,
+          `✓ Configuration saved to fallback location: ${this.fallbackConfigPath}`
         );
         return;
       } catch (fallbackError) {
         const fallbackNodeError = fallbackError as NodeJS.ErrnoException;
 
         if (
-          fallbackNodeError.code === 'EACCES' ||
-          fallbackNodeError.code === 'EPERM'
+          fallbackNodeError.code === "EACCES" ||
+          fallbackNodeError.code === "EPERM"
         ) {
           throw new ConfigError(
             ConfigErrorType.PERMISSION_DENIED,
-            'Permission denied: Cannot save configuration to any location. Please check file permissions or run with appropriate privileges.',
-            fallbackNodeError,
+            "Permission denied: Cannot save configuration to any location. Please check file permissions or run with appropriate privileges.",
+            fallbackNodeError
           );
         }
 
-        if (fallbackNodeError.code === 'ENOSPC') {
+        if (fallbackNodeError.code === "ENOSPC") {
           throw new ConfigError(
             ConfigErrorType.UNKNOWN_ERROR,
-            'Insufficient disk space to save configuration',
-            fallbackNodeError,
+            "Insufficient disk space to save configuration",
+            fallbackNodeError
           );
         }
 
         throw new ConfigError(
           ConfigErrorType.UNKNOWN_ERROR,
           `Failed to save configuration to any location. Primary error: ${nodeError.message}. Fallback error: ${fallbackNodeError.message}`,
-          fallbackNodeError,
+          fallbackNodeError
         );
       }
     }
@@ -332,23 +341,23 @@ export class ConfigManager {
    * Validate configuration data format
    */
   async validateConfig(config: StoredConfigType): Promise<boolean> {
-    if (!config || typeof config !== 'object') {
+    if (!config || typeof config !== "object") {
       return false;
     }
 
     // Check required fields
     if (
       !config.token ||
-      typeof config.token !== 'string' ||
-      config.token.trim() === ''
+      typeof config.token !== "string" ||
+      config.token.trim() === ""
     ) {
       return false;
     }
 
     if (
       !config.owner ||
-      typeof config.owner !== 'string' ||
-      config.owner.trim() === ''
+      typeof config.owner !== "string" ||
+      config.owner.trim() === ""
     ) {
       return false;
     }
@@ -369,11 +378,11 @@ export class ConfigManager {
    * Validate credentials against GitHub API
    */
   async validateCredentials(
-    config: StoredConfigType,
+    config: StoredConfigType
   ): Promise<{ isValid: boolean; error?: ConfigError }> {
     try {
       // Import Octokit dynamically to avoid circular dependencies
-      const { Octokit } = await import('@octokit/core');
+      const { Octokit } = await import("@octokit/core");
 
       // Decrypt token for API validation
       const decryptedToken = CryptoUtils.decryptToken(config.token);
@@ -383,7 +392,7 @@ export class ConfigManager {
       });
 
       // Test the token by making a simple API call
-      const response = await octokit.request('GET /user');
+      const response = await octokit.request("GET /user");
 
       // Check if the authenticated user matches the stored owner
       if (response.data.login.toLowerCase() !== config.owner.toLowerCase()) {
@@ -391,7 +400,7 @@ export class ConfigManager {
           isValid: false,
           error: new ConfigError(
             ConfigErrorType.INVALID_FORMAT,
-            `Token belongs to user '${response.data.login}' but configuration is for '${config.owner}'`,
+            `Token belongs to user '${response.data.login}' but configuration is for '${config.owner}'`
           ),
         };
       }
@@ -399,15 +408,14 @@ export class ConfigManager {
       return { isValid: true };
     } catch (error: unknown) {
       // Handle different types of API errors
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const apiError = error as any; // Type assertion for API error handling
+      const apiError = error as APIError; // Type assertion for API error handling
 
       if (apiError.status === 401) {
         return {
           isValid: false,
           error: new ConfigError(
             ConfigErrorType.INVALID_FORMAT,
-            'GitHub token is invalid or has expired',
+            "GitHub token is invalid or has expired"
           ),
         };
       }
@@ -417,21 +425,21 @@ export class ConfigManager {
           isValid: false,
           error: new ConfigError(
             ConfigErrorType.INVALID_FORMAT,
-            'GitHub token has insufficient permissions or rate limit exceeded',
+            "GitHub token has insufficient permissions or rate limit exceeded"
           ),
         };
       }
 
       if (
-        apiError.code === 'ENOTFOUND' ||
-        apiError.code === 'ECONNREFUSED' ||
-        apiError.code === 'ETIMEDOUT'
+        apiError.code === "ENOTFOUND" ||
+        apiError.code === "ECONNREFUSED" ||
+        apiError.code === "ETIMEDOUT"
       ) {
         return {
           isValid: false,
           error: new ConfigError(
             ConfigErrorType.NETWORK_ERROR,
-            'Unable to connect to GitHub API. Please check your internet connection.',
+            "Unable to connect to GitHub API. Please check your internet connection."
           ),
         };
       }
@@ -440,7 +448,9 @@ export class ConfigManager {
         isValid: false,
         error: new ConfigError(
           ConfigErrorType.UNKNOWN_ERROR,
-          `Failed to validate credentials: ${apiError.message || 'Unknown error'}`,
+          `Failed to validate credentials: ${
+            apiError.message || "Unknown error"
+          }`
         ),
       };
     }
@@ -461,16 +471,16 @@ export class ConfigManager {
       return; // Already encrypted
     }
 
-    console.log('🔒 Migrating configuration to encrypted format...');
+    console.log("🔒 Migrating configuration to encrypted format...");
 
     try {
       // Save the config again, which will encrypt the token
       await this.saveConfig(config);
-      console.log('✓ Configuration successfully encrypted');
+      console.log("✓ Configuration successfully encrypted");
     } catch (error) {
       console.warn(
-        '⚠️  Failed to encrypt existing configuration:',
-        error instanceof Error ? error.message : 'Unknown error',
+        "⚠️  Failed to encrypt existing configuration:",
+        error instanceof Error ? error.message : "Unknown error"
       );
     }
   }
@@ -505,11 +515,11 @@ export class ConfigManager {
       // If it's just a token issue but owner might be valid, preserve the owner
       if (
         validation.error.type === ConfigErrorType.INVALID_FORMAT &&
-        !validation.error.message.includes('Token belongs to user')
+        !validation.error.message.includes("Token belongs to user")
       ) {
         preservedData.owner = config.owner;
         console.warn(
-          `   Your GitHub username '${config.owner}' will be preserved.`,
+          `   Your GitHub username '${config.owner}' will be preserved.`
         );
       }
     }
@@ -534,13 +544,13 @@ export class ConfigManager {
         await fs.unlink(this.configPath);
       } catch (error) {
         const nodeError = error as NodeJS.ErrnoException;
-        if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+        if (nodeError.code === "EACCES" || nodeError.code === "EPERM") {
           errors.push(
-            `Permission denied removing primary config file: ${this.configPath}`,
+            `Permission denied removing primary config file: ${this.configPath}`
           );
         } else {
           errors.push(
-            `Failed to remove primary config file: ${nodeError.message}`,
+            `Failed to remove primary config file: ${nodeError.message}`
           );
         }
       }
@@ -552,13 +562,13 @@ export class ConfigManager {
         await fs.unlink(this.fallbackConfigPath);
       } catch (error) {
         const nodeError = error as NodeJS.ErrnoException;
-        if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+        if (nodeError.code === "EACCES" || nodeError.code === "EPERM") {
           errors.push(
-            `Permission denied removing fallback config file: ${this.fallbackConfigPath}`,
+            `Permission denied removing fallback config file: ${this.fallbackConfigPath}`
           );
         } else {
           errors.push(
-            `Failed to remove fallback config file: ${nodeError.message}`,
+            `Failed to remove fallback config file: ${nodeError.message}`
           );
         }
       }
@@ -567,7 +577,7 @@ export class ConfigManager {
     if (errors.length > 0) {
       throw new ConfigError(
         ConfigErrorType.PERMISSION_DENIED,
-        `Failed to clear configuration: ${errors.join('; ')}`,
+        `Failed to clear configuration: ${errors.join("; ")}`
       );
     }
   }
@@ -581,31 +591,31 @@ export class ConfigManager {
     } catch (error) {
       const nodeError = error as NodeJS.ErrnoException;
 
-      if (nodeError.code === 'EEXIST') {
+      if (nodeError.code === "EEXIST") {
         // Directory already exists, that's fine
         return;
       }
 
-      if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+      if (nodeError.code === "EACCES" || nodeError.code === "EPERM") {
         throw new ConfigError(
           ConfigErrorType.PERMISSION_DENIED,
           `Permission denied creating configuration directory: ${this.configDir}`,
-          nodeError,
+          nodeError
         );
       }
 
-      if (nodeError.code === 'ENOSPC') {
+      if (nodeError.code === "ENOSPC") {
         throw new ConfigError(
           ConfigErrorType.UNKNOWN_ERROR,
-          'Insufficient disk space to create configuration directory',
-          nodeError,
+          "Insufficient disk space to create configuration directory",
+          nodeError
         );
       }
 
       throw new ConfigError(
         ConfigErrorType.UNKNOWN_ERROR,
         `Failed to create configuration directory: ${nodeError.message}`,
-        nodeError,
+        nodeError
       );
     }
   }
@@ -628,19 +638,19 @@ export class ConfigManager {
   static getErrorMessage(error: ConfigError): string {
     switch (error.type) {
       case ConfigErrorType.FILE_NOT_FOUND:
-        return 'Configuration file not found. You will be prompted to enter your credentials.';
+        return "Configuration file not found. You will be prompted to enter your credentials.";
 
       case ConfigErrorType.PERMISSION_DENIED:
-        return 'Permission denied accessing configuration file. Please check file permissions or run with appropriate privileges.';
+        return "Permission denied accessing configuration file. Please check file permissions or run with appropriate privileges.";
 
       case ConfigErrorType.CORRUPTED_FILE:
-        return 'Configuration file is corrupted or contains invalid data. A backup has been created and you will be prompted for new credentials.';
+        return "Configuration file is corrupted or contains invalid data. A backup has been created and you will be prompted for new credentials.";
 
       case ConfigErrorType.INVALID_FORMAT:
-        return 'Configuration file has invalid format. You will be prompted to enter your credentials again.';
+        return "Configuration file has invalid format. You will be prompted to enter your credentials again.";
 
       case ConfigErrorType.NETWORK_ERROR:
-        return 'Network error occurred while validating credentials. Please check your internet connection.';
+        return "Network error occurred while validating credentials. Please check your internet connection.";
 
       case ConfigErrorType.UNKNOWN_ERROR:
       default:

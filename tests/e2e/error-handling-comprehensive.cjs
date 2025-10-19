@@ -6,7 +6,7 @@
  * by testing the logic and verifying user-friendly error messages
  */
 
-const fs = require('fs');
+const fs = require('fs')
 
 // ANSI color codes for output formatting
 const colors = {
@@ -17,55 +17,55 @@ const colors = {
   cyan: '\x1b[36m',
   gray: '\x1b[90m',
   reset: '\x1b[0m',
-};
-
-function colorize(color, text) {
-  return `${colors[color]}${text}${colors.reset}`;
 }
 
-const log = console.log;
+function colorize(color, text) {
+  return `${colors[color]}${text}${colors.reset}`
+}
+
+const log = console.log
 
 // Test data validation
 function validateTestData() {
-  log(colorize('blue', '🔍 Validating Test Data Files'));
-  log(colorize('blue', '='.repeat(40)));
+  log(colorize('blue', '🔍 Validating Test Data Files'))
+  log(colorize('blue', '='.repeat(40)))
 
   const requiredFiles = [
     'tests/fixtures/json/invalid-json-syntax.json',
     'tests/fixtures/json/invalid-structure-not-array.json',
     'tests/fixtures/json/missing-required-fields.json',
     'tests/fixtures/json/invalid-field-types.json',
-  ];
+  ]
 
-  let allFilesExist = true;
+  let allFilesExist = true
 
   for (const file of requiredFiles) {
     if (fs.existsSync(file)) {
-      log(colorize('green', `✅ ${file} exists`));
+      log(colorize('green', `✅ ${file} exists`))
     } else {
-      log(colorize('red', `❌ ${file} missing`));
-      allFilesExist = false;
+      log(colorize('red', `❌ ${file} missing`))
+      allFilesExist = false
     }
   }
 
-  return allFilesExist;
+  return allFilesExist
 }
 
 // Test implementation code quality
 function validateImplementation() {
-  log(colorize('blue', '\n🔍 Validating Implementation Code'));
-  log(colorize('blue', '='.repeat(40)));
+  log(colorize('blue', '\n🔍 Validating Implementation Code'))
+  log(colorize('blue', '='.repeat(40)))
 
-  const implementationFile = 'src/lib/importJson.ts';
+  const implementationFile = 'src/lib/importJson.ts'
 
   if (!fs.existsSync(implementationFile)) {
     log(
       colorize('red', `❌ Implementation file ${implementationFile} not found`),
-    );
-    return false;
+    )
+    return false
   }
 
-  const code = fs.readFileSync(implementationFile, 'utf8');
+  const code = fs.readFileSync(implementationFile, 'utf8')
 
   // Check for required error handling patterns
   const checks = [
@@ -104,16 +104,16 @@ function validateImplementation() {
       description: 'User-friendly array validation message',
       required: true,
     },
-  ];
+  ]
 
-  let passedChecks = 0;
+  let passedChecks = 0
 
   for (const check of checks) {
     if (check.pattern.test(code)) {
-      log(colorize('green', `✅ ${check.description}`));
-      passedChecks++;
+      log(colorize('green', `✅ ${check.description}`))
+      passedChecks++
     } else {
-      log(colorize('red', `❌ ${check.description}`));
+      log(colorize('red', `❌ ${check.description}`))
     }
   }
 
@@ -122,21 +122,21 @@ function validateImplementation() {
       'blue',
       `\nImplementation checks: ${passedChecks}/${checks.length} passed`,
     ),
-  );
-  return passedChecks === checks.length;
+  )
+  return passedChecks === checks.length
 }
 
 // Test error scenarios with actual data
 function testErrorScenarios() {
-  log(colorize('blue', '\n🧪 Testing Error Scenarios'));
-  log(colorize('blue', '='.repeat(40)));
+  log(colorize('blue', '\n🧪 Testing Error Scenarios'))
+  log(colorize('blue', '='.repeat(40)))
 
   const scenarios = [
     {
       name: 'Non-existent file (Requirement 2.1)',
       test: () => {
-        const nonExistentFile = 'tests/fixtures/json/non-existent-file.json';
-        return !fs.existsSync(nonExistentFile);
+        const nonExistentFile = 'tests/fixtures/json/non-existent-file.json'
+        return !fs.existsSync(nonExistentFile)
       },
       expected: 'Should return false for non-existent file',
     },
@@ -147,11 +147,11 @@ function testErrorScenarios() {
           const content = fs.readFileSync(
             'tests/fixtures/json/invalid-json-syntax.json',
             'utf8',
-          );
-          JSON.parse(content);
-          return false; // Should not reach here
+          )
+          JSON.parse(content)
+          return false // Should not reach here
         } catch (error) {
-          return error instanceof SyntaxError;
+          return error instanceof SyntaxError
         }
       },
       expected: 'Should throw SyntaxError for invalid JSON',
@@ -163,11 +163,11 @@ function testErrorScenarios() {
           const content = fs.readFileSync(
             'tests/fixtures/json/invalid-structure-not-array.json',
             'utf8',
-          );
-          const data = JSON.parse(content);
-          return !Array.isArray(data);
-        } catch (error) {
-          return false;
+          )
+          const data = JSON.parse(content)
+          return !Array.isArray(data)
+        } catch (_error) {
+          return false
         }
       },
       expected: 'Should detect non-array structure',
@@ -179,9 +179,9 @@ function testErrorScenarios() {
           const content = fs.readFileSync(
             'tests/fixtures/json/missing-required-fields.json',
             'utf8',
-          );
-          const data = JSON.parse(content);
-          if (!Array.isArray(data)) return false;
+          )
+          const data = JSON.parse(content)
+          if (!Array.isArray(data)) return false
 
           // Check if any items are missing name field or have empty name
           return data.some(
@@ -189,9 +189,9 @@ function testErrorScenarios() {
               !item.name ||
               typeof item.name !== 'string' ||
               item.name.trim() === '',
-          );
-        } catch (error) {
-          return false;
+          )
+        } catch (_error) {
+          return false
         }
       },
       expected: 'Should detect missing or invalid name fields',
@@ -203,9 +203,9 @@ function testErrorScenarios() {
           const content = fs.readFileSync(
             'tests/fixtures/json/invalid-field-types.json',
             'utf8',
-          );
-          const data = JSON.parse(content);
-          if (!Array.isArray(data)) return false;
+          )
+          const data = JSON.parse(content)
+          if (!Array.isArray(data)) return false
 
           // Check for invalid field types
           return data.some(
@@ -219,29 +219,29 @@ function testErrorScenarios() {
                 typeof item.description !== 'string') ||
               typeof item !== 'object' ||
               item === null,
-          );
-        } catch (error) {
-          return false;
+          )
+        } catch (_error) {
+          return false
         }
       },
       expected: 'Should detect invalid field types',
     },
-  ];
+  ]
 
-  let passedTests = 0;
+  let passedTests = 0
 
   for (const scenario of scenarios) {
     try {
-      const result = scenario.test();
+      const result = scenario.test()
       if (result) {
-        log(colorize('green', `✅ ${scenario.name}`));
-        passedTests++;
+        log(colorize('green', `✅ ${scenario.name}`))
+        passedTests++
       } else {
-        log(colorize('red', `❌ ${scenario.name}`));
-        log(colorize('gray', `   Expected: ${scenario.expected}`));
+        log(colorize('red', `❌ ${scenario.name}`))
+        log(colorize('gray', `   Expected: ${scenario.expected}`))
       }
     } catch (error) {
-      log(colorize('red', `❌ ${scenario.name} - Error: ${error.message}`));
+      log(colorize('red', `❌ ${scenario.name} - Error: ${error.message}`))
     }
   }
 
@@ -250,17 +250,17 @@ function testErrorScenarios() {
       'blue',
       `\nScenario tests: ${passedTests}/${scenarios.length} passed`,
     ),
-  );
-  return passedTests === scenarios.length;
+  )
+  return passedTests === scenarios.length
 }
 
 // Verify error message quality
 function verifyErrorMessageQuality() {
-  log(colorize('blue', '\n📝 Verifying Error Message Quality'));
-  log(colorize('blue', '='.repeat(40)));
+  log(colorize('blue', '\n📝 Verifying Error Message Quality'))
+  log(colorize('blue', '='.repeat(40)))
 
-  const implementationFile = 'src/lib/importJson.ts';
-  const code = fs.readFileSync(implementationFile, 'utf8');
+  const implementationFile = 'src/lib/importJson.ts'
+  const code = fs.readFileSync(implementationFile, 'utf8')
 
   const qualityChecks = [
     {
@@ -293,111 +293,111 @@ function verifyErrorMessageQuality() {
       description: 'Clear type expectations in error messages',
       weight: 1,
     },
-  ];
+  ]
 
-  let qualityScore = 0;
-  let maxScore = 0;
+  let qualityScore = 0
+  let maxScore = 0
 
   for (const check of qualityChecks) {
-    maxScore += check.weight;
+    maxScore += check.weight
     if (check.pattern.test(code)) {
-      log(colorize('green', `✅ ${check.description}`));
-      qualityScore += check.weight;
+      log(colorize('green', `✅ ${check.description}`))
+      qualityScore += check.weight
     } else {
-      log(colorize('yellow', `⚠️  ${check.description}`));
+      log(colorize('yellow', `⚠️  ${check.description}`))
     }
   }
 
-  const percentage = Math.round((qualityScore / maxScore) * 100);
+  const percentage = Math.round((qualityScore / maxScore) * 100)
   log(
     colorize(
       'blue',
       `\nError message quality: ${qualityScore}/${maxScore} (${percentage}%)`,
     ),
-  );
+  )
 
-  return percentage >= 80; // 80% threshold for good quality
+  return percentage >= 80 // 80% threshold for good quality
 }
 
 // Main test runner
 async function runComprehensiveTests() {
-  log(colorize('blue', '🧪 Comprehensive Error Handling Test Suite'));
-  log(colorize('blue', '='.repeat(60)));
-  log(colorize('gray', 'Testing requirements 2.1, 2.2, 2.3, and 2.4'));
-  log('');
+  log(colorize('blue', '🧪 Comprehensive Error Handling Test Suite'))
+  log(colorize('blue', '='.repeat(60)))
+  log(colorize('gray', 'Testing requirements 2.1, 2.2, 2.3, and 2.4'))
+  log('')
 
   const results = {
     testData: validateTestData(),
     implementation: validateImplementation(),
     scenarios: testErrorScenarios(),
     messageQuality: verifyErrorMessageQuality(),
-  };
+  }
 
-  log(colorize('blue', '\n📊 Final Test Results'));
-  log(colorize('blue', '='.repeat(30)));
+  log(colorize('blue', '\n📊 Final Test Results'))
+  log(colorize('blue', '='.repeat(30)))
 
   const categories = [
     { name: 'Test Data Files', result: results.testData },
     { name: 'Implementation Code', result: results.implementation },
     { name: 'Error Scenarios', result: results.scenarios },
     { name: 'Message Quality', result: results.messageQuality },
-  ];
+  ]
 
-  let passedCategories = 0;
+  let passedCategories = 0
 
   for (const category of categories) {
     if (category.result) {
-      log(colorize('green', `✅ ${category.name}`));
-      passedCategories++;
+      log(colorize('green', `✅ ${category.name}`))
+      passedCategories++
     } else {
-      log(colorize('red', `❌ ${category.name}`));
+      log(colorize('red', `❌ ${category.name}`))
     }
   }
 
-  const overallSuccess = passedCategories === categories.length;
+  const overallSuccess = passedCategories === categories.length
 
-  log('');
+  log('')
   if (overallSuccess) {
-    log(colorize('green', '🎉 All comprehensive tests passed!'));
+    log(colorize('green', '🎉 All comprehensive tests passed!'))
     log(
       colorize('blue', 'Error handling implementation meets all requirements:'),
-    );
+    )
     log(
       colorize('gray', '  • 2.1: File not found errors are handled gracefully'),
-    );
+    )
     log(
       colorize('gray', '  • 2.2: JSON parsing errors display helpful messages'),
-    );
+    )
     log(
       colorize('gray', '  • 2.3: Invalid structure validation works correctly'),
-    );
+    )
     log(
       colorize(
         'gray',
         '  • 2.4: Field validation provides specific error details',
       ),
-    );
+    )
     log(
       colorize('gray', '  • Error messages are user-friendly and informative'),
-    );
+    )
   } else {
     log(
       colorize(
         'red',
         `❌ ${categories.length - passedCategories} test categories failed`,
       ),
-    );
+    )
   }
 
-  return overallSuccess;
+  return overallSuccess
 }
 
 // Run the comprehensive test suite
 runComprehensiveTests()
   .then((success) => {
-    process.exit(success ? 0 : 1);
+    process.exit(success ? 0 : 1)
   })
   .catch((error) => {
-    log(colorize('red', `Test suite error: ${error.message}`));
-    process.exit(1);
-  });
+    log(colorize('red', `Test suite error: ${error.message}`))
+    process.exit(1)
+  })

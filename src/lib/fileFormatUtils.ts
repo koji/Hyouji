@@ -1,11 +1,10 @@
-import * as path from 'path';
-
-import * as yaml from 'js-yaml';
+import * as yaml from 'js-yaml'
+import * as path from 'path'
 
 /**
  * Supported file formats for label import
  */
-export type SupportedFormat = 'json' | 'yaml';
+export type SupportedFormat = 'json' | 'yaml'
 
 /**
  * Detects file format based on file extension
@@ -13,18 +12,18 @@ export type SupportedFormat = 'json' | 'yaml';
  * @returns The detected format or null if unsupported
  */
 export const detectFileFormat = (filePath: string): SupportedFormat | null => {
-  const extension = path.extname(filePath).toLowerCase();
+  const extension = path.extname(filePath).toLowerCase()
 
   switch (extension) {
     case '.json':
-      return 'json';
+      return 'json'
     case '.yaml':
     case '.yml':
-      return 'yaml';
+      return 'yaml'
     default:
-      return null;
+      return null
   }
-};
+}
 
 /**
  * Parses JSON content from a string
@@ -33,8 +32,8 @@ export const detectFileFormat = (filePath: string): SupportedFormat | null => {
  * @throws Error if JSON parsing fails
  */
 export const parseJsonContent = (content: string): unknown => {
-  return JSON.parse(content);
-};
+  return JSON.parse(content)
+}
 
 /**
  * Parses YAML content from a string
@@ -44,28 +43,28 @@ export const parseJsonContent = (content: string): unknown => {
  */
 export const parseYamlContent = (content: string): unknown => {
   try {
-    return yaml.load(content);
+    return yaml.load(content)
   } catch (error) {
     // Enhance YAML error messages to be more descriptive
     if (error instanceof yaml.YAMLException) {
-      throw new Error(`YAMLException: ${error.message}`);
+      throw new Error(`YAMLException: ${error.message}`)
     }
-    throw error;
+    throw error
   }
-};
+}
 
 /**
  * Gets a list of supported file extensions
  * @returns Array of supported file extensions
  */
 export const getSupportedExtensions = (): string[] => {
-  return ['.json', '.yaml', '.yml'];
-};
+  return ['.json', '.yaml', '.yml']
+}
 
 /**
  * Formats supported extensions for user-friendly display
  * @returns Formatted string of supported extensions
  */
 export const formatSupportedExtensions = (): string => {
-  return getSupportedExtensions().join(', ');
-};
+  return getSupportedExtensions().join(', ')
+}

@@ -1012,9 +1012,7 @@ const generateSampleJson = async () => {
           )
         );
       } else {
-        log$3(
-          chalk.red(`❌ Error generating sample JSON file: ${error.message}`)
-        );
+        log$3(chalk.red(`❌ Error generating sample JSON file: ${error.message}`));
       }
     } else {
       log$3(
@@ -1069,9 +1067,7 @@ const generateSampleYaml = async () => {
           )
         );
       } else {
-        log$2(
-          chalk.red(`❌ Error generating sample YAML file: ${error.message}`)
-        );
+        log$2(chalk.red(`❌ Error generating sample YAML file: ${error.message}`));
       }
     } else {
       log$2(
@@ -1139,9 +1135,7 @@ const importLabelsFromFile = async (configs2, filePath) => {
       }
     } catch (parseError) {
       const formatName = format.toUpperCase();
-      log$1(
-        chalk.red(`Error: Invalid ${formatName} syntax in file: ${filePath}`)
-      );
+      log$1(chalk.red(`Error: Invalid ${formatName} syntax in file: ${filePath}`));
       log$1(
         chalk.red(
           `Parse error: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
@@ -1823,6 +1817,7 @@ const main = async () => {
     case 8: {
       console.log("exit");
       process.exit(0);
+      return;
     }
     // eslint-disable-next-line no-fallthrough
     default: {

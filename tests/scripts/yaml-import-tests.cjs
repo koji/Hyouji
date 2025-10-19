@@ -9,11 +9,10 @@
  * - Compatibility tests
  */
 
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { spawn } = require('child_process')
+const fs = require('fs')
 
-const log = console.log;
+const log = console.log
 
 // ANSI color codes for output formatting
 const colors = {
@@ -24,10 +23,10 @@ const colors = {
   cyan: '\x1b[36m',
   gray: '\x1b[90m',
   reset: '\x1b[0m',
-};
+}
 
 function colorize(color, text) {
-  return `${colors[color]}${text}${colors.reset}`;
+  return `${colors[color]}${text}${colors.reset}`
 }
 
 // Test suite configuration
@@ -67,41 +66,43 @@ const testSuites = [
     description: 'Tests compatibility between JSON and YAML formats',
     requirement: '1.3, 3.1, 3.3',
   },
-];
+]
 
 // Run a single test suite
 function runTestSuite(suite) {
   return new Promise((resolve) => {
-    log(colorize('cyan', `\n🧪 Running: ${suite.name}`));
-    log(colorize('gray', `   Description: ${suite.description}`));
-    log(colorize('gray', `   Requirements: ${suite.requirement}`));
-    log(colorize('gray', `   Command: ${suite.command} ${suite.args.join(' ')}`));
-    log('');
+    log(colorize('cyan', `\n🧪 Running: ${suite.name}`))
+    log(colorize('gray', `   Description: ${suite.description}`))
+    log(colorize('gray', `   Requirements: ${suite.requirement}`))
+    log(
+      colorize('gray', `   Command: ${suite.command} ${suite.args.join(' ')}`),
+    )
+    log('')
 
-    const startTime = Date.now();
+    const startTime = Date.now()
     const child = spawn(suite.command, suite.args, {
       stdio: 'inherit',
       shell: true,
-    });
+    })
 
     child.on('close', (code) => {
-      const duration = Date.now() - startTime;
-      const durationStr = `${(duration / 1000).toFixed(2)}s`;
+      const duration = Date.now() - startTime
+      const durationStr = `${(duration / 1000).toFixed(2)}s`
 
       if (code === 0) {
-        log(colorize('green', `✅ ${suite.name} - PASSED (${durationStr})`));
-        resolve({ success: true, duration });
+        log(colorize('green', `✅ ${suite.name} - PASSED (${durationStr})`))
+        resolve({ success: true, duration })
       } else {
-        log(colorize('red', `❌ ${suite.name} - FAILED (${durationStr})`));
-        resolve({ success: false, duration, exitCode: code });
+        log(colorize('red', `❌ ${suite.name} - FAILED (${durationStr})`))
+        resolve({ success: false, duration, exitCode: code })
       }
-    });
+    })
 
     child.on('error', (error) => {
-      log(colorize('red', `❌ ${suite.name} - ERROR: ${error.message}`));
-      resolve({ success: false, error: error.message });
-    });
-  });
+      log(colorize('red', `❌ ${suite.name} - ERROR: ${error.message}`))
+      resolve({ success: false, error: error.message })
+    })
+  })
 }
 
 // Check if all required test files exist
@@ -112,19 +113,19 @@ function checkTestFiles() {
     'tests/integration/error-handling/yaml-import.cjs',
     'tests/integration/yaml-import-workflow.cjs',
     'tests/integration/json-yaml-compatibility.cjs',
-  ];
+  ]
 
-  const missingFiles = requiredFiles.filter(file => !fs.existsSync(file));
+  const missingFiles = requiredFiles.filter((file) => !fs.existsSync(file))
 
   if (missingFiles.length > 0) {
-    log(colorize('red', '❌ Missing required test files:'));
-    missingFiles.forEach(file => {
-      log(colorize('red', `   - ${file}`));
-    });
-    return false;
+    log(colorize('red', '❌ Missing required test files:'))
+    missingFiles.forEach((file) => {
+      log(colorize('red', `   - ${file}`))
+    })
+    return false
   }
 
-  return true;
+  return true
 }
 
 // Check if all required test fixtures exist
@@ -142,120 +143,137 @@ function checkTestFixtures() {
     'tests/fixtures/yaml/invalid-empty-name.yaml',
     'tests/fixtures/yaml/invalid-empty-color.yaml',
     'tests/fixtures/yaml/invalid-non-objects.yaml',
-  ];
+  ]
 
-  const missingFixtures = requiredFixtures.filter(file => !fs.existsSync(file));
+  const missingFixtures = requiredFixtures.filter(
+    (file) => !fs.existsSync(file),
+  )
 
   if (missingFixtures.length > 0) {
-    log(colorize('yellow', '⚠️  Missing test fixtures (will be created if needed):'));
-    missingFixtures.forEach(file => {
-      log(colorize('yellow', `   - ${file}`));
-    });
+    log(
+      colorize(
+        'yellow',
+        '⚠️  Missing test fixtures (will be created if needed):',
+      ),
+    )
+    missingFixtures.forEach((file) => {
+      log(colorize('yellow', `   - ${file}`))
+    })
   }
 
-  return missingFixtures.length === 0;
+  return missingFixtures.length === 0
 }
 
 // Main test runner
 async function runAllTests() {
-  log(colorize('blue', '🧪 YAML Import Test Suite Runner'));
-  log(colorize('blue', '='.repeat(50)));
-  log('');
+  log(colorize('blue', '🧪 YAML Import Test Suite Runner'))
+  log(colorize('blue', '='.repeat(50)))
+  log('')
 
   // Pre-flight checks
-  log(colorize('blue', '🔍 Pre-flight checks...'));
-  
-  const filesExist = checkTestFiles();
+  log(colorize('blue', '🔍 Pre-flight checks...'))
+
+  const filesExist = checkTestFiles()
   if (!filesExist) {
-    log(colorize('red', '❌ Pre-flight check failed: Missing test files'));
-    process.exit(1);
+    log(colorize('red', '❌ Pre-flight check failed: Missing test files'))
+    process.exit(1)
   }
-  
-  const fixturesExist = checkTestFixtures();
-  log(colorize('green', '✅ Test files check passed'));
+
+  const fixturesExist = checkTestFixtures()
+  log(colorize('green', '✅ Test files check passed'))
   if (fixturesExist) {
-    log(colorize('green', '✅ Test fixtures check passed'));
+    log(colorize('green', '✅ Test fixtures check passed'))
   }
 
   // Run test suites
-  let passedSuites = 0;
-  let totalSuites = testSuites.length;
-  let totalDuration = 0;
-  const results = [];
+  let passedSuites = 0
+  let totalSuites = testSuites.length
+  let totalDuration = 0
+  const results = []
 
   for (const suite of testSuites) {
-    const result = await runTestSuite(suite);
-    results.push({ suite, result });
-    
+    const result = await runTestSuite(suite)
+    results.push({ suite, result })
+
     if (result.success) {
-      passedSuites++;
+      passedSuites++
     }
-    
+
     if (result.duration) {
-      totalDuration += result.duration;
+      totalDuration += result.duration
     }
 
     // Add a small delay between test suites
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   // Summary
-  log('');
-  log(colorize('blue', '📊 Test Suite Results Summary'));
-  log(colorize('blue', '='.repeat(40)));
-  
+  log('')
+  log(colorize('blue', '📊 Test Suite Results Summary'))
+  log(colorize('blue', '='.repeat(40)))
+
   results.forEach(({ suite, result }) => {
-    const status = result.success ? 
-      colorize('green', '✅ PASSED') : 
-      colorize('red', '❌ FAILED');
-    const duration = result.duration ? 
-      ` (${(result.duration / 1000).toFixed(2)}s)` : '';
-    log(`${status} ${suite.name}${duration}`);
-    
+    const status = result.success
+      ? colorize('green', '✅ PASSED')
+      : colorize('red', '❌ FAILED')
+    const duration = result.duration
+      ? ` (${(result.duration / 1000).toFixed(2)}s)`
+      : ''
+    log(`${status} ${suite.name}${duration}`)
+
     if (!result.success && result.exitCode) {
-      log(colorize('red', `   Exit code: ${result.exitCode}`));
+      log(colorize('red', `   Exit code: ${result.exitCode}`))
     }
     if (!result.success && result.error) {
-      log(colorize('red', `   Error: ${result.error}`));
+      log(colorize('red', `   Error: ${result.error}`))
     }
-  });
+  })
 
-  log('');
-  log(colorize('blue', '📈 Overall Statistics:'));
-  log(colorize('green', `✅ Passed: ${passedSuites}/${totalSuites} test suites`));
-  log(colorize('blue', `⏱️  Total duration: ${(totalDuration / 1000).toFixed(2)}s`));
+  log('')
+  log(colorize('blue', '📈 Overall Statistics:'))
+  log(
+    colorize('green', `✅ Passed: ${passedSuites}/${totalSuites} test suites`),
+  )
+  log(
+    colorize(
+      'blue',
+      `⏱️  Total duration: ${(totalDuration / 1000).toFixed(2)}s`,
+    ),
+  )
 
   if (passedSuites === totalSuites) {
-    log(colorize('green', '🎉 All YAML import tests passed!'));
-    log('');
-    log(colorize('blue', '📋 Implementation verification checklist:'));
-    log('□ YAML parsing with js-yaml library works correctly');
-    log('□ File format detection supports .yaml and .yml extensions');
-    log('□ YAML validation maintains consistency with JSON validation');
-    log('□ Error handling provides clear, user-friendly messages');
-    log('□ Unknown fields are handled with warnings but don\'t block import');
-    log('□ Edge cases (empty files, syntax errors) are handled gracefully');
-    log('□ JSON functionality remains completely unchanged');
-    log('□ All task requirements have been satisfied');
+    log(colorize('green', '🎉 All YAML import tests passed!'))
+    log('')
+    log(colorize('blue', '📋 Implementation verification checklist:'))
+    log('□ YAML parsing with js-yaml library works correctly')
+    log('□ File format detection supports .yaml and .yml extensions')
+    log('□ YAML validation maintains consistency with JSON validation')
+    log('□ Error handling provides clear, user-friendly messages')
+    log("□ Unknown fields are handled with warnings but don't block import")
+    log('□ Edge cases (empty files, syntax errors) are handled gracefully')
+    log('□ JSON functionality remains completely unchanged')
+    log('□ All task requirements have been satisfied')
   } else {
-    log(colorize('red', `❌ ${totalSuites - passedSuites} test suite(s) failed`));
-    log('');
-    log(colorize('yellow', '📋 Next steps:'));
-    log('1. Review failed test output above');
-    log('2. Fix any issues in the implementation');
-    log('3. Re-run this test suite');
-    log('4. Ensure all requirements are met before marking task complete');
+    log(
+      colorize('red', `❌ ${totalSuites - passedSuites} test suite(s) failed`),
+    )
+    log('')
+    log(colorize('yellow', '📋 Next steps:'))
+    log('1. Review failed test output above')
+    log('2. Fix any issues in the implementation')
+    log('3. Re-run this test suite')
+    log('4. Ensure all requirements are met before marking task complete')
   }
 
-  return passedSuites === totalSuites;
+  return passedSuites === totalSuites
 }
 
 // Run the tests
 runAllTests()
   .then((success) => {
-    process.exit(success ? 0 : 1);
+    process.exit(success ? 0 : 1)
   })
   .catch((error) => {
-    log(colorize('red', `Test runner error: ${error.message}`));
-    process.exit(1);
-  });
+    log(colorize('red', `Test runner error: ${error.message}`))
+    process.exit(1)
+  })

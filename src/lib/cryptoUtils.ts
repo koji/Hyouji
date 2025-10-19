@@ -3,15 +3,15 @@ import {
   createDecipheriv,
   createHash,
   randomBytes,
-} from 'crypto';
-import { homedir } from 'os';
+} from 'crypto'
+import { homedir } from 'os'
 
 /**
  * Utility class for encrypting and decrypting sensitive data like tokens
  */
 export class CryptoUtils {
-  private static readonly ALGORITHM = 'aes-256-cbc';
-  private static readonly ENCODING: BufferEncoding = 'hex';
+  private static readonly ALGORITHM = 'aes-256-cbc'
+  private static readonly ENCODING: BufferEncoding = 'hex'
 
   /**
    * Generate a machine-specific key based on system information
@@ -24,10 +24,10 @@ export class CryptoUtils {
       process.platform,
       process.arch,
       process.env.USER || process.env.USERNAME || 'default',
-    ].join('|');
+    ].join('|')
 
     // Create a hash of the machine info to use as encryption key
-    return createHash('sha256').update(machineInfo).digest();
+    return createHash('sha256').update(machineInfo).digest()
   }
 
   /**
@@ -37,20 +37,20 @@ export class CryptoUtils {
    */
   static encryptToken(token: string): string {
     try {
-      const key = this.generateMachineKey();
-      const iv = randomBytes(16);
-      const cipher = createCipheriv(this.ALGORITHM, key, iv);
+      const key = this.generateMachineKey()
+      const iv = randomBytes(16)
+      const cipher = createCipheriv(this.ALGORITHM, key, iv)
 
-      let encrypted = cipher.update(token, 'utf8', this.ENCODING);
-      encrypted += cipher.final(this.ENCODING);
+      let encrypted = cipher.update(token, 'utf8', this.ENCODING)
+      encrypted += cipher.final(this.ENCODING)
 
       // Prepend IV to encrypted data
-      return iv.toString(this.ENCODING) + ':' + encrypted;
+      return iv.toString(this.ENCODING) + ':' + encrypted
     } catch {
       // If encryption fails, return the original token
       // This ensures backward compatibility
-      console.warn('⚠️  Token encryption failed, storing in plain text');
-      return token;
+      console.warn('⚠️  Token encryption failed, storing in plain text')
+      return token
     }
   }
 
@@ -64,28 +64,28 @@ export class CryptoUtils {
       // Check if token is encrypted (contains ':' separator)
       if (!encryptedToken.includes(':')) {
         // Token is not encrypted, return as-is for backward compatibility
-        return encryptedToken;
+        return encryptedToken
       }
 
-      const [ivHex, encrypted] = encryptedToken.split(':');
+      const [ivHex, encrypted] = encryptedToken.split(':')
       if (!ivHex || !encrypted) {
         // Invalid format, return as-is
-        return encryptedToken;
+        return encryptedToken
       }
 
-      const key = this.generateMachineKey();
-      const iv = Buffer.from(ivHex, this.ENCODING);
-      const decipher = createDecipheriv(this.ALGORITHM, key, iv);
+      const key = this.generateMachineKey()
+      const iv = Buffer.from(ivHex, this.ENCODING)
+      const decipher = createDecipheriv(this.ALGORITHM, key, iv)
 
-      let decrypted = decipher.update(encrypted, this.ENCODING, 'utf8');
-      decrypted += decipher.final('utf8');
+      let decrypted = decipher.update(encrypted, this.ENCODING, 'utf8')
+      decrypted += decipher.final('utf8')
 
-      return decrypted;
+      return decrypted
     } catch {
       // If decryption fails, return the original string
       // This handles cases where the token might not be encrypted
-      console.warn('⚠️  Token decryption failed, using as plain text');
-      return encryptedToken;
+      console.warn('⚠️  Token decryption failed, using as plain text')
+      return encryptedToken
     }
   }
 
@@ -96,7 +96,7 @@ export class CryptoUtils {
    */
   static isTokenEncrypted(token: string): boolean {
     // Simple check: encrypted tokens contain ':' and are longer than typical GitHub tokens
-    return token.includes(':') && token.length > 50;
+    return token.includes(':') && token.length > 50
   }
 
   /**
@@ -106,13 +106,13 @@ export class CryptoUtils {
    */
   static obfuscateToken(token: string): string {
     if (!token || token.length < 8) {
-      return '***';
+      return '***'
     }
 
-    const start = token.substring(0, 4);
-    const end = token.substring(token.length - 4);
-    const middle = '*'.repeat(Math.min(token.length - 8, 20));
+    const start = token.substring(0, 4)
+    const end = token.substring(token.length - 4)
+    const middle = '*'.repeat(Math.min(token.length - 8, 20))
 
-    return `${start}${middle}${end}`;
+    return `${start}${middle}${end}`
   }
 }
