@@ -51,7 +51,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as unknown as ConfigManager, // `unknown` then cast to `ConfigManager` because `vi.mocked` returns a mocked type that doesn't directly match the class type
+        }) as unknown as InstanceType<typeof ConfigManager>, // `unknown` then cast to `ConfigManager` because `vi.mocked` returns a mocked type that doesn't directly match the class type
     )
 
     // Mock successful auto-detection
@@ -68,7 +68,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as unknown as Octokit
+    const mockOctokit = { auth: 'test-token' } as unknown as InstanceType<typeof Octokit>
     vi.mocked(Octokit).mockImplementation(() => mockOctokit)
 
     const result = await getGitHubConfigs()
@@ -105,7 +105,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as unknown as ConfigManager,
+        }) as unknown as InstanceType<typeof ConfigManager>,
     )
 
     // Mock failed auto-detection
@@ -122,7 +122,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     })
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as unknown as Octokit
+    const mockOctokit = { auth: 'test-token' } as unknown as InstanceType<typeof Octokit>
     vi.mocked(Octokit).mockImplementation(() => mockOctokit)
 
     const result = await getGitHubConfigs()
@@ -166,7 +166,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
       () =>
         ({
           loadValidatedConfig: mockLoadValidatedConfig,
-        }) as unknown as ConfigManager,
+        }) as unknown as InstanceType<typeof ConfigManager>,
     )
 
     // Mock auto-detection throwing an error
@@ -182,7 +182,7 @@ describe('getGitHubConfigs auto-detection integration', () => {
     })
 
     // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as unknown as Octokit
+    const mockOctokit = { auth: 'test-token' } as unknown as InstanceType<typeof Octokit>
     vi.mocked(Octokit).mockImplementation(() => mockOctokit)
 
     const result = await getGitHubConfigs()
