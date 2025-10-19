@@ -6,8 +6,8 @@
  * Requirements: 1.1, 1.3, 3.3
  */
 
-const { execSync, spawn } = require('child_process')
-const { existsSync, unlinkSync, readFileSync, writeFileSync } = require('fs')
+const { execSync } = require('child_process')
+const { existsSync, unlinkSync, readFileSync } = require('fs')
 const { join } = require('path')
 const { tmpdir } = require('os')
 
@@ -291,7 +291,7 @@ function testEndToEndFlow() {
         'Run generateSampleJson unit tests',
       )
       console.log('✅ Unit tests pass')
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         '⚠️  Unit tests failed or not found, but continuing with integration test',
       )
@@ -370,7 +370,7 @@ function main() {
     // Only run Vitest if the basic tests pass
     try {
       runViTestIntegration()
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         '⚠️  Vitest integration tests failed, but basic integration tests passed',
       )

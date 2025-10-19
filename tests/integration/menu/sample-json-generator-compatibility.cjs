@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { execSync } = require('child_process')
+// const { execSync } = require('child_process')
 
 /**
  * Integration test to verify that generated JSON is compatible with import functionality

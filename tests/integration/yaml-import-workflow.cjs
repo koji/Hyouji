@@ -108,7 +108,7 @@ function parseYamlContent(content) {
 }
 
 // Mock the JSON parsing logic
-function parseJsonContent(content) {
+function _parseJsonContent(content) {
   return JSON.parse(content)
 }
 

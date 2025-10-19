@@ -29,7 +29,7 @@ describe('importLabelsFromFile', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Mock console.log to avoid test output noise
-    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => { /* do nothing */ })
   })
 
   afterEach(() => {

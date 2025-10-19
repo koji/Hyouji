@@ -174,7 +174,7 @@ function testErrorHandling() {
   // Remove existing origin remote first
   try {
     execSync('git remote remove origin', { cwd: noRemoteDir, stdio: 'pipe' })
-  } catch (error) {
+  } catch (_error) {
     // Ignore error if remote doesn't exist
   }
 

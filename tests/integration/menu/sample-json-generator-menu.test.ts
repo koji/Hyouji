@@ -45,9 +45,9 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
     vi.clearAllMocks()
 
     // Mock console.log to capture output
-    vi.spyOn(console, 'log').mockImplementation(() => {})
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => { /* no-op */ })
+    vi.spyOn(console, 'error').mockImplementation(() => { /* no-op */ })
+    vi.spyOn(console, 'warn').mockImplementation(() => { /* no-op */ })
 
     // Mock process.exit to prevent test termination
     vi.spyOn(process, 'exit').mockImplementation(() => {
@@ -72,7 +72,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
 
       // Verify the menu option exists
       const generateJsonOption = actionSelector.choices.find(
-        (choice: any) => choice.title === 'Generate sample JSON',
+        (choice: { title: string; value: number }) => choice.title === 'Generate sample JSON',
       )
 
       expect(generateJsonOption).toBeDefined()
@@ -84,10 +84,10 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
       const { actionSelector } = await import('../../../src/constant.js')
 
       const importJsonIndex = actionSelector.choices.findIndex(
-        (choice: any) => choice.title === 'import JSON',
+        (choice: { title: string; value: number }) => choice.title === 'import JSON',
       )
       const generateJsonIndex = actionSelector.choices.findIndex(
-        (choice: any) => choice.title === 'Generate sample JSON',
+        (choice: { title: string; value: number }) => choice.title === 'Generate sample JSON',
       )
 
       expect(importJsonIndex).toBe(4)
@@ -99,10 +99,10 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
       const { actionSelector } = await import('../../../src/constant.js')
 
       const settingsOption = actionSelector.choices.find(
-        (choice: any) => choice.title === 'Display your settings',
+        (choice: { title: string; value: number }) => choice.title === 'Display your settings',
       )
       const exitOption = actionSelector.choices.find(
-        (choice: any) => choice.title === 'exit',
+        (choice: { title: string; value: number }) => choice.title === 'exit',
       )
 
       expect(settingsOption.value).toBe(6)
@@ -122,7 +122,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
 
       // Mock prompts to return option 5 (Generate sample JSON)
       const prompts = await import('prompts')
-      ;(prompts.default as any).mockResolvedValue({ action: [5] })
+      vi.mocked(prompts.default).mockResolvedValue({ action: [5] })
 
       // Mock configuration to avoid GitHub API calls
       const mockConfig = {
@@ -160,7 +160,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
       }))
 
       // Import and run the main function
-      const indexModule = await import('../../../src/index.js')
+      const _indexModule = await import('../../../src/index.js')
 
       // Wait for the async operations to complete
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -178,7 +178,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
       }))
 
       const prompts = await import('prompts')
-      ;(prompts.default as any).mockResolvedValue({ action: [5] })
+      vi.mocked(prompts.default).mockResolvedValue({ action: [5] })
 
       // Mock configuration
       const mockConfig = {
@@ -237,7 +237,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
 
       const prompts = await import('prompts')
       // First call returns option 5, second call returns option 7 (exit)
-      ;(prompts.default as any)
+      vi.mocked(prompts.default)
         .mockResolvedValueOnce({ action: [5] })
         .mockResolvedValueOnce({ action: [7] })
 
@@ -297,7 +297,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
       }))
 
       const prompts = await import('prompts')
-      ;(prompts.default as any).mockResolvedValue({ action: [5] })
+      vi.mocked(prompts.default).mockResolvedValue({ action: [5] })
 
       // Mock configuration
       const mockConfig = {
@@ -348,7 +348,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
     it('should complete full flow from menu selection to file creation', async () => {
       // Use the real generateSampleJson function for end-to-end test
       const prompts = await import('prompts')
-      ;(prompts.default as any).mockResolvedValue({ action: [5] })
+      vi.mocked(prompts.default).mockResolvedValue({ action: [5] })
 
       // Mock configuration
       const mockConfig = {
@@ -409,7 +409,7 @@ describe('Sample JSON Generator Menu Integration Tests', () => {
 
     it('should display success message after file creation', async () => {
       const prompts = await import('prompts')
-      ;(prompts.default as any).mockResolvedValue({ action: [5] })
+      vi.mocked(prompts.default).mockResolvedValue({ action: [5] })
 
       // Mock configuration
       const mockConfig = {

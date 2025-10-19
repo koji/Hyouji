@@ -5,7 +5,7 @@
  * This tests the real importLabelsFromFile function from the built code
  */
 
-const fs = require('fs')
+// const fs = require('fs')
 
 // ANSI color codes for output formatting
 const colors = {

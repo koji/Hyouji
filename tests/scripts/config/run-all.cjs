@@ -8,7 +8,7 @@
  */
 
 const { spawn } = require('child_process')
-const path = require('path')
+// const path = require('path')
 
 // ANSI color codes for output formatting
 const colors = {
@@ -62,7 +62,7 @@ function executeTest(test) {
     log(colorize('gray', `   Requirements: ${test.requirements.join(', ')}`))
     log(colorize('gray', '='.repeat(60)))
 
-    const isESModule = test.file.endsWith('.mjs')
+    const _isESModule = test.file.endsWith('.mjs')
     const command = 'node'
     const args = [test.file]
 

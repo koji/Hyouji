@@ -1,7 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { StoredConfigType } from '../types'
+
+// Mock dependencies
+vi.mock('prompts')
+vi.mock('./inputGitHubConfig')
+vi.mock('./configManager')
 
 // TODO: Fix mocking for Vitest 3.x - temporarily skipping integration tests
 describe.skip('Integration Tests', () => {
@@ -25,13 +29,14 @@ describe.skip('Integration Tests', () => {
       const mockConfigManager = new ConfigManager()
 
       // Mock valid saved config
-      ;(mockConfigManager.loadValidatedConfig as any).mockResolvedValueOnce({
+      const mockLoadValidatedConfig = vi.fn().mockResolvedValueOnce({
         config: validConfig,
         shouldPromptForCredentials: false,
       })
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
       // Mock repo prompt
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         repo: 'test-repo',
       })
 
@@ -50,13 +55,14 @@ describe.skip('Integration Tests', () => {
       const mockConfigManager = new ConfigManager()
 
       // Mock no saved config
-      ;(mockConfigManager.loadValidatedConfig as any).mockResolvedValueOnce({
+      const mockLoadValidatedConfig = vi.fn().mockResolvedValueOnce({
         config: null,
         shouldPromptForCredentials: true,
       })
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
       // Mock full credential prompts
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         octokit: 'ghp_newtoken123456789012345678901234567890',
         owner: 'newuser',
         repo: 'new-repo',
@@ -77,12 +83,13 @@ describe.skip('Integration Tests', () => {
       const mockConfigManager = new ConfigManager()
 
       // Mock config loading error
-      ;(mockConfigManager.loadValidatedConfig as any).mockRejectedValueOnce(
+      const mockLoadValidatedConfig = vi.fn().mockRejectedValueOnce(
         new Error('Config loading failed'),
       )
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
       // Mock credential prompts
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         octokit: 'ghp_newtoken123456789012345678901234567890',
         owner: 'newuser',
         repo: 'new-repo',
@@ -100,11 +107,26 @@ describe.skip('Integration Tests', () => {
       const { ConfigManager } = await import('./configManager')
 
       const mockConfigManager = new ConfigManager()
-      ;(mockConfigManager.configExists as any).mockReturnValue(true)
-      ;(mockConfigManager.loadConfig as any).mockResolvedValueOnce(validConfig)
-      ;(mockConfigManager.getConfigPath as any).mockReturnValue(
+      const mockConfigExists = vi.fn().mockReturnValue(true)
+      const mockLoadConfig = vi.fn().mockResolvedValueOnce(validConfig)
+      const mockGetConfigPath = vi.fn().mockReturnValue(
         '/home/testuser/.config/github-label-manager/config.json',
       )
+      ;(mockConfigManager as unknown as { 
+        configExists: typeof mockConfigExists;
+        loadConfig: typeof mockLoadConfig;
+        getConfigPath: typeof mockGetConfigPath;
+      }).configExists = mockConfigExists
+      ;(mockConfigManager as unknown as { 
+        configExists: typeof mockConfigExists;
+        loadConfig: typeof mockLoadConfig;
+        getConfigPath: typeof mockGetConfigPath;
+      }).loadConfig = mockLoadConfig
+      ;(mockConfigManager as unknown as { 
+        configExists: typeof mockConfigExists;
+        loadConfig: typeof mockLoadConfig;
+        getConfigPath: typeof mockGetConfigPath;
+      }).getConfigPath = mockGetConfigPath
 
       // Test the components that would be used in displaySettings
       const configExists = mockConfigManager.configExists()
@@ -120,7 +142,8 @@ describe.skip('Integration Tests', () => {
       const { ConfigManager } = await import('./configManager')
 
       const mockConfigManager = new ConfigManager()
-      ;(mockConfigManager.configExists as any).mockReturnValue(false)
+      const mockConfigExists = vi.fn().mockReturnValue(false)
+      ;(mockConfigManager as unknown as { configExists: typeof mockConfigExists }).configExists = mockConfigExists
 
       const configExists = mockConfigManager.configExists()
       expect(configExists).toBe(false)
@@ -130,8 +153,16 @@ describe.skip('Integration Tests', () => {
       const { ConfigManager } = await import('./configManager')
 
       const mockConfigManager = new ConfigManager()
-      ;(mockConfigManager.configExists as any).mockReturnValue(true)
-      ;(mockConfigManager.loadConfig as any).mockResolvedValueOnce(null)
+      const mockConfigExists = vi.fn().mockReturnValue(true)
+      const mockLoadConfig = vi.fn().mockResolvedValueOnce(null)
+      ;(mockConfigManager as unknown as { 
+        configExists: typeof mockConfigExists;
+        loadConfig: typeof mockLoadConfig;
+      }).configExists = mockConfigExists
+      ;(mockConfigManager as unknown as { 
+        configExists: typeof mockConfigExists;
+        loadConfig: typeof mockLoadConfig;
+      }).loadConfig = mockLoadConfig
 
       const configExists = mockConfigManager.configExists()
       const config = await mockConfigManager.loadConfig()
@@ -149,12 +180,13 @@ describe.skip('Integration Tests', () => {
 
       const mockConfigManager = new ConfigManager()
 
-      ;(mockConfigManager.loadValidatedConfig as any).mockResolvedValueOnce({
+      const mockLoadValidatedConfig = vi.fn().mockResolvedValueOnce({
         config: null,
         shouldPromptForCredentials: true,
       })
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         octokit: 'token',
         owner: 'owner',
         repo: 'repo',
@@ -177,13 +209,14 @@ describe.skip('Integration Tests', () => {
       const mockConfigManager = new ConfigManager()
 
       // Mock no saved config
-      ;(mockConfigManager.loadValidatedConfig as any).mockResolvedValueOnce({
+      const mockLoadValidatedConfig = vi.fn().mockResolvedValueOnce({
         config: null,
         shouldPromptForCredentials: true,
       })
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
       // Mock traditional prompts
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         octokit: 'ghp_token123456789012345678901234567890',
         owner: 'user',
         repo: 'repo',
@@ -206,13 +239,14 @@ describe.skip('Integration Tests', () => {
 
       const mockConfigManager = new ConfigManager()
 
-      ;(mockConfigManager.loadValidatedConfig as any).mockResolvedValueOnce({
+      const mockLoadValidatedConfig = vi.fn().mockResolvedValueOnce({
         config: null,
         shouldPromptForCredentials: true,
       })
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
       // Mock cancelled prompts (user pressed Ctrl+C)
-      ;(prompts as any).mockResolvedValueOnce({})
+      vi.mocked(prompts).mockResolvedValueOnce({})
 
       const result = await getGitHubConfigs()
 
@@ -227,11 +261,12 @@ describe.skip('Integration Tests', () => {
 
       const mockConfigManager = new ConfigManager()
 
-      ;(mockConfigManager.loadValidatedConfig as any).mockRejectedValueOnce(
+      const mockLoadValidatedConfig = vi.fn().mockRejectedValueOnce(
         new Error('Network error'),
       )
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         octokit: 'token',
         owner: 'owner',
         repo: 'repo',
@@ -252,14 +287,15 @@ describe.skip('Integration Tests', () => {
       const mockConfigManager = new ConfigManager()
 
       // Mock invalid token but preserved owner
-      ;(mockConfigManager.loadValidatedConfig as any).mockResolvedValueOnce({
+      const mockLoadValidatedConfig = vi.fn().mockResolvedValueOnce({
         config: null,
         shouldPromptForCredentials: true,
         preservedData: { owner: validConfig.owner },
       })
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
       // Mock credential prompts
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         octokit: 'ghp_newtoken123456789012345678901234567890',
         owner: validConfig.owner,
         repo: 'test-repo',
@@ -281,12 +317,13 @@ describe.skip('Integration Tests', () => {
       const mockConfigManager = new ConfigManager()
 
       // Mock valid config
-      ;(mockConfigManager.loadValidatedConfig as any).mockResolvedValueOnce({
+      const mockLoadValidatedConfig = vi.fn().mockResolvedValueOnce({
         config: validConfig,
         shouldPromptForCredentials: false,
       })
+      ;(mockConfigManager as unknown as { loadValidatedConfig: typeof mockLoadValidatedConfig }).loadValidatedConfig = mockLoadValidatedConfig
 
-      ;(prompts as any).mockResolvedValueOnce({
+      vi.mocked(prompts).mockResolvedValueOnce({
         repo: 'test-repo',
       })
 
@@ -307,10 +344,11 @@ describe.skip('Integration Tests', () => {
       const fromSavedConfig = true
 
       if (fromSavedConfig) {
-        ;(mockConfigManager.clearConfig as any).mockResolvedValueOnce(undefined)
+        const mockClearConfig = vi.fn().mockResolvedValueOnce(undefined)
+        ;(mockConfigManager as unknown as { clearConfig: typeof mockClearConfig }).clearConfig = mockClearConfig
         await mockConfigManager.clearConfig()
 
-        expect(mockConfigManager.clearConfig).toHaveBeenCalled()
+        expect(mockClearConfig).toHaveBeenCalled()
       }
     })
   })

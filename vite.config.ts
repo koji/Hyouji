@@ -16,6 +16,7 @@ export default defineConfig({
         'chalk',
         'figlet',
         'oh-my-logo',
+        'js-yaml',
         'fs',
         'path',
         'os',

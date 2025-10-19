@@ -166,7 +166,7 @@ function testErrorScenarios() {
           )
           const data = JSON.parse(content)
           return !Array.isArray(data)
-        } catch (error) {
+        } catch (_error) {
           return false
         }
       },
@@ -190,7 +190,7 @@ function testErrorScenarios() {
               typeof item.name !== 'string' ||
               item.name.trim() === '',
           )
-        } catch (error) {
+        } catch (_error) {
           return false
         }
       },
@@ -220,7 +220,7 @@ function testErrorScenarios() {
               typeof item !== 'object' ||
               item === null,
           )
-        } catch (error) {
+        } catch (_error) {
           return false
         }
       },

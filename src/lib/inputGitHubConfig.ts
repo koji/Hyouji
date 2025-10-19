@@ -3,17 +3,23 @@ import chalk from 'chalk'
 import prompts from 'prompts'
 
 import { githubConfigs } from '../constant.js'
-import { ConfigType } from '../types/index.js'
+import { ConfigType, StoredConfigType } from '../types/index.js'
 
 import { ConfigError, ConfigManager } from './configManager.js'
 import { GitRepositoryDetector } from './gitRepositoryDetector.js'
+
+// Type for validation result from ConfigManager
+type ValidationResult = {
+  config: StoredConfigType | null;
+  shouldPromptForCredentials: boolean;
+  preservedData?: Partial<StoredConfigType>;
+}
 
 export const getGitHubConfigs = async (): Promise<ConfigType> => {
   const configManager = new ConfigManager()
 
   // Try to load and validate existing configuration
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let validationResult: any = {
+  let validationResult: ValidationResult = {
     config: null,
     shouldPromptForCredentials: true,
     preservedData: undefined,
@@ -122,7 +128,7 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
         ...promptConfig[ownerPromptIndex],
         initial: validationResult.preservedData.owner,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any // Type assertion for prompts with initial value
+      }
     }
   }
 

@@ -131,7 +131,7 @@ function executeTest(test) {
     log(colorize("gray", `   Description: ${test.description}`));
     log(colorize("gray", "=".repeat(60)));
 
-    const isESModule = test.file.endsWith(".mjs") || test.file.endsWith(".js");
+    const _isESModule = test.file.endsWith(".mjs") || test.file.endsWith(".js");
     const command = "node";
     const args = [test.file];
 
@@ -213,7 +213,7 @@ async function executeTestsByCategory(categoryName) {
 async function executeIndividualTest(testName) {
   // Search in all categories
   let foundTest = null;
-  let foundCategory = null;
+  let _foundCategory = null;
 
   for (const category of integrationTestCategories) {
     const test = category.tests.find(
@@ -223,7 +223,7 @@ async function executeIndividualTest(testName) {
     );
     if (test) {
       foundTest = { ...test, category: category.category };
-      foundCategory = category;
+      _foundCategory = category;
       break;
     }
   }

@@ -209,7 +209,7 @@ async function testFormatCompatibility(testCase) {
       log(colorize('gray', `   YAML: ${yamlFile}`))
 
       // Test JSON processing
-      const jsonFormat = detectFileFormat(jsonFile)
+      const _jsonFormat = detectFileFormat(jsonFile)
       const jsonFileContent = fs.readFileSync(jsonFile, 'utf8')
       const jsonParsedData = parseJsonContent(jsonFileContent)
       const jsonResults = validateAndProcessLabels(jsonParsedData, 'json')
@@ -222,7 +222,7 @@ async function testFormatCompatibility(testCase) {
       log(colorize('yellow', `   Warnings: ${jsonResults.warnings.length}`))
 
       // Test YAML processing
-      const yamlFormat = detectFileFormat(yamlFile)
+      const _yamlFormat = detectFileFormat(yamlFile)
       const yamlFileContent = fs.readFileSync(yamlFile, 'utf8')
       const yamlParsedData = parseYamlContent(yamlFileContent)
       const yamlResults = validateAndProcessLabels(yamlParsedData, 'yaml')

@@ -36,7 +36,7 @@ describe('generateSampleJson', () => {
     it('should create JSON file with correct content and formatting', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -52,7 +52,7 @@ describe('generateSampleJson', () => {
     it('should generate JSON with proper indentation (2 spaces)', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -73,7 +73,7 @@ describe('generateSampleJson', () => {
     it('should generate JSON with correct sample data structure', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -100,7 +100,7 @@ describe('generateSampleJson', () => {
     it('should verify color values are in correct format without # prefix', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -121,7 +121,7 @@ describe('generateSampleJson', () => {
     it('should overwrite existing hyouji.json file without prompting', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -212,7 +212,7 @@ describe('generateSampleJson', () => {
     it('should write to the correct file path', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -228,7 +228,7 @@ describe('generateSampleJson', () => {
     it('should use UTF-8 encoding', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -241,7 +241,7 @@ describe('generateSampleJson', () => {
     it('should call writeFileSync exactly once on success', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -257,7 +257,7 @@ describe('generateSampleJson', () => {
 
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -271,7 +271,7 @@ describe('generateSampleJson', () => {
     it('should use sampleData from constants', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -287,7 +287,7 @@ describe('generateSampleJson', () => {
       // This test ensures the function works even if sampleData is empty
       // We can't easily mock the import, but we can verify the structure
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -300,7 +300,7 @@ describe('generateSampleJson', () => {
     it('should generate valid JSON that can be parsed', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -318,7 +318,7 @@ describe('generateSampleJson', () => {
     it('should generate JSON with correct structure for label import', async () => {
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
@@ -351,7 +351,7 @@ describe('generateSampleJson', () => {
 
       // Arrange
       const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      mockWriteFileSync.mockImplementation(() => {})
+      mockWriteFileSync.mockImplementation(() => { /* No-op mock */ })
 
       // Act
       await generateSampleJson()
