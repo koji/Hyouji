@@ -5,7 +5,7 @@
  * This tests the real importLabelsFromFile function from the built code
  */
 
-const fs = require('fs');
+const fs = require('fs')
 
 // ANSI color codes for output formatting
 const colors = {
@@ -16,20 +16,20 @@ const colors = {
   cyan: '\x1b[36m',
   gray: '\x1b[90m',
   reset: '\x1b[0m',
-};
-
-function colorize(color, text) {
-  return `${colors[color]}${text}${colors.reset}`;
 }
 
-const log = console.log;
+function colorize(color, text) {
+  return `${colors[color]}${text}${colors.reset}`
+}
+
+const log = console.log
 
 // Mock configs for testing (won't actually create labels since octokit is null)
 const mockConfigs = {
   octokit: null,
   owner: 'test-owner',
   repo: 'test-repo',
-};
+}
 
 // Test scenarios
 const testScenarios = [
@@ -58,7 +58,7 @@ const testScenarios = [
     filePath: 'tests/fixtures/json/invalid-field-types.json',
     requirement: '2.4',
   },
-];
+]
 
 async function testWithActualImplementation() {
   log(
@@ -66,16 +66,16 @@ async function testWithActualImplementation() {
       'blue',
       '🔧 Integration Test: Testing actual built implementation',
     ),
-  );
-  log(colorize('blue', '='.repeat(60)));
-  log('');
+  )
+  log(colorize('blue', '='.repeat(60)))
+  log('')
 
   // Try to load the actual implementation
-  let importLabelsFromFile;
+  let importLabelsFromFile
   try {
     // Try different ways to import the function
-    const importModule = await import('../../../src/lib/importLabels.ts');
-    importLabelsFromFile = importModule.importLabelsFromFile;
+    const importModule = await import('../../../src/lib/importLabels.ts')
+    importLabelsFromFile = importModule.importLabelsFromFile
 
     if (!importLabelsFromFile) {
       log(
@@ -83,25 +83,25 @@ async function testWithActualImplementation() {
           'red',
           '❌ Could not load importLabelsFromFile function from built code',
         ),
-      );
-      return false;
+      )
+      return false
     }
 
     log(
       colorize('green', '✅ Successfully loaded importLabelsFromFile function'),
-    );
+    )
   } catch (error) {
     log(
       colorize(
         'red',
         `❌ Failed to load built implementation: ${error.message}`,
       ),
-    );
-    return false;
+    )
+    return false
   }
 
-  log('');
-  let passedTests = 0;
+  log('')
+  let passedTests = 0
 
   for (const scenario of testScenarios) {
     log(
@@ -109,50 +109,48 @@ async function testWithActualImplementation() {
         'cyan',
         `📋 Testing: ${scenario.name} (Requirement ${scenario.requirement})`,
       ),
-    );
-    log(colorize('gray', `   File: ${scenario.filePath}`));
-    log('');
+    )
+    log(colorize('gray', `   File: ${scenario.filePath}`))
+    log('')
 
     try {
       // Capture console output
-      const originalLog = console.log;
-      const capturedOutput = [];
+      const originalLog = console.log
+      const capturedOutput = []
       console.log = (...args) => {
-        capturedOutput.push(args.join(' '));
-        originalLog(...args);
-      };
+        capturedOutput.push(args.join(' '))
+        originalLog(...args)
+      }
 
       // Call the actual function
-      await importLabelsFromFile(mockConfigs, scenario.filePath);
+      await importLabelsFromFile(mockConfigs, scenario.filePath)
 
       // Restore console.log
-      console.log = originalLog;
+      console.log = originalLog
 
       // Verify that appropriate error messages were displayed
-      const output = capturedOutput.join('\n');
-      let testPassed = false;
+      const output = capturedOutput.join('\n')
+      let testPassed = false
 
       switch (scenario.requirement) {
         case '2.1': // File not found
-          testPassed = output.includes('File not found at path');
-          break;
+          testPassed = output.includes('File not found at path')
+          break
         case '2.2': // Invalid JSON syntax
           testPassed =
             output.includes('Invalid JSON syntax') ||
-            output.includes('Parse error');
-          break;
+            output.includes('Parse error')
+          break
         case '2.3': // Invalid structure
-          testPassed = output.includes(
-            'must contain an array of label objects',
-          );
-          break;
+          testPassed = output.includes('must contain an array of label objects')
+          break
         case '2.4': // Validation errors
           testPassed =
             output.includes('missing required') ||
             output.includes('invalid') ||
             output.includes('not a valid object') ||
-            output.includes('No valid labels found');
-          break;
+            output.includes('No valid labels found')
+          break
       }
 
       if (testPassed) {
@@ -161,53 +159,53 @@ async function testWithActualImplementation() {
             'green',
             `✅ Test passed - appropriate error handling detected`,
           ),
-        );
-        passedTests++;
+        )
+        passedTests++
       } else {
         log(
           colorize('red', `❌ Test failed - expected error message not found`),
-        );
-        log(colorize('gray', `   Captured output: ${output}`));
+        )
+        log(colorize('gray', `   Captured output: ${output}`))
       }
     } catch (error) {
-      log(colorize('red', `❌ Test failed with exception: ${error.message}`));
+      log(colorize('red', `❌ Test failed with exception: ${error.message}`))
     }
 
-    log('');
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    log('')
+    await new Promise((resolve) => setTimeout(resolve, 500))
   }
 
-  log(colorize('blue', '📊 Integration Test Results'));
-  log(colorize('blue', '='.repeat(30)));
+  log(colorize('blue', '📊 Integration Test Results'))
+  log(colorize('blue', '='.repeat(30)))
   log(
     colorize(
       'green',
       `✅ Passed: ${passedTests}/${testScenarios.length} tests`,
     ),
-  );
+  )
 
-  return passedTests === testScenarios.length;
+  return passedTests === testScenarios.length
 }
 
 // Run the integration test
 testWithActualImplementation()
   .then((success) => {
     if (success) {
-      log('');
-      log(colorize('green', '🎉 All integration tests passed!'));
+      log('')
+      log(colorize('green', '🎉 All integration tests passed!'))
       log(
         colorize(
           'blue',
           'The actual implementation correctly handles all error scenarios.',
         ),
-      );
+      )
     } else {
-      log('');
-      log(colorize('red', '❌ Some integration tests failed.'));
+      log('')
+      log(colorize('red', '❌ Some integration tests failed.'))
     }
-    process.exit(success ? 0 : 1);
+    process.exit(success ? 0 : 1)
   })
   .catch((error) => {
-    log(colorize('red', `Integration test runner error: ${error.message}`));
-    process.exit(1);
-  });
+    log(colorize('red', `Integration test runner error: ${error.message}`))
+    process.exit(1)
+  })

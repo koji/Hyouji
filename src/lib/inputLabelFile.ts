@@ -1,8 +1,8 @@
-import prompts from 'prompts';
+import prompts from 'prompts'
 
-import { labelFilePath } from '../constant.js';
+import { labelFilePath } from '../constant.js'
 
 export const getLabelFilePath = async (): Promise<string> => {
-  const response = await prompts(labelFilePath);
-  return response.filePath;
-};
+  const response = await prompts(labelFilePath)
+  return response.filePath
+}
