@@ -309,7 +309,7 @@ jobs:
           echo "🎉 CI Workflow completed successfully!"
           echo ""
           echo "✅ All checks passed:"
-          echo "  - Code quality (Biome, Prettier)"
+          echo "  - Code quality (Biome)"
           echo "  - TypeScript compilation"
           if [ "${{ steps.changes.outputs.run_tests }}" = "true" ]; then
             echo "  - Unit tests and coverage"
