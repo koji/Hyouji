@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (optional, uses package.json if not specified)'
+        description: "Version to publish (optional, uses package.json if not specified)"
         required: false
         type: string
 
@@ -104,8 +104,8 @@ jobs:
       - name: Setup Node.js for npm publishing
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Verify network connectivity and npm registry
         run: |
@@ -175,25 +175,15 @@ jobs:
           done
 
       # Pre-publish validation - Run all CI validation steps
-      - name: Run ESLint
+      - name: Run Biome checks
         run: |
-          echo "Running ESLint checks for publishing..."
-          if ! bun run test:lint; then
-            echo "❌ Error: ESLint checks failed - cannot publish"
+          echo "Running Biome checks for publishing..."
+          if ! bun run lint; then
+            echo "❌ Error: Biome checks failed - cannot publish"
             echo "Fix all linting errors before publishing"
             exit 1
           fi
-          echo "✅ ESLint checks passed"
-
-      - name: Check Prettier formatting
-        run: |
-          echo "Checking code formatting for publishing..."
-          if ! bun run test:prettier; then
-            echo "❌ Error: Code formatting issues - cannot publish"
-            echo "Run 'bun run fix:prettier' to fix formatting before publishing"
-            exit 1
-          fi
-          echo "✅ Code formatting is correct"
+          echo "✅ Biome checks passed"
 
       - name: TypeScript compilation check
         run: |
@@ -613,6 +603,6 @@ jobs:
           echo "  1. Check the workflow logs for specific error messages"
           echo "  2. Verify NPM_TOKEN has publishing permissions"
           echo "  3. Ensure package.json version is unique"
-          echo "  4. Run validation steps locally: bun run test:lint && bun test && bun run build"
+          echo "  4. Run validation steps locally: bun run lint && bun test && bun run build"
           echo ""
           echo "📞 Need help? Check the repository issues or documentation."
