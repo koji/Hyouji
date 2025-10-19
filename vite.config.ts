@@ -45,4 +45,10 @@ export default defineConfig({
   ssr: {
     noExternal: [],
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      charset: 'utf8',
+      platform: 'node',
+    },
+  },
 })
