@@ -116,11 +116,11 @@ jobs:
           fi
           echo "✅ Dependencies installed successfully"
 
-      - name: Run ESLint
+      - name: Run Biome checks
         run: |
-          echo "Running ESLint checks..."
+          echo "Running Biome checks..."
           if ! bun run test:lint; then
-            echo "❌ Error: ESLint checks failed"
+            echo "❌ Error: Biome checks failed"
             echo "Code quality issues detected. Please fix the following:"
             echo "  - Check for syntax errors"
             echo "  - Review linting rules violations"
@@ -129,7 +129,7 @@ jobs:
             echo "Run 'bun run test:lint' locally to see detailed errors"
             exit 1
           fi
-          echo "✅ ESLint checks passed"
+          echo "✅ Biome checks passed"
 
       - name: Check Prettier formatting
         run: |
@@ -322,7 +322,7 @@ jobs:
           echo "🎉 CI Workflow completed successfully!"
           echo ""
           echo "✅ All checks passed:"
-          echo "  - Code quality (ESLint, Prettier)"
+          echo "  - Code quality (Biome, Prettier)"
           echo "  - TypeScript compilation"
           if [ "${{ steps.changes.outputs.run_tests }}" = "true" ]; then
             echo "  - Unit tests and coverage"
