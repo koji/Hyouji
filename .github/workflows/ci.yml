@@ -131,19 +131,6 @@ jobs:
           fi
           echo "✅ Biome checks passed"
 
-      - name: Check Prettier formatting
-        run: |
-          echo "Checking code formatting with Prettier..."
-          if ! bun run test:prettier; then
-            echo "❌ Error: Code formatting issues detected"
-            echo "Files are not properly formatted. To fix:"
-            echo "  1. Run 'bun run fix:prettier' to auto-format files"
-            echo "  2. Or run 'bunx prettier --write .' to format all files"
-            echo "  3. Commit the formatting changes"
-            exit 1
-          fi
-          echo "✅ Code formatting is correct"
-
       - name: TypeScript compilation check
         run: |
           echo "Checking TypeScript compilation..."
