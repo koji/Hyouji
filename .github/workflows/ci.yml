@@ -119,14 +119,14 @@ jobs:
       - name: Run Biome checks
         run: |
           echo "Running Biome checks..."
-          if ! bun run test:lint; then
+          if ! bun run lint; then
             echo "❌ Error: Biome checks failed"
             echo "Code quality issues detected. Please fix the following:"
             echo "  - Check for syntax errors"
             echo "  - Review linting rules violations"
             echo "  - Ensure code follows project standards"
             echo ""
-            echo "Run 'bun run test:lint' locally to see detailed errors"
+            echo "Run 'bun run lint' locally to see detailed errors"
             exit 1
           fi
           echo "✅ Biome checks passed"
@@ -339,9 +339,9 @@ jobs:
           echo ""
           echo "Please check the logs above for specific error details."
           echo "Common issues and solutions:"
-          echo "  - Linting errors: Run 'npm run test:lint' locally"
-          echo "  - Format issues: Run 'npm run format' locally"
-          echo "  - Test failures: Run 'npm test' locally"
-          echo "  - Build errors: Run 'npm run build' locally"
+          echo "  - Linting errors: Run 'bun run lint' locally"
+          echo "  - Format issues: Run 'bun run format' locally"
+          echo "  - Test failures: Run 'bun test' locally"
+          echo "  - Build errors: Run 'bun run build' locally"
           echo ""
           echo "Fix the issues and push again to re-run the workflow."
