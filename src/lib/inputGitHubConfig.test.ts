@@ -69,7 +69,7 @@ describe("getGitHubConfigs auto-detection integration", () => {
         this.auth = options.auth;
       }
     }
-    vi.mocked(Octokit).mockImplementation(MockOctokit as any);
+  vi.mocked(Octokit).mockImplementation(MockOctokit as unknown as typeof Octokit);
 
     const result = await getGitHubConfigs();
 
@@ -119,7 +119,7 @@ describe("getGitHubConfigs auto-detection integration", () => {
         this.auth = options.auth;
       }
     }
-    vi.mocked(Octokit).mockImplementation(MockOctokit as any);
+  vi.mocked(Octokit).mockImplementation(MockOctokit as unknown as typeof Octokit);
 
     const result = await getGitHubConfigs();
 
@@ -177,7 +177,7 @@ describe("getGitHubConfigs auto-detection integration", () => {
         this.auth = options.auth;
       }
     }
-    vi.mocked(Octokit).mockImplementation(MockOctokit as any);
+  vi.mocked(Octokit).mockImplementation(MockOctokit as unknown as typeof Octokit);
 
     const result = await getGitHubConfigs();
 
