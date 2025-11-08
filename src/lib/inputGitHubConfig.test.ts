@@ -65,6 +65,10 @@ describe("getGitHubConfigs auto-detection integration", () => {
     // Mock Octokit as a constructor
     class MockOctokit {
       auth: string;
+      request = vi.fn();
+      graphql = vi.fn();
+      log = {};
+      hook = vi.fn();
       constructor(options: { auth: string }) {
         this.auth = options.auth;
       }
@@ -117,6 +121,10 @@ describe("getGitHubConfigs auto-detection integration", () => {
     // Mock Octokit as a constructor
     class MockOctokit {
       auth: string;
+      request = vi.fn();
+      graphql = vi.fn();
+      log = {};
+      hook = vi.fn();
       constructor(options: { auth: string }) {
         this.auth = options.auth;
       }
@@ -177,6 +185,10 @@ describe("getGitHubConfigs auto-detection integration", () => {
     // Mock Octokit as a constructor
     class MockOctokit {
       auth: string;
+      request = vi.fn();
+      graphql = vi.fn();
+      log = {};
+      hook = vi.fn();
       constructor(options: { auth: string }) {
         this.auth = options.auth;
       }
