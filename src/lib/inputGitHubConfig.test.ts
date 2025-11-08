@@ -63,10 +63,15 @@ describe("getGitHubConfigs auto-detection integration", () => {
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock Octokit as a constructor
+    const mockRequest = Object.assign(vi.fn(), {
+      defaults: vi.fn(),
+      endpoint: vi.fn(),
+    });
+    const mockGraphql = vi.fn();
     class MockOctokit {
       auth: string;
-      request = vi.fn();
-      graphql = vi.fn();
+      request = mockRequest;
+      graphql = mockGraphql;
       log = {};
       hook = vi.fn();
       constructor(options: { auth: string }) {
@@ -119,10 +124,15 @@ describe("getGitHubConfigs auto-detection integration", () => {
     });
 
     // Mock Octokit as a constructor
+    const mockRequest = Object.assign(vi.fn(), {
+      defaults: vi.fn(),
+      endpoint: vi.fn(),
+    });
+    const mockGraphql = vi.fn();
     class MockOctokit {
       auth: string;
-      request = vi.fn();
-      graphql = vi.fn();
+      request = mockRequest;
+      graphql = mockGraphql;
       log = {};
       hook = vi.fn();
       constructor(options: { auth: string }) {
@@ -183,10 +193,15 @@ describe("getGitHubConfigs auto-detection integration", () => {
     });
 
     // Mock Octokit as a constructor
+    const mockRequest = Object.assign(vi.fn(), {
+      defaults: vi.fn(),
+      endpoint: vi.fn(),
+    });
+    const mockGraphql = vi.fn();
     class MockOctokit {
       auth: string;
-      request = vi.fn();
-      graphql = vi.fn();
+      request = mockRequest;
+      graphql = mockGraphql;
       log = {};
       hook = vi.fn();
       constructor(options: { auth: string }) {
