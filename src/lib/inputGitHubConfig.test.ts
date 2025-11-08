@@ -74,18 +74,17 @@ describe("getGitHubConfigs auto-detection integration", () => {
       endpoint: mockEndpoint,
     });
     const mockGraphql = vi.fn();
-    class MockOctokit {
-      auth: string;
-      request = mockRequest;
-      graphql = mockGraphql;
-      log = {};
-      hook = vi.fn();
-      constructor(options: { auth: string }) {
-        this.auth = options.auth;
-      }
-    }
+    const MockOctokit = vi.fn().mockImplementation((options) => {
+      return {
+        auth: options?.auth ?? "",
+        request: mockRequest,
+        graphql: mockGraphql,
+        log: {},
+        hook: vi.fn(),
+      };
+    });
     vi.mocked(Octokit).mockImplementation(
-      (options?: { auth: string }) => new MockOctokit(options ?? { auth: "" })
+      MockOctokit as unknown as typeof Octokit
     );
 
     const result = await getGitHubConfigs();
@@ -141,18 +140,17 @@ describe("getGitHubConfigs auto-detection integration", () => {
       endpoint: mockEndpoint,
     });
     const mockGraphql = vi.fn();
-    class MockOctokit {
-      auth: string;
-      request = mockRequest;
-      graphql = mockGraphql;
-      log = {};
-      hook = vi.fn();
-      constructor(options: { auth: string }) {
-        this.auth = options.auth;
-      }
-    }
+    const MockOctokit = vi.fn().mockImplementation((options) => {
+      return {
+        auth: options?.auth ?? "",
+        request: mockRequest,
+        graphql: mockGraphql,
+        log: {},
+        hook: vi.fn(),
+      };
+    });
     vi.mocked(Octokit).mockImplementation(
-      (options?: { auth: string }) => new MockOctokit(options ?? { auth: "" })
+      MockOctokit as unknown as typeof Octokit
     );
 
     const result = await getGitHubConfigs();
@@ -216,18 +214,17 @@ describe("getGitHubConfigs auto-detection integration", () => {
       endpoint: mockEndpoint,
     });
     const mockGraphql = vi.fn();
-    class MockOctokit {
-      auth: string;
-      request = mockRequest;
-      graphql = mockGraphql;
-      log = {};
-      hook = vi.fn();
-      constructor(options: { auth: string }) {
-        this.auth = options.auth;
-      }
-    }
+    const MockOctokit = vi.fn().mockImplementation((options) => {
+      return {
+        auth: options?.auth ?? "",
+        request: mockRequest,
+        graphql: mockGraphql,
+        log: {},
+        hook: vi.fn(),
+      };
+    });
     vi.mocked(Octokit).mockImplementation(
-      (options?: { auth: string }) => new MockOctokit(options ?? { auth: "" })
+      MockOctokit as unknown as typeof Octokit
     );
 
     const result = await getGitHubConfigs();
