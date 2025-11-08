@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Octokit } from "@octokit/core";
 
 import { getGitHubConfigs } from "./inputGitHubConfig.js";
 
@@ -36,19 +37,10 @@ const mockEndpoint = Object.assign(vi.fn(), {
   merge: vi.fn(),
   parse: vi.fn(),
 });
-const mockRequest = Object.assign(vi.fn(), {
-  defaults: vi.fn(),
-  endpoint: mockEndpoint,
-});
-const mockGraphql = vi.fn();
 const MockOctokit = vi.fn().mockImplementation((options) => {
   return {
     auth: options?.auth ?? "",
-    request: mockRequest,
-    graphql: mockGraphql,
-    log: {},
-    hook: vi.fn(),
-  };
+  } as unknown as Octokit;
 });
 
 describe("getGitHubConfigs auto-detection integration", () => {
@@ -61,7 +53,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const { GitRepositoryDetector } = await import(
       "./gitRepositoryDetector.js"
     );
-    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
     vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
@@ -107,7 +98,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const { GitRepositoryDetector } = await import(
       "./gitRepositoryDetector.js"
     );
-    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
     vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
@@ -160,7 +150,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const { GitRepositoryDetector } = await import(
       "./gitRepositoryDetector.js"
     );
-    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
     vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
