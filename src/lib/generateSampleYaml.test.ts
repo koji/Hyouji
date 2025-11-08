@@ -1,207 +1,210 @@
-import * as fs from 'fs'
+import * as fs from "fs";
+import type { Mock } from "vitest";
 
-import yaml from 'js-yaml'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import yaml from "js-yaml";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { sampleData } from '../constant.js'
+import { sampleData } from "../constant.js";
 
-import { generateSampleYaml } from './generateSampleYaml'
+import { generateSampleYaml } from "./generateSampleYaml";
 
 // Mock oh-my-logo to avoid dependency issues in CI
-vi.mock('oh-my-logo', () => ({
-  render: vi.fn().mockResolvedValue('Mocked ASCII Art'),
-}))
+vi.mock("oh-my-logo", () => ({
+  render: vi.fn().mockResolvedValue("Mocked ASCII Art"),
+}));
 
 // Mock fs module
-vi.mock('fs')
+vi.mock("fs", () => ({
+  writeFileSync: vi.fn(),
+}));
 
 // Mock chalk to avoid color codes in tests
-vi.mock('chalk', () => ({
+vi.mock("chalk", () => ({
   default: {
     blue: vi.fn((text) => text),
     green: vi.fn((text) => text),
     red: vi.fn((text) => text),
   },
-}))
+}));
 
-describe('generateSampleYaml', () => {
+describe("generateSampleYaml", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   afterEach(() => {
-    vi.restoreAllMocks()
-  })
+    vi.restoreAllMocks();
+  });
 
-  describe('Successful generation', () => {
-    it('should generate YAML file with correct path', async () => {
+  describe("Successful generation", () => {
+    it("should generate YAML file with correct path", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = fs.writeFileSync as Mock;
 
       // Act
-      await generateSampleYaml()
+      await generateSampleYaml();
 
       // Assert
       expect(mockWriteFileSync).toHaveBeenCalledWith(
-        './hyouji.yaml',
+        "./hyouji.yaml",
         expect.any(String),
-        'utf8',
-      )
-    })
+        "utf8"
+      );
+    });
 
-    it('should generate YAML with correct content structure', async () => {
+    it("should generate YAML with correct content structure", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = fs.writeFileSync as Mock;
 
       // Act
-      await generateSampleYaml()
+      await generateSampleYaml();
 
       // Assert
-      expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
-      const [, yamlContent] = mockWriteFileSync.mock.calls[0]
+      expect(mockWriteFileSync).toHaveBeenCalledTimes(1);
+      const [, yamlContent] = mockWriteFileSync.mock.calls[0];
 
       // Parse the generated YAML to verify structure
-      const parsedYaml = yaml.load(yamlContent as string)
-      expect(parsedYaml).toEqual(sampleData)
-    })
+      const parsedYaml = yaml.load(yamlContent as string);
+      expect(parsedYaml).toEqual(sampleData);
+    });
 
-    it('should generate valid YAML syntax', async () => {
+    it("should generate valid YAML syntax", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = fs.writeFileSync as Mock;
 
       // Act
-      await generateSampleYaml()
+      await generateSampleYaml();
 
       // Assert
-      const [, yamlContent] = mockWriteFileSync.mock.calls[0]
+      const [, yamlContent] = mockWriteFileSync.mock.calls[0];
 
       // Should not throw when parsing the generated YAML
-      expect(() => yaml.load(yamlContent as string)).not.toThrow()
-    })
+      expect(() => yaml.load(yamlContent as string)).not.toThrow();
+    });
 
-    it('should preserve all sample data fields correctly', async () => {
+    it("should preserve all sample data fields correctly", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = fs.writeFileSync as Mock;
 
       // Act
-      await generateSampleYaml()
+      await generateSampleYaml();
 
       // Assert
-      const [, yamlContent] = mockWriteFileSync.mock.calls[0]
-      const parsedYaml = yaml.load(yamlContent as string) as typeof sampleData
+      const [, yamlContent] = mockWriteFileSync.mock.calls[0];
+      const parsedYaml = yaml.load(yamlContent as string) as typeof sampleData;
 
       // Verify all fields are preserved
-      expect(parsedYaml).toHaveLength(sampleData.length)
+      expect(parsedYaml).toHaveLength(sampleData.length);
       parsedYaml.forEach((label, index) => {
-        expect(label.name).toBe(sampleData[index].name)
-        expect(label.color).toBe(sampleData[index].color)
-        expect(label.description).toBe(sampleData[index].description)
-      })
-    })
-  })
+        expect(label.name).toBe(sampleData[index].name);
+        expect(label.color).toBe(sampleData[index].color);
+        expect(label.description).toBe(sampleData[index].description);
+      });
+    });
+  });
 
-  describe('Error handling', () => {
-    it('should handle EACCES error (permission denied)', async () => {
+  describe("Error handling", () => {
+    it("should handle EACCES error (permission denied)", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      const error = new Error('Permission denied') as NodeJS.ErrnoException
-      error.code = 'EACCES'
+      const mockWriteFileSync = fs.writeFileSync as Mock;
+      const error = new Error("Permission denied") as NodeJS.ErrnoException;
+      error.code = "EACCES";
       mockWriteFileSync.mockImplementation(() => {
-        throw error
-      })
+        throw error;
+      });
 
       // Act & Assert - should not throw
-      await expect(generateSampleYaml()).resolves.not.toThrow()
-    })
+      await expect(generateSampleYaml()).resolves.not.toThrow();
+    });
 
-    it('should handle ENOSPC error (insufficient disk space)', async () => {
+    it("should handle ENOSPC error (insufficient disk space)", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      const error = new Error('No space left') as NodeJS.ErrnoException
-      error.code = 'ENOSPC'
+      const mockWriteFileSync = fs.writeFileSync as Mock;
+      const error = new Error("No space left") as NodeJS.ErrnoException;
+      error.code = "ENOSPC";
       mockWriteFileSync.mockImplementation(() => {
-        throw error
-      })
+        throw error;
+      });
 
       // Act & Assert - should not throw
-      await expect(generateSampleYaml()).resolves.not.toThrow()
-    })
+      await expect(generateSampleYaml()).resolves.not.toThrow();
+    });
 
-    it('should handle EROFS error (read-only file system)', async () => {
+    it("should handle EROFS error (read-only file system)", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      const error = new Error('Read-only') as NodeJS.ErrnoException
-      error.code = 'EROFS'
+      const mockWriteFileSync = fs.writeFileSync as Mock;
+      const error = new Error("Read-only") as NodeJS.ErrnoException;
+      error.code = "EROFS";
       mockWriteFileSync.mockImplementation(() => {
-        throw error
-      })
+        throw error;
+      });
 
       // Act & Assert - should not throw
-      await expect(generateSampleYaml()).resolves.not.toThrow()
-    })
+      await expect(generateSampleYaml()).resolves.not.toThrow();
+    });
 
-    it('should handle generic Error objects', async () => {
+    it("should handle generic Error objects", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
-      const error = new Error('Generic error message')
+      const mockWriteFileSync = fs.writeFileSync as Mock;
+      const error = new Error("Generic error message");
       mockWriteFileSync.mockImplementation(() => {
-        throw error
-      })
+        throw error;
+      });
 
       // Act & Assert - should not throw
-      await expect(generateSampleYaml()).resolves.not.toThrow()
-    })
+      await expect(generateSampleYaml()).resolves.not.toThrow();
+    });
 
-    it('should handle non-Error objects', async () => {
+    it("should handle non-Error objects", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = fs.writeFileSync as Mock;
       mockWriteFileSync.mockImplementation(() => {
-        throw 'String error'
-      })
+        throw "String error";
+      });
 
       // Act & Assert - should not throw
-      await expect(generateSampleYaml()).resolves.not.toThrow()
-    })
-  })
+      await expect(generateSampleYaml()).resolves.not.toThrow();
+    });
+  });
 
-  describe('YAML format validation', () => {
-    it('should generate YAML with correct structure for label import', async () => {
+  describe("YAML format validation", () => {
+    it("should generate YAML with correct structure for label import", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = fs.writeFileSync as Mock;
 
       // Act
-      await generateSampleYaml()
+      await generateSampleYaml();
 
       // Assert
-      const [, yamlContent] = mockWriteFileSync.mock.calls[0]
-      const parsedYaml = yaml.load(yamlContent as string) as typeof sampleData
+      const [, yamlContent] = mockWriteFileSync.mock.calls[0];
+      const parsedYaml = yaml.load(yamlContent as string) as typeof sampleData;
 
       // Should be an array
-      expect(Array.isArray(parsedYaml)).toBe(true)
+      expect(Array.isArray(parsedYaml)).toBe(true);
 
       // Each item should have required structure
       parsedYaml.forEach((item) => {
-        expect(item).toHaveProperty('name')
-        expect(item).toHaveProperty('color')
-        expect(item).toHaveProperty('description')
-        expect(typeof item.name).toBe('string')
-        expect(typeof item.color).toBe('string')
-        expect(typeof item.description).toBe('string')
-      })
-    })
+        expect(item).toHaveProperty("name");
+        expect(item).toHaveProperty("color");
+        expect(item).toHaveProperty("description");
+        expect(typeof item.name).toBe("string");
+        expect(typeof item.color).toBe("string");
+        expect(typeof item.description).toBe("string");
+      });
+    });
 
-    it('should generate YAML that matches sample data exactly', async () => {
+    it("should generate YAML that matches sample data exactly", async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = fs.writeFileSync as Mock;
 
       // Act
-      await generateSampleYaml()
+      await generateSampleYaml();
 
       // Assert
-      const [, yamlContent] = mockWriteFileSync.mock.calls[0]
-      const parsedYaml = yaml.load(yamlContent as string)
+      const [, yamlContent] = mockWriteFileSync.mock.calls[0];
+      const parsedYaml = yaml.load(yamlContent as string);
 
-      expect(parsedYaml).toEqual(sampleData)
-    })
-  })
-})
+      expect(parsedYaml).toEqual(sampleData);
+    });
+  });
+});

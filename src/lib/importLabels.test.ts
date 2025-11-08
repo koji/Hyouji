@@ -13,7 +13,10 @@ vi.mock('oh-my-logo', () => ({
 }))
 
 // Mock dependencies
-vi.mock('fs')
+vi.mock('fs', () => ({
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
+}))
 vi.mock('./callApi.js')
 
 const mockFs = vi.mocked(fs)

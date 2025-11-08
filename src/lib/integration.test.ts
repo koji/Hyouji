@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { StoredConfigType } from '../types'
 
 // Mock dependencies
-vi.mock('prompts')
+vi.mock('prompts', () => ({
+  default: vi.fn(),
+}))
 vi.mock('./inputGitHubConfig')
 vi.mock('./configManager')
 
