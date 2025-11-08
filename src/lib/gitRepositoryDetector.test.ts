@@ -32,7 +32,9 @@ describe("GitRepositoryDetector", () => {
       mod.GitRepositoryDetector.execAsync = mockExecAsync;
     });
     // For direct reference
-  (GitRepositoryDetector as unknown as { execAsync: typeof mockExecAsync }).execAsync = mockExecAsync;
+    (
+      GitRepositoryDetector as unknown as { execAsync: typeof mockExecAsync }
+    ).execAsync = mockExecAsync;
   });
 
   afterEach(() => {
