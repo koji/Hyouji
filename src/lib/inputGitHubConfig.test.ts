@@ -8,7 +8,26 @@ vi.mock("prompts", () => ({
 }));
 vi.mock("./configManager.js");
 vi.mock("./gitRepositoryDetector.js");
-vi.mock("@octokit/core");
+
+vi.mock("@octokit/core", () => {
+  class MockOctokit {
+    constructor(public options: { auth: string }) {}
+    request = vi.fn();
+    graphql = vi.fn();
+    log = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    hook = vi.fn();
+    retry = {
+      retryRequest: vi.fn(),
+    };
+  }
+  return { Octokit: MockOctokit };
+});
+
 vi.mock("../constant.js", () => ({
   githubConfigs: [
     {
@@ -39,7 +58,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const { GitRepositoryDetector } = await import(
       "./gitRepositoryDetector.js"
     );
-    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
     vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
@@ -62,17 +80,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
 
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
-    // Mock Octokit as a constructor
-    class MockOctokit {
-      auth: string;
-      constructor(options: { auth: string }) {
-        this.auth = options.auth;
-      }
-    }
-    vi.mocked(Octokit).mockImplementation(
-      MockOctokit as unknown as typeof Octokit
-    );
-
     const result = await getGitHubConfigs();
 
     expect(result.owner).toBe("detected-owner");
@@ -80,7 +87,9 @@ describe("getGitHubConfigs auto-detection integration", () => {
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(true);
     expect(result.detectionMethod).toBe("origin");
-    expect(result.octokit.auth).toBe("test-token");
+    expect(
+      (result.octokit as unknown as { options: { auth: string } }).options.auth
+    ).toBe("test-token");
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
   });
@@ -91,7 +100,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const { GitRepositoryDetector } = await import(
       "./gitRepositoryDetector.js"
     );
-    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
     vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
@@ -114,17 +122,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
       repo: "manual-repo",
     });
 
-    // Mock Octokit as a constructor
-    class MockOctokit {
-      auth: string;
-      constructor(options: { auth: string }) {
-        this.auth = options.auth;
-      }
-    }
-    vi.mocked(Octokit).mockImplementation(
-      MockOctokit as unknown as typeof Octokit
-    );
-
     const result = await getGitHubConfigs();
 
     expect(result.owner).toBe("saved-owner");
@@ -132,7 +129,9 @@ describe("getGitHubConfigs auto-detection integration", () => {
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(false);
     expect(result.detectionMethod).toBe("manual");
-    expect(result.octokit.auth).toBe("test-token");
+    expect(
+      (result.octokit as unknown as { options: { auth: string } }).options.auth
+    ).toBe("test-token");
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([
@@ -150,7 +149,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const { GitRepositoryDetector } = await import(
       "./gitRepositoryDetector.js"
     );
-    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
     vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
@@ -174,17 +172,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
       repo: "manual-repo",
     });
 
-    // Mock Octokit as a constructor
-    class MockOctokit {
-      auth: string;
-      constructor(options: { auth: string }) {
-        this.auth = options.auth;
-      }
-    }
-    vi.mocked(Octokit).mockImplementation(
-      MockOctokit as unknown as typeof Octokit
-    );
-
     const result = await getGitHubConfigs();
 
     expect(result.owner).toBe("saved-owner");
@@ -192,7 +179,9 @@ describe("getGitHubConfigs auto-detection integration", () => {
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(false);
     expect(result.detectionMethod).toBe("manual");
-    expect(result.octokit.auth).toBe("test-token");
+    expect(
+      (result.octokit as unknown as { options: { auth: string } }).options.auth
+    ).toBe("test-token");
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([

@@ -28,13 +28,7 @@ describe("GitRepositoryDetector", () => {
     vi.clearAllMocks();
     mockExecAsync.mockReset();
     // Override execAsync for all tests
-    import("./gitRepositoryDetector").then((mod) => {
-      mod.GitRepositoryDetector.execAsync = mockExecAsync;
-    });
-    // For direct reference
-    (
-      GitRepositoryDetector as unknown as { execAsync: typeof mockExecAsync }
-    ).execAsync = mockExecAsync;
+    GitRepositoryDetector.overrideExecAsync(mockExecAsync);
   });
 
   afterEach(() => {
@@ -91,7 +85,7 @@ describe("GitRepositoryDetector", () => {
       });
 
       const result = await GitRepositoryDetector.getAllRemotes("/project");
-      expect(result).toEqual(["origin", "upstream"]);
+      expect(result).toEqual({ remotes: ["origin", "upstream"] });
     });
 
     it("should return empty array when no remotes", async () => {
@@ -101,14 +95,14 @@ describe("GitRepositoryDetector", () => {
       });
 
       const result = await GitRepositoryDetector.getAllRemotes("/project");
-      expect(result).toEqual([]);
+      expect(result).toEqual({ remotes: [] });
     });
 
     it("should return empty array on git command error", async () => {
       mockExecAsync.mockRejectedValue(new Error("Git not found"));
 
       const result = await GitRepositoryDetector.getAllRemotes("/project");
-      expect(result).toEqual([]);
+      expect(result).toEqual({ remotes: [] });
     });
 
     it("should filter out empty remote names", async () => {
@@ -118,7 +112,7 @@ describe("GitRepositoryDetector", () => {
       });
 
       const result = await GitRepositoryDetector.getAllRemotes("/project");
-      expect(result).toEqual(["origin", "upstream"]);
+      expect(result).toEqual({ remotes: ["origin", "upstream"] });
     });
   });
 
@@ -704,7 +698,7 @@ describe("GitRepositoryDetector", () => {
 
         // This should timeout and return empty array for getAllRemotes
         const result = await GitRepositoryDetector.getAllRemotes("/project");
-        expect(result).toEqual([]);
+        expect(result).toEqual({ remotes: [] });
       });
 
       it("should handle very long directory paths", async () => {

@@ -1,609 +1,84 @@
-import type { ExecOptions } from 'child_process'
-import { exec } from 'child_process'
+import { existsSync } from "fs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// import { promisify } from 'util';
+vi.mock("fs", () => ({
+  existsSync: vi.fn(),
+}));
 
-// Define the callback type for exec function
-type ExecCallback = (
-  error: Error | null,
-  stdout: string,
-  stderr: string,
-) => void
+const mockExecAsync = vi.fn();
+const mockExistsSync = vi.mocked(existsSync);
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { GitRepositoryDetector } from "./gitRepositoryDetector.js";
 
-// Create a mock for the promisified exec function using vi.hoisted
-const mockExecAsync = vi.hoisted(() => vi.fn())
-
-// Mock the child_process module
-vi.mock('child_process', () => ({
-  exec: vi.fn(),
-}))
-vi.mock('util', () => ({
-  promisify: vi.fn(() => mockExecAsync),
-}))
-
-const mockExec = vi.mocked(exec)
-
-// const mockPromisify = vi.mocked(promisify);
-
-import { GitRepositoryDetector } from './gitRepositoryDetector.js'
-
-describe('GitRepositoryDetector Error Handling', () => {
+describe("GitRepositoryDetector Error Handling", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    mockExecAsync.mockReset()
-  })
+    vi.clearAllMocks();
+    // Override the execAsync implementation before each test
+    GitRepositoryDetector.overrideExecAsync(mockExecAsync);
+  });
 
-  describe('Git command availability errors', () => {
-    // TODO: Fix these tests - they need to be updated to use the new promise-based mock approach
-    // Currently commented out to make CI pass
-
-    it('placeholder test - TODO: implement error handling tests', () => {
-      // This is a placeholder to prevent empty describe block errors
-      expect(true).toBe(true)
-    })
-
-    /*
-    it('should handle git command not found error in getAllRemotes', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('git: command not found');
-            (error as NodeJS.ErrnoException).code = 'ENOENT';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
+  describe("Git command availability errors", () => {
+    it("should handle git command not found error", async () => {
+      // Mock findGitRoot to succeed
+      mockExistsSync.mockImplementation((path: string) => {
+        return path.includes(".git");
+      });
+      // Mock getAllRemotes to fail with ENOENT
+      const error: NodeJS.ErrnoException = new Error("git: command not found");
+      error.code = "ENOENT";
+      mockExecAsync.mockRejectedValue(error);
 
       const result = await GitRepositoryDetector.detectRepository();
 
       expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Git command not available');
+      expect(result.error).toBe("Git command not available");
     });
 
-    it('should handle git command not found error in findGitRoot', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('git: command not found');
-            (error as NodeJS.ErrnoException).code = 'ENOENT';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
+    it("should handle not a git repository error", async () => {
+      // Mock findGitRoot to fail (not a git repository)
+      mockExistsSync.mockReturnValue(false);
 
       const result = await GitRepositoryDetector.detectRepository();
 
       expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Git command not available');
+      expect(result.error).toBe("Not a Git repository");
     });
+  });
 
-    it('should handle git command not found error in detectRepository', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('git: command not found');
-            (error as NodeJS.ErrnoException).code = 'ENOENT';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Git command not available');
-    });
-
-    it('should handle not a git repository error', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('fatal: not a git repository');
-            (error as NodeJS.ErrnoException).code = '128';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Not a Git repository');
-    });
-    */
-  })
-
-  describe('Remote configuration errors', () => {
-    it('should handle no remotes configured', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '', ''))
-          }
-          return {} as ReturnType<typeof exec>
-        },
-      )
-
-      const result = await GitRepositoryDetector.detectRepository()
-
-      expect(result.isGitRepository).toBe(true)
-      expect(result.repositoryInfo).toBeUndefined()
-      expect(result.error).toBe('No remotes configured')
-    })
-
-    it('should handle empty remotes list', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            process.nextTick(() => callback(null, '   \n  \n  ', ''))
-          }
-          return {} as ReturnType<typeof exec>
-        },
-      )
-
-      const result = await GitRepositoryDetector.detectRepository()
-
-      expect(result.isGitRepository).toBe(true)
-      expect(result.repositoryInfo).toBeUndefined()
-      expect(result.error).toBe('No remotes configured')
-    })
-
-    /*
-    it('should handle invalid remote URL format', async () => {
-      mockExec.mockImplementation(
-        (command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            if (
-              command.includes('git remote') &&
-              !command.includes('get-url')
-            ) {
-              process.nextTick(() => callback(null, 'invalid-remote\n', ''));
-            } else if (command.includes('git remote get-url')) {
-              process.nextTick(() =>
-                callback(new Error('No such remote'), '', ''),
-              );
-            }
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
+  describe("Remote configuration errors", () => {
+    it("should handle no remotes configured", async () => {
+      // Mock findGitRoot to succeed
+      mockExistsSync.mockImplementation((path: string) => {
+        return path.includes(".git");
+      });
+      // Mock getAllRemotes to return empty
+      mockExecAsync.mockResolvedValueOnce({ stdout: "", stderr: "" });
 
       const result = await GitRepositoryDetector.detectRepository();
 
       expect(result.isGitRepository).toBe(true);
       expect(result.repositoryInfo).toBeUndefined();
-      expect(result.error).toBe('Could not parse remote URL');
-    });
-    */
-  })
-
-  // TODO: Re-enable when mock implementation is fixed
-  /*
-  describe('Network and connectivity errors', () => {
-    it('should handle timeout errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('Operation timed out');
-            (error as NodeJS.ErrnoException).code = 'ETIMEDOUT';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Git command timed out');
+      expect(result.error).toBe("No remotes configured");
     });
 
-    it('should handle DNS resolution errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('Could not resolve hostname');
-            (error as NodeJS.ErrnoException).code = 'ENOTFOUND';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Network error');
-    });
-
-    it('should handle connection refused errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('Connection refused');
-            (error as NodeJS.ErrnoException).code = 'ECONNREFUSED';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Network error');
-    });
-
-    it('should handle SSL certificate errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('SSL certificate problem');
-            (error as NodeJS.ErrnoException).code = 'CERT_UNTRUSTED';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('SSL certificate error');
-    });
-  });
-  */
-
-  // TODO: Re-enable when mock implementation is fixed
-  /*
-  describe('Authentication and permission errors', () => {
-    it('should handle authentication failures', async () => {
-      mockExec.mockImplementation(
-        (command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            if (
-              command.includes('git remote') &&
-              !command.includes('get-url')
-            ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
-            } else if (command.includes('git remote get-url')) {
-              const error = new Error('Authentication failed');
-              (error as NodeJS.ErrnoException).code = 'EAUTH';
-              process.nextTick(() => callback(error, '', ''));
-            }
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
+    it("should handle repositories with malformed remote URLs", async () => {
+      // Mock findGitRoot to succeed
+      mockExistsSync.mockImplementation((path: string) => {
+        return path.includes(".git");
+      });
+      // Mock getAllRemotes to return a remote name
+      mockExecAsync.mockResolvedValueOnce({ stdout: "origin", stderr: "" });
+      // Mock getRemoteUrl to return an invalid URL
+      mockExecAsync.mockResolvedValueOnce({
+        stdout: "invalid-url",
+        stderr: "",
+      });
 
       const result = await GitRepositoryDetector.detectRepository();
 
       expect(result.isGitRepository).toBe(true);
       expect(result.repositoryInfo).toBeUndefined();
-      expect(result.error).toBe('Authentication failed');
-    });
-
-    it('should handle permission denied errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error(
-              "fatal: could not read Username for 'https://github.com': terminal prompts disabled",
-            );
-            (error as NodeJS.ErrnoException).code = '128';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Permission denied');
+      expect(result.error).toBe("Could not parse remote URL");
     });
   });
-  */
-
-  // TODO: Re-enable when mock implementation is fixed
-  /*
-  describe('System resource errors', () => {
-    it('should handle disk space errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('No space left on device');
-            (error as NodeJS.ErrnoException).code = 'ENOSPC';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('System resource error');
-    });
-
-    it('should handle interrupted system calls', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('Interrupted system call');
-            (error as NodeJS.ErrnoException).code = 'EINTR';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('System resource error');
-    });
-
-    it('should handle process killed errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('Process killed');
-            (error as any).signal = 'SIGKILL'; // eslint-disable-line @typescript-eslint/no-explicit-any
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Process terminated');
-    });
-
-    it('should handle memory allocation errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('Cannot allocate memory');
-            (error as NodeJS.ErrnoException).code = 'ENOMEM';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('System resource error');
-    });
-  });
-  */
-
-  // TODO: Re-enable when mock implementation is fixed
-  /*
-  describe('File system errors', () => {
-    it('should handle file not found errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('No such file or directory');
-            (error as NodeJS.ErrnoException).code = 'ENOENT';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Git command not available');
-    });
-
-    it('should handle permission denied file access', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('Permission denied');
-            (error as NodeJS.ErrnoException).code = 'EACCES';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Permission denied');
-    });
-
-    it('should handle corrupted repository errors', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error('fatal: bad object HEAD');
-            (error as NodeJS.ErrnoException).code = '128';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Repository corrupted');
-    });
-  });
-  */
-
-  // TODO: Re-enable when mock implementation is fixed
-  /*
-  describe('Edge case error scenarios', () => {
-    it('should handle malformed git output', async () => {
-      mockExec.mockImplementation(
-        (command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            if (
-              command.includes('git remote') &&
-              !command.includes('get-url')
-            ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
-            } else if (command.includes('git remote get-url origin')) {
-              // Return malformed URL that can't be parsed
-              process.nextTick(() => callback(null, 'not-a-valid-url\n', ''));
-            }
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(true);
-      expect(result.repositoryInfo).toBeUndefined();
-      expect(result.error).toBe('Could not parse remote URL');
-    });
-
-    it('should handle empty git output', async () => {
-      mockExec.mockImplementation(
-        (command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            if (
-              command.includes('git remote') &&
-              !command.includes('get-url')
-            ) {
-              process.nextTick(() => callback(null, 'origin\n', ''));
-            } else if (command.includes('git remote get-url origin')) {
-              // Return empty output
-              process.nextTick(() => callback(null, '', ''));
-            }
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(true);
-      expect(result.repositoryInfo).toBeUndefined();
-      expect(result.error).toBe('Could not parse remote URL');
-    });
-
-    it('should handle unexpected git command output format', async () => {
-      mockExec.mockImplementation(
-        (command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            if (
-              command.includes('git remote') &&
-              !command.includes('get-url')
-            ) {
-              // Return unexpected format
-              process.nextTick(() =>
-                callback(
-                  null,
-                  'unexpected output format\nwith multiple lines\n',
-                  '',
-                ),
-              );
-            } else if (command.includes('git remote get-url')) {
-              process.nextTick(() =>
-                callback(null, 'https://github.com/owner/repo.git\n', ''),
-              );
-            }
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(true);
-      expect(result.repositoryInfo).toBeDefined();
-      expect(result.repositoryInfo!.owner).toBe('owner');
-      expect(result.repositoryInfo!.repo).toBe('repo');
-    });
-
-    it('should handle git command with stderr warnings', async () => {
-      mockExec.mockImplementation(
-        (command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            if (
-              command.includes('git remote') &&
-              !command.includes('get-url')
-            ) {
-              process.nextTick(() =>
-                callback(null, 'origin\n', 'warning: some git warning\n'),
-              );
-            } else if (command.includes('git remote get-url origin')) {
-              process.nextTick(() =>
-                callback(
-                  null,
-                  'https://github.com/owner/repo.git\n',
-                  'warning: another warning\n',
-                ),
-              );
-            }
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(true);
-      expect(result.repositoryInfo).toBeDefined();
-      expect(result.repositoryInfo!.owner).toBe('owner');
-      expect(result.repositoryInfo!.repo).toBe('repo');
-    });
-
-    it('should handle concurrent git operations conflicts', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error(
-              "fatal: Unable to create '.git/index.lock': File exists",
-            );
-            (error as NodeJS.ErrnoException).code = '128';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Git operation conflict');
-    });
-
-    it('should handle git version compatibility issues', async () => {
-      mockExec.mockImplementation(
-        (_command: string, _options: ExecOptions, callback?: ExecCallback) => {
-          if (typeof callback === 'function') {
-            const error = new Error("git: 'remote' is not a git command");
-            (error as NodeJS.ErrnoException).code = '1';
-            process.nextTick(() => callback(error, '', ''));
-          }
-          return {} as ReturnType<typeof exec>;
-        },
-      );
-
-      const result = await GitRepositoryDetector.detectRepository();
-
-      expect(result.isGitRepository).toBe(false);
-      expect(result.error).toBe('Git command failed');
-    });
-  });
-  */
-})
+});
