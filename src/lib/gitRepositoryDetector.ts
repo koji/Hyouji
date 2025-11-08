@@ -49,89 +49,76 @@ export class GitRepositoryDetector {
   static async detectRepository(cwd?: string): Promise<GitDetectionResult> {
     const workingDir = cwd || process.cwd();
 
+    let gitRoot: string | null;
     try {
-      // Find Git root directory
-      const gitRoot = await this.findGitRoot(workingDir);
-      if (!gitRoot) {
-        return {
-          isGitRepository: false,
-          error: "Not a Git repository",
-        };
-      }
-
-      // Get all remotes
-      const remotes = await this.getAllRemotes(gitRoot);
-      if (remotes.length === 0) {
-        return {
-          isGitRepository: true,
-          error: "No remotes configured",
-        };
-      }
-
-      // Try to get origin remote first, then fallback to first remote
-      let remoteUrl: string | null = null;
-      let detectionMethod: "origin" | "first-remote" = "origin";
-
-      if (remotes.includes("origin")) {
-        remoteUrl = await this.getRemoteUrl(gitRoot, "origin");
-      }
-
-      if (!remoteUrl && remotes.length > 0) {
-        remoteUrl = await this.getRemoteUrl(gitRoot, remotes[0]);
-        detectionMethod = "first-remote";
-      }
-
-      if (!remoteUrl) {
-        return {
-          isGitRepository: true,
-          error: "Could not retrieve remote URL",
-        };
-      }
-
-      // Parse the Git URL
-      const parsedUrl = this.parseGitUrl(remoteUrl);
-      if (!parsedUrl) {
-        return {
-          isGitRepository: true,
-          error: "Could not parse remote URL",
-        };
-      }
-
-      return {
-        isGitRepository: true,
-        repositoryInfo: {
-          owner: parsedUrl.owner,
-          repo: parsedUrl.repo,
-          remoteUrl,
-          detectionMethod,
-        },
-      };
+      gitRoot = await this.findGitRoot(workingDir);
     } catch (err) {
       const error = err as NodeJS.ErrnoException;
-      if (
-        error.code === "ENOENT" ||
-        error.message.includes("command not found")
-      ) {
-        return {
-          isGitRepository: false,
-          error: "Git command not available",
-        };
-      }
-      if (
-        error.code === "128" ||
-        error.message.includes("not a git repository")
-      ) {
-        return {
-          isGitRepository: false,
-          error: "Not a Git repository",
-        };
-      }
       return {
         isGitRepository: false,
         error:
           error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
+
+    if (!gitRoot) {
+      return {
+        isGitRepository: false,
+        error: "Not a Git repository",
+      };
+    }
+
+    const remotesResult = await this.getAllRemotes(gitRoot);
+    if ("error" in remotesResult) {
+      return { isGitRepository: false, error: remotesResult.error };
+    }
+
+    const remotes = remotesResult.remotes;
+    if (remotes.length === 0) {
+      return {
+        isGitRepository: true,
+        error: "No remotes configured",
+      };
+    }
+
+    // Try to get origin remote first, then fallback to first remote
+    let remoteUrl: string | null = null;
+    let detectionMethod: "origin" | "first-remote" = "origin";
+
+    if (remotes.includes("origin")) {
+      remoteUrl = await this.getRemoteUrl(gitRoot, "origin");
+    }
+
+    if (!remoteUrl && remotes.length > 0) {
+      remoteUrl = await this.getRemoteUrl(gitRoot, remotes[0]);
+      detectionMethod = "first-remote";
+    }
+
+    if (!remoteUrl) {
+      return {
+        isGitRepository: true,
+        error: "Could not retrieve remote URL",
+      };
+    }
+
+    // Parse the Git URL
+    const parsedUrl = this.parseGitUrl(remoteUrl);
+    if (!parsedUrl) {
+      return {
+        isGitRepository: true,
+        error: "Could not parse remote URL",
+      };
+    }
+
+    return {
+      isGitRepository: true,
+      repositoryInfo: {
+        owner: parsedUrl.owner,
+        repo: parsedUrl.repo,
+        remoteUrl,
+        detectionMethod,
+      },
+    };
   }
 
   /**
@@ -150,6 +137,11 @@ export class GitRepositoryDetector {
       }
 
       currentPath = dirname(currentPath);
+    }
+
+    // Check root directory as well
+    if (existsSync(join(currentPath, ".git"))) {
+      return currentPath;
     }
 
     return null;
@@ -280,17 +272,38 @@ export class GitRepositoryDetector {
   /**
    * Gets all configured Git remotes
    * @param gitRoot - Git repository root directory
-   * @returns Promise<string[]> - Array of remote names
+   * @returns Promise with remotes array or error object
    */
-  static async getAllRemotes(gitRoot: string): Promise<string[]> {
-    const { stdout } = await this.execAsyncInternal("git remote", {
-      cwd: gitRoot,
-      timeout: GIT_COMMAND_TIMEOUT_MS,
-    });
+  static async getAllRemotes(
+    gitRoot: string
+  ): Promise<{ remotes: string[] } | { error: string }> {
+    try {
+      const { stdout } = await this.execAsyncInternal("git remote", {
+        cwd: gitRoot,
+        timeout: GIT_COMMAND_TIMEOUT_MS,
+      });
 
-    return stdout
-      .trim()
-      .split("\n")
-      .filter((remote) => remote.length > 0);
+      return {
+        remotes: stdout
+          .trim()
+          .split("\n")
+          .filter((remote) => remote.length > 0),
+      };
+    } catch (err) {
+      const error = err as NodeJS.ErrnoException;
+      // Check if it's a "git command not found" error (ENOENT code)
+      if (error.code === "ENOENT") {
+        return { error: "Git command not available" };
+      }
+      // Check if it's a "not a git repository" error
+      if (
+        error instanceof Error &&
+        (error.message.includes("not a git repository") ||
+          error.message.includes("Not a git repository"))
+      ) {
+        return { error: "Not a Git repository" };
+      }
+      return { remotes: [] };
+    }
   }
 }

@@ -1,8 +1,14 @@
+import { existsSync } from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GitRepositoryDetector } from "./gitRepositoryDetector.js";
 
-// Define a mock for the promisified exec function
+vi.mock("fs", () => ({
+  existsSync: vi.fn(),
+}));
+
 const mockExecAsync = vi.fn();
+const mockExistsSync = vi.mocked(existsSync);
+
+import { GitRepositoryDetector } from "./gitRepositoryDetector.js";
 
 describe("GitRepositoryDetector Error Handling", () => {
   beforeEach(() => {
@@ -13,6 +19,11 @@ describe("GitRepositoryDetector Error Handling", () => {
 
   describe("Git command availability errors", () => {
     it("should handle git command not found error", async () => {
+      // Mock findGitRoot to succeed
+      mockExistsSync.mockImplementation((path: string) => {
+        return path.includes(".git");
+      });
+      // Mock getAllRemotes to fail with ENOENT
       const error: NodeJS.ErrnoException = new Error("git: command not found");
       error.code = "ENOENT";
       mockExecAsync.mockRejectedValue(error);
@@ -24,11 +35,8 @@ describe("GitRepositoryDetector Error Handling", () => {
     });
 
     it("should handle not a git repository error", async () => {
-      const error: NodeJS.ErrnoException = new Error(
-        "fatal: not a git repository"
-      );
-      error.code = "128";
-      mockExecAsync.mockRejectedValue(error);
+      // Mock findGitRoot to fail (not a git repository)
+      mockExistsSync.mockReturnValue(false);
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -39,7 +47,12 @@ describe("GitRepositoryDetector Error Handling", () => {
 
   describe("Remote configuration errors", () => {
     it("should handle no remotes configured", async () => {
-      mockExecAsync.mockResolvedValue({ stdout: "", stderr: "" });
+      // Mock findGitRoot to succeed
+      mockExistsSync.mockImplementation((path: string) => {
+        return path.includes(".git");
+      });
+      // Mock getAllRemotes to return empty
+      mockExecAsync.mockResolvedValueOnce({ stdout: "", stderr: "" });
 
       const result = await GitRepositoryDetector.detectRepository();
 
@@ -48,14 +61,24 @@ describe("GitRepositoryDetector Error Handling", () => {
       expect(result.error).toBe("No remotes configured");
     });
 
-    it("should handle empty remotes list", async () => {
-      mockExecAsync.mockResolvedValue({ stdout: "   \n  \n  ", stderr: "" });
+    it("should handle repositories with malformed remote URLs", async () => {
+      // Mock findGitRoot to succeed
+      mockExistsSync.mockImplementation((path: string) => {
+        return path.includes(".git");
+      });
+      // Mock getAllRemotes to return a remote name
+      mockExecAsync.mockResolvedValueOnce({ stdout: "origin", stderr: "" });
+      // Mock getRemoteUrl to return an invalid URL
+      mockExecAsync.mockResolvedValueOnce({
+        stdout: "invalid-url",
+        stderr: "",
+      });
 
       const result = await GitRepositoryDetector.detectRepository();
 
       expect(result.isGitRepository).toBe(true);
       expect(result.repositoryInfo).toBeUndefined();
-      expect(result.error).toBe("No remotes configured");
+      expect(result.error).toBe("Could not parse remote URL");
     });
   });
 });

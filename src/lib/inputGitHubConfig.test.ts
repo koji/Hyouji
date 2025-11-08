@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Octokit } from "@octokit/core";
 
 import { getGitHubConfigs } from "./inputGitHubConfig.js";
 
@@ -9,7 +8,26 @@ vi.mock("prompts", () => ({
 }));
 vi.mock("./configManager.js");
 vi.mock("./gitRepositoryDetector.js");
-vi.mock("@octokit/core");
+
+vi.mock("@octokit/core", () => {
+  class MockOctokit {
+    constructor(public options: { auth: string }) {}
+    request = vi.fn();
+    graphql = vi.fn();
+    log = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    hook = vi.fn();
+    retry = {
+      retryRequest: vi.fn(),
+    };
+  }
+  return { Octokit: MockOctokit };
+});
+
 vi.mock("../constant.js", () => ({
   githubConfigs: [
     {
@@ -29,23 +47,6 @@ vi.mock("../constant.js", () => ({
     },
   ],
 }));
-
-// Create a reusable mock for the Octokit class
-const createMockOctokit = (auth: string) => ({
-  auth,
-  request: vi.fn(),
-  graphql: vi.fn(),
-  log: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-  hook: vi.fn(),
-  retry: {
-    retryRequest: vi.fn(),
-  },
-});
 
 describe("getGitHubConfigs auto-detection integration", () => {
   beforeEach(() => {
@@ -79,11 +80,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
 
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
-    // Mock Octokit as a constructor
-    vi.mocked(Octokit).mockImplementation(
-      (options) => createMockOctokit(options?.auth ?? "") as unknown as Octokit
-    );
-
     const result = await getGitHubConfigs();
 
     expect(result.owner).toBe("detected-owner");
@@ -91,9 +87,9 @@ describe("getGitHubConfigs auto-detection integration", () => {
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(true);
     expect(result.detectionMethod).toBe("origin");
-    expect((result.octokit as unknown as { auth: string }).auth).toBe(
-      "test-token"
-    );
+    expect(
+      (result.octokit as unknown as { options: { auth: string } }).options.auth
+    ).toBe("test-token");
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
   });
@@ -126,11 +122,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
       repo: "manual-repo",
     });
 
-    // Mock Octokit as a constructor
-    vi.mocked(Octokit).mockImplementation(
-      (options) => createMockOctokit(options?.auth ?? "") as unknown as Octokit
-    );
-
     const result = await getGitHubConfigs();
 
     expect(result.owner).toBe("saved-owner");
@@ -138,9 +129,9 @@ describe("getGitHubConfigs auto-detection integration", () => {
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(false);
     expect(result.detectionMethod).toBe("manual");
-    expect((result.octokit as unknown as { auth: string }).auth).toBe(
-      "test-token"
-    );
+    expect(
+      (result.octokit as unknown as { options: { auth: string } }).options.auth
+    ).toBe("test-token");
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([
@@ -181,11 +172,6 @@ describe("getGitHubConfigs auto-detection integration", () => {
       repo: "manual-repo",
     });
 
-    // Mock Octokit as a constructor
-    vi.mocked(Octokit).mockImplementation(
-      (options) => createMockOctokit(options?.auth ?? "") as unknown as Octokit
-    );
-
     const result = await getGitHubConfigs();
 
     expect(result.owner).toBe("saved-owner");
@@ -193,9 +179,9 @@ describe("getGitHubConfigs auto-detection integration", () => {
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(false);
     expect(result.detectionMethod).toBe("manual");
-    expect((result.octokit as unknown as { auth: string }).auth).toBe(
-      "test-token"
-    );
+    expect(
+      (result.octokit as unknown as { options: { auth: string } }).options.auth
+    ).toBe("test-token");
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([
