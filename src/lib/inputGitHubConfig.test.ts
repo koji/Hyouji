@@ -63,9 +63,15 @@ describe("getGitHubConfigs auto-detection integration", () => {
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock Octokit as a constructor
+    const mockEndpoint = Object.assign(vi.fn(), {
+      DEFAULTS: {},
+      defaults: vi.fn(),
+      merge: vi.fn(),
+      parse: vi.fn(),
+    });
     const mockRequest = Object.assign(vi.fn(), {
       defaults: vi.fn(),
-      endpoint: vi.fn(),
+      endpoint: mockEndpoint,
     });
     const mockGraphql = vi.fn();
     class MockOctokit {
@@ -124,9 +130,15 @@ describe("getGitHubConfigs auto-detection integration", () => {
     });
 
     // Mock Octokit as a constructor
+    const mockEndpoint = Object.assign(vi.fn(), {
+      DEFAULTS: {},
+      defaults: vi.fn(),
+      merge: vi.fn(),
+      parse: vi.fn(),
+    });
     const mockRequest = Object.assign(vi.fn(), {
       defaults: vi.fn(),
-      endpoint: vi.fn(),
+      endpoint: mockEndpoint,
     });
     const mockGraphql = vi.fn();
     class MockOctokit {
@@ -193,9 +205,15 @@ describe("getGitHubConfigs auto-detection integration", () => {
     });
 
     // Mock Octokit as a constructor
+    const mockEndpoint = Object.assign(vi.fn(), {
+      DEFAULTS: {},
+      defaults: vi.fn(),
+      merge: vi.fn(),
+      parse: vi.fn(),
+    });
     const mockRequest = Object.assign(vi.fn(), {
       defaults: vi.fn(),
-      endpoint: vi.fn(),
+      endpoint: mockEndpoint,
     });
     const mockGraphql = vi.fn();
     class MockOctokit {
