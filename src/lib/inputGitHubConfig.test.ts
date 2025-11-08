@@ -31,7 +31,7 @@ vi.mock("../constant.js", () => ({
 }));
 
 // Create a reusable mock for the Octokit class
-const mockEndpoint = Object.assign(vi.fn(), {
+const _mockEndpoint = Object.assign(vi.fn(), {
   DEFAULTS: {},
   defaults: vi.fn(),
   merge: vi.fn(),
