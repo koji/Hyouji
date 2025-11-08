@@ -31,16 +31,20 @@ vi.mock("../constant.js", () => ({
 }));
 
 // Create a reusable mock for the Octokit class
-const mockEndpoint = Object.assign(vi.fn(), {
-  DEFAULTS: {},
-  defaults: vi.fn(),
-  merge: vi.fn(),
-  parse: vi.fn(),
-});
-const MockOctokit = vi.fn().mockImplementation((options) => {
-  return {
-    auth: options?.auth ?? "",
-  } as unknown as Octokit;
+const createMockOctokit = (auth: string) => ({
+  auth,
+  request: vi.fn(),
+  graphql: vi.fn(),
+  log: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+  hook: vi.fn(),
+  retry: {
+    retryRequest: vi.fn(),
+  },
 });
 
 describe("getGitHubConfigs auto-detection integration", () => {
@@ -76,8 +80,8 @@ describe("getGitHubConfigs auto-detection integration", () => {
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock Octokit as a constructor
-vi.mocked(Octokit).mockImplementation(
-      Object.assign(MockOctokit, { _endpoint: mockEndpoint }) as unknown as typeof Octokit
+    vi.mocked(Octokit).mockImplementation(
+      (options) => createMockOctokit(options?.auth ?? "") as unknown as Octokit
     );
 
     const result = await getGitHubConfigs();
@@ -87,7 +91,9 @@ vi.mocked(Octokit).mockImplementation(
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(true);
     expect(result.detectionMethod).toBe("origin");
-    expect(result.octokit.auth).toBe("test-token");
+    expect((result.octokit as unknown as { auth: string }).auth).toBe(
+      "test-token"
+    );
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
   });
@@ -121,8 +127,8 @@ vi.mocked(Octokit).mockImplementation(
     });
 
     // Mock Octokit as a constructor
-vi.mocked(Octokit).mockImplementation(
-      Object.assign(MockOctokit, { _endpoint: mockEndpoint }) as unknown as typeof Octokit
+    vi.mocked(Octokit).mockImplementation(
+      (options) => createMockOctokit(options?.auth ?? "") as unknown as Octokit
     );
 
     const result = await getGitHubConfigs();
@@ -132,7 +138,9 @@ vi.mocked(Octokit).mockImplementation(
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(false);
     expect(result.detectionMethod).toBe("manual");
-    expect(result.octokit.auth).toBe("test-token");
+    expect((result.octokit as unknown as { auth: string }).auth).toBe(
+      "test-token"
+    );
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([
@@ -174,8 +182,8 @@ vi.mocked(Octokit).mockImplementation(
     });
 
     // Mock Octokit as a constructor
-vi.mocked(Octokit).mockImplementation(
-      Object.assign(MockOctokit, { _endpoint: mockEndpoint }) as unknown as typeof Octokit
+    vi.mocked(Octokit).mockImplementation(
+      (options) => createMockOctokit(options?.auth ?? "") as unknown as Octokit
     );
 
     const result = await getGitHubConfigs();
@@ -185,7 +193,9 @@ vi.mocked(Octokit).mockImplementation(
     expect(result.fromSavedConfig).toBe(true);
     expect(result.autoDetected).toBe(false);
     expect(result.detectionMethod).toBe("manual");
-    expect(result.octokit.auth).toBe("test-token");
+    expect((result.octokit as unknown as { auth: string }).auth).toBe(
+      "test-token"
+    );
 
     expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([

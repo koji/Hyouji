@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { type ChildProcess, exec } from "child_process";
 import { existsSync } from "fs";
 import { dirname, join } from "path";
 import { promisify } from "util";
@@ -22,7 +22,25 @@ export class GitRepositoryDetector {
   /**
    * Allows tests to override execAsync implementation
    */
-  static execAsync = promisify(exec);
+  private static execAsyncInternal: (
+    command: string,
+    options?: { cwd: string; timeout: number }
+  ) => Promise<{ stdout: string; stderr: string }> & { child?: ChildProcess } =
+    promisify(exec);
+
+  /**
+   * Overrides the internal execAsync function for testing purposes.
+   * @param mock - The mock function to use for execAsync.
+   */
+  static overrideExecAsync(
+    mock: (
+      command: string,
+      options?: { cwd: string; timeout: number }
+    ) => Promise<{ stdout: string; stderr: string }>
+  ) {
+    this.execAsyncInternal = mock;
+  }
+
   /**
    * Detects Git repository information from the current working directory
    * @param cwd - Current working directory (defaults to process.cwd())
@@ -89,9 +107,29 @@ export class GitRepositoryDetector {
         },
       };
     } catch (err) {
+      const error = err as NodeJS.ErrnoException;
+      if (
+        error.code === "ENOENT" ||
+        error.message.includes("command not found")
+      ) {
+        return {
+          isGitRepository: false,
+          error: "Git command not available",
+        };
+      }
+      if (
+        error.code === "128" ||
+        error.message.includes("not a git repository")
+      ) {
+        return {
+          isGitRepository: false,
+          error: "Not a Git repository",
+        };
+      }
       return {
         isGitRepository: false,
-        error: err instanceof Error ? err.message : "Unknown error occurred",
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
   }
@@ -128,7 +166,7 @@ export class GitRepositoryDetector {
     remoteName: string
   ): Promise<string | null> {
     try {
-      const { stdout } = await GitRepositoryDetector.execAsync(
+      const { stdout } = await this.execAsyncInternal(
         `git remote get-url ${remoteName}`,
         {
           cwd: gitRoot,
@@ -245,18 +283,14 @@ export class GitRepositoryDetector {
    * @returns Promise<string[]> - Array of remote names
    */
   static async getAllRemotes(gitRoot: string): Promise<string[]> {
-    try {
-      const { stdout } = await GitRepositoryDetector.execAsync("git remote", {
-        cwd: gitRoot,
-        timeout: GIT_COMMAND_TIMEOUT_MS,
-      });
+    const { stdout } = await this.execAsyncInternal("git remote", {
+      cwd: gitRoot,
+      timeout: GIT_COMMAND_TIMEOUT_MS,
+    });
 
-      return stdout
-        .trim()
-        .split("\n")
-        .filter((remote) => remote.length > 0);
-    } catch {
-      return [];
-    }
+    return stdout
+      .trim()
+      .split("\n")
+      .filter((remote) => remote.length > 0);
   }
 }

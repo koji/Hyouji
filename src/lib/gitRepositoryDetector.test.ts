@@ -28,13 +28,7 @@ describe("GitRepositoryDetector", () => {
     vi.clearAllMocks();
     mockExecAsync.mockReset();
     // Override execAsync for all tests
-    import("./gitRepositoryDetector").then((mod) => {
-      mod.GitRepositoryDetector.execAsync = mockExecAsync;
-    });
-    // For direct reference
-    (
-      GitRepositoryDetector as unknown as { execAsync: typeof mockExecAsync }
-    ).execAsync = mockExecAsync;
+    GitRepositoryDetector.overrideExecAsync(mockExecAsync);
   });
 
   afterEach(() => {
