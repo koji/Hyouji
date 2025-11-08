@@ -89,18 +89,16 @@ jobs:
         run: |
           echo "Installing dependencies with bun..."
 
-          # Check if node_modules is cached and up to date
-          if [ -d "node_modules" ] && [ -f "bun.lock" ]; then
-            echo "📦 Found cached node_modules, verifying integrity..."
-            if bun pm ls > /dev/null 2>&1; then
-              echo "✅ Cached dependencies are valid, skipping bun install"
-              exit 0
-            else
-              echo "⚠️  Cached dependencies are invalid, reinstalling..."
-              rm -rf node_modules
-            fi
+          # Remove node_modules if it exists to ensure fresh install
+          # This prevents issues with stale cached dependencies that don't match the lockfile
+          if [ -d "node_modules" ]; then
+            echo "📦 Removing cached node_modules to ensure fresh install..."
+            rm -rf node_modules
           fi
 
+          # Always run bun install to ensure dependencies match lockfile exactly
+          # This ensures that if package.json or bun.lock changed, dependencies are updated
+          # bun install with --frozen-lockfile is fast and ensures consistency
           if ! bun install --frozen-lockfile; then
             echo "❌ Error: Failed to install dependencies"
             echo "This could be due to:"
