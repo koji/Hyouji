@@ -17,13 +17,9 @@ vi.mock('oh-my-logo', () => ({
 // Mock the createLabel function to avoid actual API calls and capture calls
 let mockCreateLabel: ReturnType<typeof vi.fn>
 
-vi.mock('./callApi.js', async () => {
-  const actual = await vi.importActual('./callApi.js')
-  return {
-    ...actual,
-    createLabel: vi.fn(),
-  }
-})
+vi.mock('./callApi.js', () => ({
+  createLabel: vi.fn(),
+}))
 
 // Mock fs for file operations
 vi.mock('fs')

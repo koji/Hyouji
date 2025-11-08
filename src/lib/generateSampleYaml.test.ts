@@ -13,7 +13,9 @@ vi.mock('oh-my-logo', () => ({
 }))
 
 // Mock fs module
-vi.mock('fs')
+vi.mock('fs', () => ({
+  writeFileSync: vi.fn(),
+}))
 
 // Mock chalk to avoid color codes in tests
 vi.mock('chalk', () => ({
@@ -36,7 +38,7 @@ describe('generateSampleYaml', () => {
   describe('Successful generation', () => {
     it('should generate YAML file with correct path', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
 
       // Act
       await generateSampleYaml()
@@ -51,7 +53,7 @@ describe('generateSampleYaml', () => {
 
     it('should generate YAML with correct content structure', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
 
       // Act
       await generateSampleYaml()
@@ -67,7 +69,7 @@ describe('generateSampleYaml', () => {
 
     it('should generate valid YAML syntax', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
 
       // Act
       await generateSampleYaml()
@@ -81,7 +83,7 @@ describe('generateSampleYaml', () => {
 
     it('should preserve all sample data fields correctly', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
 
       // Act
       await generateSampleYaml()
@@ -103,7 +105,7 @@ describe('generateSampleYaml', () => {
   describe('Error handling', () => {
     it('should handle EACCES error (permission denied)', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
       const error = new Error('Permission denied') as NodeJS.ErrnoException
       error.code = 'EACCES'
       mockWriteFileSync.mockImplementation(() => {
@@ -116,7 +118,7 @@ describe('generateSampleYaml', () => {
 
     it('should handle ENOSPC error (insufficient disk space)', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
       const error = new Error('No space left') as NodeJS.ErrnoException
       error.code = 'ENOSPC'
       mockWriteFileSync.mockImplementation(() => {
@@ -129,7 +131,7 @@ describe('generateSampleYaml', () => {
 
     it('should handle EROFS error (read-only file system)', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
       const error = new Error('Read-only') as NodeJS.ErrnoException
       error.code = 'EROFS'
       mockWriteFileSync.mockImplementation(() => {
@@ -142,7 +144,7 @@ describe('generateSampleYaml', () => {
 
     it('should handle generic Error objects', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
       const error = new Error('Generic error message')
       mockWriteFileSync.mockImplementation(() => {
         throw error
@@ -154,7 +156,7 @@ describe('generateSampleYaml', () => {
 
     it('should handle non-Error objects', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
       mockWriteFileSync.mockImplementation(() => {
         throw 'String error'
       })
@@ -167,7 +169,7 @@ describe('generateSampleYaml', () => {
   describe('YAML format validation', () => {
     it('should generate YAML with correct structure for label import', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
 
       // Act
       await generateSampleYaml()
@@ -192,7 +194,7 @@ describe('generateSampleYaml', () => {
 
     it('should generate YAML that matches sample data exactly', async () => {
       // Arrange
-      const mockWriteFileSync = vi.mocked(fs.writeFileSync)
+      const mockWriteFileSync = (fs.writeFileSync as vi.Mock)
 
       // Act
       await generateSampleYaml()

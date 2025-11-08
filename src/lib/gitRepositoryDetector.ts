@@ -1,88 +1,82 @@
-import { exec } from 'child_process'
-import { existsSync } from 'fs'
-import { dirname, join } from 'path'
-import { promisify } from 'util'
+import { exec } from "child_process";
+import { existsSync } from "fs";
+import { dirname, join } from "path";
+import { promisify } from "util";
 
-const execAsync = promisify(exec)
-const GIT_COMMAND_TIMEOUT_MS = 5000
+const GIT_COMMAND_TIMEOUT_MS = 5000;
 
-/**
- * Information about a detected Git repository
- */
 export interface GitRepositoryInfo {
-  owner: string
-  repo: string
-  remoteUrl: string
-  detectionMethod: 'origin' | 'first-remote' | 'manual'
+  owner: string;
+  repo: string;
+  remoteUrl: string;
+  detectionMethod: "origin" | "first-remote" | "manual";
 }
 
-/**
- * Result of Git repository detection
- */
 export interface GitDetectionResult {
-  isGitRepository: boolean
-  repositoryInfo?: GitRepositoryInfo
-  error?: string
+  isGitRepository: boolean;
+  repositoryInfo?: GitRepositoryInfo;
+  error?: string;
 }
 
-/**
- * GitRepositoryDetector handles automatic detection of Git repository information
- */
 export class GitRepositoryDetector {
+  /**
+   * Allows tests to override execAsync implementation
+   */
+  static execAsync = promisify(exec);
   /**
    * Detects Git repository information from the current working directory
    * @param cwd - Current working directory (defaults to process.cwd())
    * @returns Promise<GitDetectionResult>
    */
   static async detectRepository(cwd?: string): Promise<GitDetectionResult> {
-    const workingDir = cwd || process.cwd()
+    const workingDir = cwd || process.cwd();
 
     try {
       // Find Git root directory
-      const gitRoot = await this.findGitRoot(workingDir)
+      const gitRoot = await this.findGitRoot(workingDir);
       if (!gitRoot) {
         return {
           isGitRepository: false,
-          error: 'Not a Git repository',
-        }
+          error: "Not a Git repository",
+        };
       }
 
       // Get all remotes
-      const remotes = await this.getAllRemotes(gitRoot)
+      const remotes = await this.getAllRemotes(gitRoot);
       if (remotes.length === 0) {
         return {
           isGitRepository: true,
-          error: 'No remotes configured',
-        }
+          error: "No remotes configured",
+        };
       }
 
       // Try to get origin remote first, then fallback to first remote
-      let remoteUrl: string | null = null
-      let detectionMethod: 'origin' | 'first-remote' = 'origin'
+      let remoteUrl: string | null = null;
+      let detectionMethod: "origin" | "first-remote" = "origin";
 
-      if (remotes.includes('origin')) {
-        remoteUrl = await this.getRemoteUrl(gitRoot, 'origin')
+      if (remotes.includes("origin")) {
+        remoteUrl = await this.getRemoteUrl(gitRoot, "origin");
       }
 
       if (!remoteUrl && remotes.length > 0) {
-        remoteUrl = await this.getRemoteUrl(gitRoot, remotes[0])
-        detectionMethod = 'first-remote'
+        remoteUrl = await this.getRemoteUrl(gitRoot, remotes[0]);
+        detectionMethod = "first-remote";
       }
 
       if (!remoteUrl) {
         return {
           isGitRepository: true,
-          error: 'Could not retrieve remote URL',
-        }
+          error: "Could not retrieve remote URL",
+        };
       }
 
       // Parse the Git URL
-      const parsedUrl = this.parseGitUrl(remoteUrl)
+      const parsedUrl = this.parseGitUrl(remoteUrl);
       if (!parsedUrl) {
         return {
           isGitRepository: true,
-          error: 'Could not parse remote URL',
-        }
+          error: "Could not parse remote URL",
+        };
       }
 
       return {
@@ -93,12 +87,12 @@ export class GitRepositoryDetector {
           remoteUrl,
           detectionMethod,
         },
-      }
+      };
     } catch (err) {
       return {
         isGitRepository: false,
-        error: err instanceof Error ? err.message : 'Unknown error occurred',
-      }
+        error: err instanceof Error ? err.message : "Unknown error occurred",
+      };
     }
   }
 
@@ -108,19 +102,19 @@ export class GitRepositoryDetector {
    * @returns Promise<string | null> - Git root path or null if not found
    */
   static async findGitRoot(startPath: string): Promise<string | null> {
-    let currentPath = startPath
+    let currentPath = startPath;
 
     while (currentPath !== dirname(currentPath)) {
-      const gitPath = join(currentPath, '.git')
+      const gitPath = join(currentPath, ".git");
 
       if (existsSync(gitPath)) {
-        return currentPath
+        return currentPath;
       }
 
-      currentPath = dirname(currentPath)
+      currentPath = dirname(currentPath);
     }
 
-    return null
+    return null;
   }
 
   /**
@@ -131,17 +125,20 @@ export class GitRepositoryDetector {
    */
   static async getRemoteUrl(
     gitRoot: string,
-    remoteName: string,
+    remoteName: string
   ): Promise<string | null> {
     try {
-      const { stdout } = await execAsync(`git remote get-url ${remoteName}`, {
-        cwd: gitRoot,
-        timeout: GIT_COMMAND_TIMEOUT_MS,
-      })
+      const { stdout } = await GitRepositoryDetector.execAsync(
+        `git remote get-url ${remoteName}`,
+        {
+          cwd: gitRoot,
+          timeout: GIT_COMMAND_TIMEOUT_MS,
+        }
+      );
 
-      return stdout.trim() || null
+      return stdout.trim() || null;
     } catch {
-      return null
+      return null;
     }
   }
 
@@ -152,69 +149,69 @@ export class GitRepositoryDetector {
    */
   static parseGitUrl(url: string): { owner: string; repo: string } | null {
     // Input validation
-    if (!url || typeof url !== 'string' || url.trim().length === 0) {
-      return null
+    if (!url || typeof url !== "string" || url.trim().length === 0) {
+      return null;
     }
 
-    const trimmedUrl = url.trim()
+    const trimmedUrl = url.trim();
 
     try {
       // SSH format: git@github.com:owner/repo.git
       const sshMatch = trimmedUrl.match(
-        /^git@github\.com:([^/\s:]+)\/([^/\s:]+?)(?:\.git)?$/,
-      )
+        /^git@github\.com:([^/\s:]+)\/([^/\s:]+?)(?:\.git)?$/
+      );
       if (sshMatch) {
-        const owner = sshMatch[1]
-        const repo = sshMatch[2]
+        const owner = sshMatch[1];
+        const repo = sshMatch[2];
 
         // Validate extracted values
         if (
           this.isValidGitHubIdentifier(owner) &&
           this.isValidGitHubIdentifier(repo)
         ) {
-          return { owner, repo }
+          return { owner, repo };
         }
       }
 
       // HTTPS format: https://github.com/owner/repo.git or https://github.com/owner/repo
       const httpsMatch = trimmedUrl.match(
-        /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/,
-      )
+        /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/
+      );
       if (httpsMatch) {
-        const owner = httpsMatch[1]
-        const repo = httpsMatch[2]
+        const owner = httpsMatch[1];
+        const repo = httpsMatch[2];
 
         // Validate extracted values
         if (
           this.isValidGitHubIdentifier(owner) &&
           this.isValidGitHubIdentifier(repo)
         ) {
-          return { owner, repo }
+          return { owner, repo };
         }
       }
 
       // HTTP format (less secure but sometimes used): http://github.com/owner/repo.git
       const httpMatch = trimmedUrl.match(
-        /^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/,
-      )
+        /^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/
+      );
       if (httpMatch) {
-        const owner = httpMatch[1]
-        const repo = httpMatch[2]
+        const owner = httpMatch[1];
+        const repo = httpMatch[2];
 
         // Validate extracted values
         if (
           this.isValidGitHubIdentifier(owner) &&
           this.isValidGitHubIdentifier(repo)
         ) {
-          return { owner, repo }
+          return { owner, repo };
         }
       }
     } catch {
       // Handle regex errors or other parsing issues
-      return null
+      return null;
     }
 
-    return null
+    return null;
   }
 
   /**
@@ -223,8 +220,8 @@ export class GitRepositoryDetector {
    * @returns boolean - True if valid, false otherwise
    */
   private static isValidGitHubIdentifier(identifier: string): boolean {
-    if (!identifier || typeof identifier !== 'string') {
-      return false
+    if (!identifier || typeof identifier !== "string") {
+      return false;
     }
 
     // GitHub username/repo name rules:
@@ -232,14 +229,14 @@ export class GitRepositoryDetector {
     // - Cannot start or end with a hyphen
     // - Cannot contain consecutive hyphens
     // - Must be 1-39 characters long
-    const GITHUB_IDENTIFIER_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/
+    const GITHUB_IDENTIFIER_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
 
     return (
       identifier.length >= 1 &&
       identifier.length <= 39 &&
       GITHUB_IDENTIFIER_REGEX.test(identifier) &&
-      !identifier.includes('--') // No consecutive hyphens
-    )
+      !identifier.includes("--") // No consecutive hyphens
+    );
   }
 
   /**
@@ -249,17 +246,17 @@ export class GitRepositoryDetector {
    */
   static async getAllRemotes(gitRoot: string): Promise<string[]> {
     try {
-      const { stdout } = await execAsync('git remote', {
+      const { stdout } = await GitRepositoryDetector.execAsync("git remote", {
         cwd: gitRoot,
         timeout: GIT_COMMAND_TIMEOUT_MS,
-      })
+      });
 
       return stdout
         .trim()
-        .split('\n')
-        .filter((remote) => remote.length > 0)
+        .split("\n")
+        .filter((remote) => remote.length > 0);
     } catch {
-      return []
+      return [];
     }
   }
 }

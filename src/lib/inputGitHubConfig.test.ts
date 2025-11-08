@@ -1,208 +1,200 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getGitHubConfigs } from './inputGitHubConfig.js'
+import { getGitHubConfigs } from "./inputGitHubConfig.js";
 
 // Mock dependencies
-vi.mock('prompts')
-vi.mock('./configManager.js')
-vi.mock('./gitRepositoryDetector.js')
-vi.mock('@octokit/core')
-vi.mock('../constant.js', () => ({
+vi.mock("prompts", () => ({
+  default: vi.fn(),
+}));
+vi.mock("./configManager.js");
+vi.mock("./gitRepositoryDetector.js");
+vi.mock("@octokit/core");
+vi.mock("../constant.js", () => ({
   githubConfigs: [
     {
-      type: 'password',
-      name: 'octokit',
-      message: 'Please type your personal token',
+      type: "password",
+      name: "octokit",
+      message: "Please type your personal token",
     },
     {
-      type: 'text',
-      name: 'owner',
-      message: 'Please type your GitHub account',
+      type: "text",
+      name: "owner",
+      message: "Please type your GitHub account",
     },
     {
-      type: 'text',
-      name: 'repo',
-      message: 'Please type your target repo name',
+      type: "text",
+      name: "repo",
+      message: "Please type your target repo name",
     },
   ],
-}))
+}));
 
-describe('getGitHubConfigs auto-detection integration', () => {
+describe("getGitHubConfigs auto-detection integration", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
-  it('should use auto-detected repository when detection succeeds', async () => {
-    const { ConfigManager } = await import('./configManager.js')
-    const { GitRepositoryDetector } = await import('./gitRepositoryDetector.js')
-    const { Octokit } = await import('@octokit/core')
+  it("should use auto-detected repository when detection succeeds", async () => {
+    const { ConfigManager } = await import("./configManager.js");
+    const { GitRepositoryDetector } = await import(
+      "./gitRepositoryDetector.js"
+    );
+    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
-    const mockLoadValidatedConfig = vi.fn().mockResolvedValue({
+    vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
       config: {
-        token: 'test-token',
-        owner: 'saved-owner',
-        lastUpdated: '2024-01-01T00:00:00.000Z',
+        token: "test-token",
+        owner: "saved-owner",
+        lastUpdated: "2024-01-01T00:00:00.000Z",
       },
       shouldPromptForCredentials: false,
-    })
-
-    vi.mocked(ConfigManager).mockImplementation(
-      () =>
-        ({
-          loadValidatedConfig: mockLoadValidatedConfig,
-        }) as unknown as InstanceType<typeof ConfigManager>, // `unknown` then cast to `ConfigManager` because `vi.mocked` returns a mocked type that doesn't directly match the class type
-    )
-
-    // Mock successful auto-detection
+    });
     const mockDetectRepository = vi.fn().mockResolvedValue({
       isGitRepository: true,
       repositoryInfo: {
-        owner: 'detected-owner',
-        repo: 'detected-repo',
-        remoteUrl: 'git@github.com:detected-owner/detected-repo.git',
-        detectionMethod: 'origin',
+        owner: "detected-owner",
+        repo: "detected-repo",
+        remoteUrl: "git@github.com:detected-owner/detected-repo.git",
+        detectionMethod: "origin",
       },
-    })
+    });
 
-    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
-    // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as unknown as InstanceType<typeof Octokit>
-    vi.mocked(Octokit).mockImplementation(() => mockOctokit)
+    // Mock Octokit as a constructor
+    class MockOctokit {
+      auth: string;
+      constructor(options: { auth: string }) {
+        this.auth = options.auth;
+      }
+    }
+    vi.mocked(Octokit).mockImplementation(MockOctokit as any);
 
-    const result = await getGitHubConfigs()
+    const result = await getGitHubConfigs();
 
-    expect(result).toEqual({
-      octokit: mockOctokit,
-      owner: 'detected-owner',
-      repo: 'detected-repo',
-      fromSavedConfig: true,
-      autoDetected: true,
-      detectionMethod: 'origin',
-    })
+    expect(result.owner).toBe("detected-owner");
+    expect(result.repo).toBe("detected-repo");
+    expect(result.fromSavedConfig).toBe(true);
+    expect(result.autoDetected).toBe(true);
+    expect(result.detectionMethod).toBe("origin");
+    expect(result.octokit.auth).toBe("test-token");
 
-    expect(mockDetectRepository).toHaveBeenCalledOnce()
-  })
+    expect(mockDetectRepository).toHaveBeenCalledOnce();
+  });
 
-  it('should fallback to manual input when auto-detection fails', async () => {
-    const prompts = (await import('prompts')).default
-    const { ConfigManager } = await import('./configManager.js')
-    const { GitRepositoryDetector } = await import('./gitRepositoryDetector.js')
-    const { Octokit } = await import('@octokit/core')
+  it("should fallback to manual input when auto-detection fails", async () => {
+    const prompts = (await import("prompts")).default;
+    const { ConfigManager } = await import("./configManager.js");
+    const { GitRepositoryDetector } = await import(
+      "./gitRepositoryDetector.js"
+    );
+    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
-    const mockLoadValidatedConfig = vi.fn().mockResolvedValue({
+    vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
       config: {
-        token: 'test-token',
-        owner: 'saved-owner',
-        lastUpdated: '2024-01-01T00:00:00.000Z',
+        token: "test-token",
+        owner: "saved-owner",
+        lastUpdated: "2024-01-01T00:00:00.000Z",
       },
       shouldPromptForCredentials: false,
-    })
-
-    vi.mocked(ConfigManager).mockImplementation(
-      () =>
-        ({
-          loadValidatedConfig: mockLoadValidatedConfig,
-        }) as unknown as InstanceType<typeof ConfigManager>,
-    )
-
-    // Mock failed auto-detection
+    });
     const mockDetectRepository = vi.fn().mockResolvedValue({
       isGitRepository: false,
-      error: 'Not a Git repository',
-    })
+      error: "Not a Git repository",
+    });
 
-    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock manual input
     vi.mocked(prompts).mockResolvedValue({
-      repo: 'manual-repo',
-    })
+      repo: "manual-repo",
+    });
 
-    // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as unknown as InstanceType<typeof Octokit>
-    vi.mocked(Octokit).mockImplementation(() => mockOctokit)
+    // Mock Octokit as a constructor
+    class MockOctokit {
+      auth: string;
+      constructor(options: { auth: string }) {
+        this.auth = options.auth;
+      }
+    }
+    vi.mocked(Octokit).mockImplementation(MockOctokit as any);
 
-    const result = await getGitHubConfigs()
+    const result = await getGitHubConfigs();
 
-    expect(result).toEqual({
-      octokit: mockOctokit,
-      owner: 'saved-owner',
-      repo: 'manual-repo',
-      fromSavedConfig: true,
-      autoDetected: false,
-      detectionMethod: 'manual',
-    })
+    expect(result.owner).toBe("saved-owner");
+    expect(result.repo).toBe("manual-repo");
+    expect(result.fromSavedConfig).toBe(true);
+    expect(result.autoDetected).toBe(false);
+    expect(result.detectionMethod).toBe("manual");
+    expect(result.octokit.auth).toBe("test-token");
 
-    expect(mockDetectRepository).toHaveBeenCalledOnce()
+    expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([
       {
-        type: 'text',
-        name: 'repo',
-        message: 'Please type your target repo name',
+        type: "text",
+        name: "repo",
+        message: "Please type your target repo name",
       },
-    ])
-  })
+    ]);
+  });
 
-  it('should handle auto-detection errors gracefully', async () => {
-    const prompts = (await import('prompts')).default
-    const { ConfigManager } = await import('./configManager.js')
-    const { GitRepositoryDetector } = await import('./gitRepositoryDetector.js')
-    const { Octokit } = await import('@octokit/core')
+  it("should handle auto-detection errors gracefully", async () => {
+    const prompts = (await import("prompts")).default;
+    const { ConfigManager } = await import("./configManager.js");
+    const { GitRepositoryDetector } = await import(
+      "./gitRepositoryDetector.js"
+    );
+    const { Octokit } = await import("@octokit/core");
 
     // Mock valid saved config
-    const mockLoadValidatedConfig = vi.fn().mockResolvedValue({
+    vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
       config: {
-        token: 'test-token',
-        owner: 'saved-owner',
-        lastUpdated: '2024-01-01T00:00:00.000Z',
+        token: "test-token",
+        owner: "saved-owner",
+        lastUpdated: "2024-01-01T00:00:00.000Z",
       },
       shouldPromptForCredentials: false,
-    })
-
-    vi.mocked(ConfigManager).mockImplementation(
-      () =>
-        ({
-          loadValidatedConfig: mockLoadValidatedConfig,
-        }) as unknown as InstanceType<typeof ConfigManager>,
-    )
+    });
 
     // Mock auto-detection throwing an error
     const mockDetectRepository = vi
       .fn()
-      .mockRejectedValue(new Error('Git command failed'))
+      .mockRejectedValue(new Error("Git command failed"));
 
-    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock manual input
     vi.mocked(prompts).mockResolvedValue({
-      repo: 'manual-repo',
-    })
+      repo: "manual-repo",
+    });
 
-    // Mock Octokit
-    const mockOctokit = { auth: 'test-token' } as unknown as InstanceType<typeof Octokit>
-    vi.mocked(Octokit).mockImplementation(() => mockOctokit)
+    // Mock Octokit as a constructor
+    class MockOctokit {
+      auth: string;
+      constructor(options: { auth: string }) {
+        this.auth = options.auth;
+      }
+    }
+    vi.mocked(Octokit).mockImplementation(MockOctokit as any);
 
-    const result = await getGitHubConfigs()
+    const result = await getGitHubConfigs();
 
-    expect(result).toEqual({
-      octokit: mockOctokit,
-      owner: 'saved-owner',
-      repo: 'manual-repo',
-      fromSavedConfig: true,
-      autoDetected: false,
-      detectionMethod: 'manual',
-    })
+    expect(result.owner).toBe("saved-owner");
+    expect(result.repo).toBe("manual-repo");
+    expect(result.fromSavedConfig).toBe(true);
+    expect(result.autoDetected).toBe(false);
+    expect(result.detectionMethod).toBe("manual");
+    expect(result.octokit.auth).toBe("test-token");
 
-    expect(mockDetectRepository).toHaveBeenCalledOnce()
+    expect(mockDetectRepository).toHaveBeenCalledOnce();
     expect(prompts).toHaveBeenCalledWith([
       {
-        type: 'text',
-        name: 'repo',
-        message: 'Please type your target repo name',
+        type: "text",
+        name: "repo",
+        message: "Please type your target repo name",
       },
-    ])
-  })
-})
+    ]);
+  });
+});
