@@ -31,7 +31,7 @@ vi.mock("../constant.js", () => ({
 }));
 
 // Create a reusable mock for the Octokit class
-const _mockEndpoint = Object.assign(vi.fn(), {
+const mockEndpoint = Object.assign(vi.fn(), {
   DEFAULTS: {},
   defaults: vi.fn(),
   merge: vi.fn(),
@@ -76,8 +76,8 @@ describe("getGitHubConfigs auto-detection integration", () => {
     vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
 
     // Mock Octokit as a constructor
-    vi.mocked(Octokit).mockImplementation(
-      MockOctokit as unknown as typeof Octokit
+vi.mocked(Octokit).mockImplementation(
+      Object.assign(MockOctokit, { _endpoint: mockEndpoint }) as unknown as typeof Octokit
     );
 
     const result = await getGitHubConfigs();
@@ -121,8 +121,8 @@ describe("getGitHubConfigs auto-detection integration", () => {
     });
 
     // Mock Octokit as a constructor
-    vi.mocked(Octokit).mockImplementation(
-      MockOctokit as unknown as typeof Octokit
+vi.mocked(Octokit).mockImplementation(
+      Object.assign(MockOctokit, { _endpoint: mockEndpoint }) as unknown as typeof Octokit
     );
 
     const result = await getGitHubConfigs();
@@ -174,8 +174,8 @@ describe("getGitHubConfigs auto-detection integration", () => {
     });
 
     // Mock Octokit as a constructor
-    vi.mocked(Octokit).mockImplementation(
-      MockOctokit as unknown as typeof Octokit
+vi.mocked(Octokit).mockImplementation(
+      Object.assign(MockOctokit, { _endpoint: mockEndpoint }) as unknown as typeof Octokit
     );
 
     const result = await getGitHubConfigs();
