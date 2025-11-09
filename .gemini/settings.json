@@ -4,6 +4,10 @@
       "command": "npx",
       "args": ["-y", "snyk@latest", "mcp", "-t", "stdio"],
       "env": {}
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     }
   }
 }
