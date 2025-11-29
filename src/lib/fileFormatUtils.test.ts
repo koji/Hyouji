@@ -148,8 +148,7 @@ describe('fileFormatUtils', () => {
 
     it('should handle YAML with duplicate keys', () => {
       const yamlWithDuplicates = 'name: first\nname: duplicate'
-      const result = parseYamlContent(yamlWithDuplicates)
-      expect(result).toEqual({ name: 'duplicate' })
+      expect(() => parseYamlContent(yamlWithDuplicates)).toThrow(/Map keys must be unique/)
     })
 
     it('should handle YAML with invalid indentation in arrays', () => {

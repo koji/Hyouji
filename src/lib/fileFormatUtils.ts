@@ -43,7 +43,7 @@ export const parseJsonContent = (content: string): unknown => {
  */
 export const parseYamlContent = (content: string): unknown => {
   try {
-    return YAML.parse(content, { uniqueKeys: false })
+    return YAML.parse(content)
   } catch (error) {
     // Enhance YAML error messages to be more descriptive
     if (error instanceof Error) {
