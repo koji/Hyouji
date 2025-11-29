@@ -1,4 +1,4 @@
-import * as yaml from 'js-yaml'
+import YAML from 'yaml'
 import * as path from 'path'
 
 /**
@@ -43,11 +43,11 @@ export const parseJsonContent = (content: string): unknown => {
  */
 export const parseYamlContent = (content: string): unknown => {
   try {
-    return yaml.load(content)
+    return YAML.parse(content, { uniqueKeys: false })
   } catch (error) {
     // Enhance YAML error messages to be more descriptive
-    if (error instanceof yaml.YAMLException) {
-      throw new Error(`YAMLException: ${error.message}`)
+    if (error instanceof Error) {
+      throw new Error(`YAML Error: ${error.message}`)
     }
     throw error
   }

@@ -128,7 +128,7 @@ describe('fileFormatUtils', () => {
 
     it('should throw detailed error for YAML syntax errors', () => {
       const invalidYaml = 'name: test\n  invalid: indentation'
-      expect(() => parseYamlContent(invalidYaml)).toThrow(/YAMLException/)
+      expect(() => parseYamlContent(invalidYaml)).toThrow(/YAML Error/)
     })
 
     it('should handle YAML with invalid mapping structure', () => {
@@ -147,11 +147,9 @@ describe('fileFormatUtils', () => {
     })
 
     it('should handle YAML with duplicate keys', () => {
-      const invalidYaml = 'name: first\nname: duplicate'
-      // js-yaml throws an error for duplicate keys by default
-      expect(() => parseYamlContent(invalidYaml)).toThrow(
-        /YAMLException.*duplicated mapping key/,
-      )
+      const yamlWithDuplicates = 'name: first\nname: duplicate'
+      const result = parseYamlContent(yamlWithDuplicates)
+      expect(result).toEqual({ name: 'duplicate' })
     })
 
     it('should handle YAML with invalid indentation in arrays', () => {
@@ -170,8 +168,8 @@ describe('fileFormatUtils', () => {
     })
 
     it('should handle empty YAML content', () => {
-      expect(parseYamlContent('')).toBeUndefined()
-      expect(parseYamlContent('null')).toBeNull()
+      expect(parseYamlContent('')).toBe(null)
+      expect(parseYamlContent('null')).toBe(null)
     })
 
     it('should handle YAML with quotes and special characters', () => {

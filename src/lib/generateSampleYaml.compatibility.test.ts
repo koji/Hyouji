@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 
-import yaml from 'js-yaml'
+import YAML from 'yaml'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { sampleData } from '../constant.js'
@@ -99,7 +99,7 @@ describe('Sample YAML Compatibility Tests', () => {
       const yamlContent = writeCall[1] as string
 
       // Parse and verify structure
-      const parsedYaml = yaml.load(yamlContent) as typeof sampleData
+      const parsedYaml = YAML.parse(yamlContent) as typeof sampleData
       expect(Array.isArray(parsedYaml)).toBe(true)
       expect(parsedYaml).toHaveLength(sampleData.length)
 
@@ -121,7 +121,7 @@ describe('Sample YAML Compatibility Tests', () => {
       const yamlContent = writeCall[1] as string
 
       // Should be valid YAML
-      expect(() => yaml.load(yamlContent)).not.toThrow()
+      expect(() => YAML.parse(yamlContent)).not.toThrow()
 
       // Should contain proper YAML structure indicators
       expect(yamlContent).toContain('- name:')
@@ -134,7 +134,7 @@ describe('Sample YAML Compatibility Tests', () => {
 
       const writeCall = vi.mocked(fs.writeFileSync).mock.calls[0]
       const yamlContent = writeCall[1] as string
-      const parsedYaml = yaml.load(yamlContent) as typeof sampleData
+      const parsedYaml = YAML.parse(yamlContent) as typeof sampleData
 
       // Verify all original data is preserved
       expect(parsedYaml).toEqual(sampleData)
@@ -268,7 +268,7 @@ describe('Sample YAML Compatibility Tests', () => {
 
       const writeCall = vi.mocked(fs.writeFileSync).mock.calls[0]
       const yamlContent = writeCall[1] as string
-      const parsedYaml = yaml.load(yamlContent) as ImportLabelType[]
+      const parsedYaml = YAML.parse(yamlContent) as ImportLabelType[]
 
       // Should be an array of objects with correct structure
       expect(Array.isArray(parsedYaml)).toBe(true)
@@ -284,7 +284,7 @@ describe('Sample YAML Compatibility Tests', () => {
 
       const writeCall = vi.mocked(fs.writeFileSync).mock.calls[0]
       const yamlContent = writeCall[1] as string
-      const parsedYaml = yaml.load(yamlContent)
+      const parsedYaml = YAML.parse(yamlContent)
 
       expect(parsedYaml).toEqual(sampleData)
     })
