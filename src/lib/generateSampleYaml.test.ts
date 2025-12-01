@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import type { Mock } from "vitest";
 
-import yaml from "js-yaml";
+import YAML from "yaml";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sampleData } from "../constant.js";
@@ -64,7 +64,7 @@ describe("generateSampleYaml", () => {
       const [, yamlContent] = mockWriteFileSync.mock.calls[0];
 
       // Parse the generated YAML to verify structure
-      const parsedYaml = yaml.load(yamlContent as string);
+      const parsedYaml = YAML.parse(yamlContent as string);
       expect(parsedYaml).toEqual(sampleData);
     });
 
@@ -79,7 +79,7 @@ describe("generateSampleYaml", () => {
       const [, yamlContent] = mockWriteFileSync.mock.calls[0];
 
       // Should not throw when parsing the generated YAML
-      expect(() => yaml.load(yamlContent as string)).not.toThrow();
+      expect(() => YAML.parse(yamlContent as string)).not.toThrow();
     });
 
     it("should preserve all sample data fields correctly", async () => {
@@ -91,7 +91,7 @@ describe("generateSampleYaml", () => {
 
       // Assert
       const [, yamlContent] = mockWriteFileSync.mock.calls[0];
-      const parsedYaml = yaml.load(yamlContent as string) as typeof sampleData;
+      const parsedYaml = YAML.parse(yamlContent as string) as typeof sampleData;
 
       // Verify all fields are preserved
       expect(parsedYaml).toHaveLength(sampleData.length);
@@ -177,7 +177,7 @@ describe("generateSampleYaml", () => {
 
       // Assert
       const [, yamlContent] = mockWriteFileSync.mock.calls[0];
-      const parsedYaml = yaml.load(yamlContent as string) as typeof sampleData;
+      const parsedYaml = YAML.parse(yamlContent as string) as typeof sampleData;
 
       // Should be an array
       expect(Array.isArray(parsedYaml)).toBe(true);
@@ -202,7 +202,7 @@ describe("generateSampleYaml", () => {
 
       // Assert
       const [, yamlContent] = mockWriteFileSync.mock.calls[0];
-      const parsedYaml = yaml.load(yamlContent as string);
+      const parsedYaml = YAML.parse(yamlContent as string);
 
       expect(parsedYaml).toEqual(sampleData);
     });

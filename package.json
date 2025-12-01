@@ -58,13 +58,12 @@
   "dependencies": {
     "@octokit/core": "^7.0.6",
     "chalk": "^5.6.2",
-    "js-yaml": "^4.1.0",
     "oh-my-logo": "^0.3.2",
-    "prompts": "^2.4.2"
+    "prompts": "^2.4.2",
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.4",
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "^4.0.8",
     "@vitest/ui": "^4.0.8",
