@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import * as fs from 'fs'
-import yaml from 'js-yaml'
+import YAML from 'yaml'
 
 import { sampleData } from '../constant.js'
 
@@ -12,12 +12,9 @@ export const generateSampleYaml = async (): Promise<void> => {
     const outputPath = './hyouji.yaml'
 
     // Format the sample data as YAML with proper indentation
-    const yamlContent = yaml.dump(sampleData, {
+    const yamlContent = YAML.stringify(sampleData, {
       indent: 2,
-      lineWidth: -1, // Disable line wrapping
-      noRefs: true, // Disable references
-      quotingType: '"', // Use double quotes for strings
-      forceQuotes: false, // Only quote when necessary
+      singleQuote: false, // Use double quotes for strings
     })
 
     // Provide immediate feedback that operation is starting

@@ -8,8 +8,7 @@ import * as path from "path";
 import { join, dirname } from "path";
 import { createHash, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 import prompts from "prompts";
-import * as yaml from "js-yaml";
-import yaml__default from "js-yaml";
+import YAML from "yaml";
 import { Octokit } from "@octokit/core";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -1027,16 +1026,10 @@ const log$2 = console.log;
 const generateSampleYaml = async () => {
   try {
     const outputPath = "./hyouji.yaml";
-    const yamlContent = yaml__default.dump(sampleData, {
+    const yamlContent = YAML.stringify(sampleData, {
       indent: 2,
-      lineWidth: -1,
-      // Disable line wrapping
-      noRefs: true,
-      // Disable references
-      quotingType: '"',
+      singleQuote: false
       // Use double quotes for strings
-      forceQuotes: false
-      // Only quote when necessary
     });
     log$2(chalk.blue("Generating sample YAML file..."));
     fs.writeFileSync(outputPath, yamlContent, "utf8");
@@ -1095,10 +1088,10 @@ const parseJsonContent = (content) => {
 };
 const parseYamlContent = (content) => {
   try {
-    return yaml.load(content);
+    return YAML.parse(content);
   } catch (error) {
-    if (error instanceof yaml.YAMLException) {
-      throw new Error(`YAMLException: ${error.message}`);
+    if (error instanceof Error) {
+      throw new Error(`YAML Error: ${error.message}`);
     }
     throw error;
   }
