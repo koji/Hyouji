@@ -8,11 +8,11 @@ on:
 
 permissions:
   contents: read
-  # You might use this later if you upload SARIF to code scanning, etc.
+  # Needed for uploading SARIF to GitHub Code Scanning
   security-events: write
 
 jobs:
-  # JOB 1: Run the scanners and upload artifacts
+  # JOB 1: Run the scanners, upload SARIF, and upload artifacts
   run-scanners:
     runs-on: ubuntu-latest
     steps:
@@ -24,7 +24,7 @@ jobs:
         with:
           bun-version: "latest"
 
-      # save bun audit result 
+      # bun audit を JSON で保存 (no install needed)
       - name: Run bun audit (JSON)
         run: |
           bun audit --json > bun-audit.json || true
@@ -32,13 +32,6 @@ jobs:
       # Run OSV-Scanner via Docker and save JSON results
       - name: Run OSV-Scanner (JSON)
         run: |
-          # NOTE:
-          # - OSV-Scanner V2 uses the `scan` subcommand and `--format` / `--output` flags.
-          # - bun.lockb is not a first-class supported lockfile yet, so we scan the repo
-          #   source tree recursively instead.
-          #
-          # This writes osv-results.json into the workspace.
-
           docker run --rm \
             -v "$PWD":/src \
             ghcr.io/google/osv-scanner:v2.3.0-amd64 \
@@ -48,7 +41,25 @@ jobs:
               --output=/src/osv-results.json \
           || true
 
-      # Upload results so the next job can access them
+      # Run OSV-Scanner again to produce SARIF for GitHub Code Scanning
+      - name: Run OSV-Scanner (SARIF)
+        run: |
+          docker run --rm \
+            -v "$PWD":/src \
+            ghcr.io/google/osv-scanner:v2.3.0-amd64 \
+            scan source /src \
+              --recursive \
+              --format=sarif \
+              --output=/src/osv-results.sarif \
+          || true
+
+      # Upload SARIF to GitHub Code Scanning
+      - name: Upload OSV SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: osv-results.sarif
+
+      # Upload JSON results so the next job can access them for Discord
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -59,7 +70,7 @@ jobs:
 
   # JOB 2: Download results and notify Discord
   notify:
-    needs: run-scanners # Depends on the first job completing
+    needs: run-scanners
     runs-on: ubuntu-latest
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -72,6 +83,7 @@ jobs:
       - name: Notify Discord
         if: always()
         run: |
+          # bun audit の結果から package@version(とseverity) を抽出
           BUN_ISSUES=""
           if [ -s bun-audit.json ]; then
             BUN_ISSUES=$(jq -r '
@@ -82,6 +94,7 @@ jobs:
             ' bun-audit.json | sort -u)
           fi
 
+          # osv-scanner の JSON から package@version を抽出
           OSV_ISSUES=""
           if [ -s osv-results.json ]; then
             OSV_ISSUES=$(jq -r '
@@ -105,7 +118,6 @@ jobs:
             MESSAGE="$MESSAGE\`\`\`"
           fi
 
-          # format for Discord
           FORMATTED_MESSAGE=$(printf "%b" "$MESSAGE")
           PAYLOAD=$(jq -n --arg content "$FORMATTED_MESSAGE" '{content:$content}')
 
