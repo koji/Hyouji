@@ -2,20 +2,19 @@ name: Weekly Security Audit
 
 on:
   schedule:
-    # 毎週月曜 3:00 UTC
-    - cron: "0 3 * * 1"
+    # every monday at 6:00 UTC
+    - cron: "0 6 * * 1"
   workflow_dispatch: {}
 
 permissions:
   contents: read
+  # Required to run the scanner action / upload SARIF (if you ever add it)
+  security-events: write
 
 jobs:
-  security-check:
+  # JOB 1: Run the scanners and upload artifacts
+  run-scanners:
     runs-on: ubuntu-latest
-
-    env:
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,21 +32,50 @@ jobs:
         run: |
           bun audit --json > bun-audit.json || true
 
-      # OSV-Scanner を手動インストールして JSON で保存
-      - name: Install and Run OSV-Scanner (Manual Install)
+      # Install OSV-Scanner CLI
+      - name: Install OSV-Scanner
         run: |
-          # Use the current stable version
-          OSV_VERSION="2.3.0" 
-          curl -sSfL "github.com{OSV_VERSION}/osv-scanner_${OSV_VERSION}_linux_amd64.tar.gz" -o osv-scanner.tar.gz
-          tar -xzf osv-scanner.tar.gz
-          # Run the binary directly without moving it to /usr/local/bin
-          ./osv-scanner --lockfile=bun.lockb --json > osv-results.json || true
+          curl -sSfL \
+            https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64.tar.gz \
+            -o osv-scanner.tar.gz
+          tar xzf osv-scanner.tar.gz
+          sudo mv osv-scanner /usr/local/bin/osv-scanner
+          osv-scanner --version
 
+      # Run OSV-Scanner and save JSON results
+      - name: Run OSV-Scanner (JSON)
+        run: |
+          # Note: bun.lockb is not currently a supported lockfile. We scan the repo recursively instead.
+          # If it becomes supported later, you can switch to:
+          #   osv-scanner --json --lockfile bun.lockb > osv-results.json || true
+          osv-scanner --json -r . > osv-results.json || true
 
-      # ここで JSON から問題の package@version を抜き出して Discord に送る
+      # Upload results so the next job can access them
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-results
+          path: |
+            bun-audit.json
+            osv-results.json
+
+  # JOB 2: Download results and notify Discord
+  notify:
+    needs: run-scanners # Depends on the first job completing
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: security-results
+
       - name: Notify Discord
         if: always()
         run: |
+          # The files are now available in this job's workspace
+
           # bun audit の結果から package@version(とseverity) を抽出
           BUN_ISSUES=""
           if [ -s bun-audit.json ]; then
@@ -83,7 +111,7 @@ jobs:
             MESSAGE="$MESSAGE\`\`\`"
           fi
 
-          # Discord 用に JSON エスケープして送信 (FIXED NEWLINES)
+          # for Discord
           FORMATTED_MESSAGE=$(printf "%b" "$MESSAGE")
           PAYLOAD=$(jq -n --arg content "$FORMATTED_MESSAGE" '{content:$content}')
 
@@ -91,4 +119,3 @@ jobs:
             -X POST \
             -d "$PAYLOAD" \
             "$DISCORD_WEBHOOK_URL"
-
