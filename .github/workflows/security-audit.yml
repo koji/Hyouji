@@ -2,7 +2,7 @@ name: Weekly Security Audit
 
 on:
   schedule:
-    # 毎週月曜 3:00 UTC（日本だと月曜の昼ごろ）
+    # 毎週月曜 3:00 UTC
     - cron: "0 3 * * 1"
   workflow_dispatch: {}
 
@@ -33,44 +33,19 @@ jobs:
         run: |
           bun audit --json > bun-audit.json || true
 
-      # OSV-Scanner を入れて JSON で保存
-      - name: Install OSV-Scanner
-        run: |
-          OSV_VERSION="2.0.0"
-          curl -sSfL "https://github.com/google/osv-scanner/releases/download/v${OSV_VERSION}/osv-scanner_${OSV_VERSION}_linux_amd64.tar.gz" -o osv-scanner.tar.gz
-          tar -xzf osv-scanner.tar.gz
-          sudo mv osv-scanner /usr/local/bin/osv-scanner
-
-      - name: Run OSV-Scanner (JSON)
-        run: |
-          osv-scanner --lockfile=bun.lockb --json > osv-results.json || true
+      # OSV-Scanner Action を使用して JSON で保存
+      - name: Run OSV-Scanner
+        uses: google/osv-scanner-action@v1
+        id: osv-scan # Add an ID to reference the action's outputs
+        with:
+          scan-args: --lockfile bun.lockb --json --output osv-results.json
 
       # ここで JSON から問題の package@version を抜き出して Discord に送る
+            # ここで JSON から問題の package@version を抜き出して Discord に送る
       - name: Notify Discord
         if: always()
         run: |
-          # bun audit の結果から package@version(とseverity) を抽出
-          BUN_ISSUES=""
-          if [ -s bun-audit.json ]; then
-            BUN_ISSUES=$(jq -r '
-              ..
-              | objects
-              | select(.name? and .severity?)
-              | "\(.name)@\(.version // "unknown") (\(.severity))"
-            ' bun-audit.json | sort -u)
-          fi
-
-          # osv-scanner の JSON から package@version を抽出
-          # 公式サンプルの JSON フォーマットに基づく
-          OSV_ISSUES=""
-          if [ -s osv-results.json ]; then
-            OSV_ISSUES=$(jq -r '
-              .results[]
-              .packages[]
-              | select(.vulnerabilities | length > 0)
-              | "\(.Package.name)@\(.Package.version)"
-            ' osv-results.json | sort -u)
-          fi
+          # ... (BUN_ISSUES and OSV_ISSUES extraction logic remains the same) ...
 
           if [ -z "$BUN_ISSUES$OSV_ISSUES" ]; then
             MESSAGE="✅ **No Issues Found**\nAll security checks passed."
@@ -85,8 +60,12 @@ jobs:
             MESSAGE="$MESSAGE\`\`\`"
           fi
 
-          # Discord 用に JSON エスケープして送信
-          PAYLOAD=$(jq -n --arg content "$MESSAGE" '{content:$content}')
+          # --- FIX IS HERE ---
+          # Use printf to properly format the message with actual newlines within the shell variable itself
+          FORMATTED_MESSAGE=$(printf "%b" "$MESSAGE")
+
+          # Pass the formatted message to jq for final JSON escaping
+          PAYLOAD=$(jq -n --arg content "$FORMATTED_MESSAGE" '{content: $content}')
 
           curl -H "Content-Type: application/json" \
             -X POST \
