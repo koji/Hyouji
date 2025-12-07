@@ -2,11 +2,14 @@ name: Weekly Security Audit
 
 on:
   schedule:
+    # 毎週月曜 3:00 UTC
     - cron: "0 3 * * 1"
   workflow_dispatch: {}
 
 permissions:
   contents: read
+  # Required to write scan results if you choose to upload SARIF later
+  # security-events: write 
 
 jobs:
   security-check:
@@ -27,19 +30,45 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      # bun audit を JSON で保存
       - name: Run bun audit (JSON)
         run: |
           bun audit --json > bun-audit.json || true
 
+      # OSV-Scanner Action (Reusable Workflow) を使用して JSON で保存
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action@v2.3.0
+        uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.0
         id: osv-scan
         with:
-          scan-args: --lockfile bun.lockb --json --output osv-results.json
+          lockfile: bun.lockb
+          output-json: osv-results.json
 
+      # ここで JSON から問題の package@version を抜き出して Discord に送る
       - name: Notify Discord
         if: always()
         run: |
+          # bun audit の結果から package@version(とseverity) を抽出
+          BUN_ISSUES=""
+          if [ -s bun-audit.json ]; then
+            BUN_ISSUES=$(jq -r '
+              ..
+              | objects
+              | select(.name? and .severity?)
+              | "\(.name)@\(.version // "unknown") (\(.severity))"
+            ' bun-audit.json | sort -u)
+          fi
+
+          # osv-scanner の JSON から package@version を抽出
+          OSV_ISSUES=""
+          if [ -s osv-results.json ]; then
+            OSV_ISSUES=$(jq -r '
+              .results[]
+              .packages[]
+              | select(.vulnerabilities | length > 0)
+              | "\(.Package.name)@\(.Package.version)"
+            ' osv-results.json | sort -u)
+          fi
+
           if [ -z "$BUN_ISSUES$OSV_ISSUES" ]; then
             MESSAGE="✅ **No Issues Found**\nAll security checks passed."
           else
@@ -53,14 +82,12 @@ jobs:
             MESSAGE="$MESSAGE\`\`\`"
           fi
 
-          # --- FIX IS HERE ---
-          # Use printf to properly format the message with actual newlines within the shell variable itself
+          # Discord 用に JSON エスケープして送信 (FIXED NEWLINES)
           FORMATTED_MESSAGE=$(printf "%b" "$MESSAGE")
-
-          # Pass the formatted message to jq for final JSON escaping
-          PAYLOAD=$(jq -n --arg content "$FORMATTED_MESSAGE" '{content: $content}')
+          PAYLOAD=$(jq -n --arg content "$FORMATTED_MESSAGE" '{content:$content}')
 
           curl -H "Content-Type: application/json" \
             -X POST \
             -d "$PAYLOAD" \
             "$DISCORD_WEBHOOK_URL"
+
