@@ -2,7 +2,6 @@ name: Weekly Security Audit
 
 on:
   schedule:
-    # 毎週月曜 3:00 UTC
     - cron: "0 3 * * 1"
   workflow_dispatch: {}
 
@@ -28,24 +27,19 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      # bun audit を JSON で保存
       - name: Run bun audit (JSON)
         run: |
           bun audit --json > bun-audit.json || true
 
-      # OSV-Scanner Action を使用して JSON で保存
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action@v2
-        id: osv-scan # Add an ID to reference the action's outputs
+        uses: google/osv-scanner-action@v2.3.0
+        id: osv-scan
         with:
           scan-args: --lockfile bun.lockb --json --output osv-results.json
 
-      # ここで JSON から問題の package@version を抜き出して Discord に送る
       - name: Notify Discord
         if: always()
         run: |
-          # ... (BUN_ISSUES and OSV_ISSUES extraction logic remains the same) ...
-
           if [ -z "$BUN_ISSUES$OSV_ISSUES" ]; then
             MESSAGE="✅ **No Issues Found**\nAll security checks passed."
           else
