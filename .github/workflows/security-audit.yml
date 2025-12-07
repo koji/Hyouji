@@ -2,19 +2,20 @@ name: Weekly Security Audit
 
 on:
   schedule:
-    # every monday at 6:00 UTC
-    - cron: "0 6 * * 1"
+    # 毎週月曜 3:00 UTC
+    - cron: "0 3 * * 1"
   workflow_dispatch: {}
 
 permissions:
   contents: read
-  # Required to run the scanner action
-  security-events: write 
 
 jobs:
-  # JOB 1: Run the scanners and upload artifacts
-  run-scanners:
+  security-check:
     runs-on: ubuntu-latest
+
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,41 +33,21 @@ jobs:
         run: |
           bun audit --json > bun-audit.json || true
 
-      # OSV-Scanner Action (Reusable Workflow) を実行
-      - name: Run OSV-Scanner
-        # Note: This is an action *step* that handles installation internally, 
-        # not the reusable workflow call we tried earlier. 
-        # We revert to the simpler 'action' method, which is valid within steps.
-        uses: google/osv-scanner-action@v2.3.0
-        with:
-          scan-args: --lockfile bun.lockb --json --output osv-results.json
+      # OSV-Scanner を手動インストールして JSON で保存
+      - name: Install and Run OSV-Scanner (Manual Install)
+        run: |
+          # Use the current stable version
+          OSV_VERSION="2.3.0" 
+          curl -sSfL "github.com{OSV_VERSION}/osv-scanner_${OSV_VERSION}_linux_amd64.tar.gz" -o osv-scanner.tar.gz
+          tar -xzf osv-scanner.tar.gz
+          # Run the binary directly without moving it to /usr/local/bin
+          ./osv-scanner --lockfile=bun.lockb --json > osv-results.json || true
 
-      # Upload results so the next job can access them
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-results
-          path: |
-            bun-audit.json
-            osv-results.json
 
-  # JOB 2: Download results and notify Discord
-  notify:
-    needs: run-scanners # Depends on the first job completing successfully
-    runs-on: ubuntu-latest
-    env:
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: security-results
-
+      # ここで JSON から問題の package@version を抜き出して Discord に送る
       - name: Notify Discord
         if: always()
         run: |
-          # The files are now available in this job's workspace
-
           # bun audit の結果から package@version(とseverity) を抽出
           BUN_ISSUES=""
           if [ -s bun-audit.json ]; then
@@ -110,3 +91,4 @@ jobs:
             -X POST \
             -d "$PAYLOAD" \
             "$DISCORD_WEBHOOK_URL"
+
