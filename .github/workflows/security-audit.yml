@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      # bun audit を JSON で保存
+      # save bun audit result 
       - name: Run bun audit (JSON)
         run: |
           bun audit --json > bun-audit.json || true
@@ -75,9 +75,6 @@ jobs:
       - name: Notify Discord
         if: always()
         run: |
-          # The files are now available in this job's workspace
-
-          # bun audit の結果から package@version(とseverity) を抽出
           BUN_ISSUES=""
           if [ -s bun-audit.json ]; then
             BUN_ISSUES=$(jq -r '
@@ -88,7 +85,6 @@ jobs:
             ' bun-audit.json | sort -u)
           fi
 
-          # osv-scanner の JSON から package@version を抽出
           OSV_ISSUES=""
           if [ -s osv-results.json ]; then
             OSV_ISSUES=$(jq -r '
@@ -112,7 +108,7 @@ jobs:
             MESSAGE="$MESSAGE\`\`\`"
           fi
 
-          # Discord 用に JSON エスケープして送信
+          # format for Discord
           FORMATTED_MESSAGE=$(printf "%b" "$MESSAGE")
           PAYLOAD=$(jq -n --arg content "$FORMATTED_MESSAGE" '{content:$content}')
 
