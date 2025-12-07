@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  # Required to run the scanner action / upload SARIF (if you ever add it)
+  # You might use this later if you upload SARIF to code scanning, etc.
   security-events: write
 
 jobs:
@@ -32,23 +32,24 @@ jobs:
         run: |
           bun audit --json > bun-audit.json || true
 
-      # Install OSV-Scanner CLI
-      - name: Install OSV-Scanner
-        run: |
-          curl -sSfL \
-            https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64.tar.gz \
-            -o osv-scanner.tar.gz
-          tar xzf osv-scanner.tar.gz
-          sudo mv osv-scanner /usr/local/bin/osv-scanner
-          osv-scanner --version
-
-      # Run OSV-Scanner and save JSON results
+      # Run OSV-Scanner via Docker and save JSON results
       - name: Run OSV-Scanner (JSON)
         run: |
-          # Note: bun.lockb is not currently a supported lockfile. We scan the repo recursively instead.
-          # If it becomes supported later, you can switch to:
-          #   osv-scanner --json --lockfile bun.lockb > osv-results.json || true
-          osv-scanner --json -r . > osv-results.json || true
+          # NOTE:
+          # - OSV-Scanner V2 uses the `scan` subcommand and `--format` / `--output` flags.
+          # - bun.lockb is not a first-class supported lockfile yet, so we scan the repo
+          #   source tree recursively instead.
+          #
+          # This writes osv-results.json into the workspace.
+
+          docker run --rm \
+            -v "$PWD":/src \
+            ghcr.io/google/osv-scanner:v2.3.0-amd64 \
+            scan source /src \
+              --recursive \
+              --format=json \
+              --output=/src/osv-results.json \
+          || true
 
       # Upload results so the next job can access them
       - name: Upload Artifacts
@@ -111,7 +112,7 @@ jobs:
             MESSAGE="$MESSAGE\`\`\`"
           fi
 
-          # for Discord
+          # Discord 用に JSON エスケープして送信
           FORMATTED_MESSAGE=$(printf "%b" "$MESSAGE")
           PAYLOAD=$(jq -n --arg content "$FORMATTED_MESSAGE" '{content:$content}')
 
