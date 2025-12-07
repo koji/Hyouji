@@ -35,13 +35,12 @@ jobs:
 
       # OSV-Scanner Action を使用して JSON で保存
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action@v1
+        uses: google/osv-scanner-action@v2
         id: osv-scan # Add an ID to reference the action's outputs
         with:
           scan-args: --lockfile bun.lockb --json --output osv-results.json
 
       # ここで JSON から問題の package@version を抜き出して Discord に送る
-            # ここで JSON から問題の package@version を抜き出して Discord に送る
       - name: Notify Discord
         if: always()
         run: |
