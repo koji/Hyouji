@@ -2,14 +2,11 @@ name: Weekly Security Audit
 
 on:
   schedule:
-    # 毎週月曜 3:00 UTC
     - cron: "0 3 * * 1"
   workflow_dispatch: {}
 
 permissions:
   contents: read
-  # Required to write scan results if you choose to upload SARIF later
-  # security-events: write 
 
 jobs:
   security-check:
