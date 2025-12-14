@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.15](2025-12-14)
+
+- refactor: reorganize source into feature folders (`src/cli`, `src/config`, `src/github`, `src/labels`, `src/utils`) and remove legacy `src/lib`
+- tests: move unit/integration tests alongside their modules and update import paths
+- build: keep entrypoint and configs pointing to new layout; no behavioral changes intended
+
 ### [0.0.6](2025-08-23)
 
 - fix message display bugs
