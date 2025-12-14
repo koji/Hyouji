@@ -6,8 +6,8 @@ import { promisify } from "util";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ConfigManager } from "./configManager.js";
 import { GitRepositoryDetector } from "./gitRepositoryDetector.js";
+import { ConfigManager } from "../config/configManager.js";
 
 const execAsync = promisify(exec);
 

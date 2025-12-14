@@ -6,18 +6,18 @@ import {
   createLabels,
   deleteLabel,
   deleteLabels,
-} from "./lib/callApi.js";
-import { ConfigManager } from "./lib/configManager.js";
-import { getConfirmation } from "./lib/confirmToken.js";
-import { CryptoUtils } from "./lib/cryptoUtils.js";
-import { generateSampleJson } from "./lib/generateSampleJson.js";
-import { generateSampleYaml } from "./lib/generateSampleYaml.js";
-import { importLabelsFromFile } from "./lib/importLabels.js";
-import { getTargetLabel } from "./lib/inputDeleteLabel.js";
-import { getGitHubConfigs } from "./lib/inputGitHubConfig.js";
-import { getLabelFilePath } from "./lib/inputLabelFile.js";
-import { getNewLabel } from "./lib/inputNewLabel.js";
-import { selectAction } from "./lib/selectPrompts.js";
+} from "./github/callApi.js";
+import { ConfigManager } from "./config/configManager.js";
+import { getConfirmation } from "./cli/confirmToken.js";
+import { CryptoUtils } from "./config/cryptoUtils.js";
+import { generateSampleJson } from "./labels/generateSampleJson.js";
+import { generateSampleYaml } from "./labels/generateSampleYaml.js";
+import { importLabelsFromFile } from "./labels/importLabels.js";
+import { getTargetLabel } from "./labels/inputDeleteLabel.js";
+import { getGitHubConfigs } from "./config/inputGitHubConfig.js";
+import { getLabelFilePath } from "./labels/inputLabelFile.js";
+import { getNewLabel } from "./labels/inputNewLabel.js";
+import { selectAction } from "./cli/selectPrompts.js";
 import { ConfigType } from "./types/index.js";
 
 const log = console.log;

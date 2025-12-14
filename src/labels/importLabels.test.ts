@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ConfigType } from '../types/index.js'
 
-import * as callApi from './callApi.js'
+import * as callApi from '../github/callApi.js'
 import { importLabelsFromFile } from './importLabels.js'
 
 // Mock oh-my-logo to avoid dependency issues in CI
@@ -17,7 +17,7 @@ vi.mock('fs', () => ({
   existsSync: vi.fn(),
   readFileSync: vi.fn(),
 }))
-vi.mock('./callApi.js')
+vi.mock('../github/callApi.js')
 
 const mockFs = vi.mocked(fs)
 const mockCallApi = vi.mocked(callApi)

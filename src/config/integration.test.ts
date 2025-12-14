@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getGitHubConfigs } from "./inputGitHubConfig.js";
 import { ConfigManager } from "./configManager.js";
-import { GitRepositoryDetector } from "./gitRepositoryDetector.js";
+import { GitRepositoryDetector } from "../github/gitRepositoryDetector.js";
 import { StoredConfigType } from "../types";
 
 // Mock dependencies
@@ -9,7 +9,7 @@ vi.mock("prompts", () => ({
   default: vi.fn(),
 }));
 vi.mock("./configManager.js");
-vi.mock("./gitRepositoryDetector.js");
+vi.mock("../github/gitRepositoryDetector.js");
 
 describe("Integration Tests", () => {
   const validConfig: StoredConfigType = {

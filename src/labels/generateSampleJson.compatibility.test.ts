@@ -9,7 +9,7 @@ import { generateSampleJson } from './generateSampleJson.js'
 import { importLabelsFromFile } from './importLabels.js'
 
 // Mock the createLabel function to avoid actual API calls and capture calls
-vi.mock('./callApi.js', () => ({
+vi.mock('../github/callApi.js', () => ({
   createLabel: vi.fn().mockResolvedValue(undefined),
 }))
 
@@ -34,7 +34,7 @@ describe('Sample JSON Compatibility Tests', () => {
       fs.unlinkSync(testFilePath)
     }
     // Get the mocked function
-    const { createLabel } = await import('./callApi.js')
+    const { createLabel } = await import('../github/callApi.js')
     mockCreateLabel = createLabel as ReturnType<typeof vi.fn>
     // Clear mock calls
     vi.clearAllMocks()
