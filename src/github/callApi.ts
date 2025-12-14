@@ -70,7 +70,11 @@ export const createLabels = async (
       failed++
     }
   }
-  log('Created all labels')
+  if (failed === 0) {
+    log(chalk.green('✓ Created all labels successfully'))
+  } else {
+    log(chalk.yellow(`Finished processing labels: ${created} created, ${failed} failed`))
+  }
   log(chalk.bgBlueBright(extraGuideText))
   return { created, failed }
 }
