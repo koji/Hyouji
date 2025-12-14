@@ -16,50 +16,75 @@ const log = console.log
 export const createLabel = async (
   configs: ConfigType,
   label: ImportLabelType,
-) => {
-  const resp = await configs.octokit.request(
-    'POST /repos/{owner}/{repo}/labels',
-    {
-      owner: configs.owner,
-      repo: configs.repo,
-      name: label.name,
-      color: label.color,
-      description: label.description,
-    },
-  )
+): Promise<boolean> => {
+  try {
+    log(chalk.cyan(`⏳ Creating label "${label.name}"...`))
+    const resp = await configs.octokit.request(
+      'POST /repos/{owner}/{repo}/labels',
+      {
+        owner: configs.owner,
+        repo: configs.repo,
+        name: label.name,
+        color: label.color,
+        description: label.description,
+      },
+    )
 
-  const status = resp.status as CreateLabelResponseType
+    const status = resp.status as CreateLabelResponseType
 
-  switch (status) {
-    case 201:
-      log(chalk.green(`${resp.status}: Created ${label.name}`))
-      break
-    case 404:
-      log(chalk.red(`${resp.status}: Resource not found`))
-      break
-    case 422:
-      log(chalk.red(`${resp.status}: Validation failed`))
-      break
-    default:
-      log(chalk.yellow(`${resp.status}: Something wrong`))
-      break
+    switch (status) {
+      case 201:
+        log(chalk.green(`✓ ${resp.status}: Created ${label.name}`))
+        return true
+      case 404:
+        log(chalk.red(`${resp.status}: Resource not found`))
+        return false
+      case 422:
+        log(chalk.red(`${resp.status}: Validation failed`))
+        return false
+      default:
+        log(chalk.yellow(`${resp.status}: Something wrong`))
+        return false
+    }
+  } catch (error) {
+    log(
+      chalk.red(
+        `Error creating label "${label.name}": ${error instanceof Error ? error.message : 'Unknown error'}`,
+      ),
+    )
+    return false
   }
 }
 
-export const createLabels = async (configs: ConfigType) => {
-  labels.forEach(async (label) => {
-    createLabel(configs, label)
-  })
+export const createLabels = async (
+  configs: ConfigType,
+): Promise<{ created: number; failed: number }> => {
+  let created = 0
+  let failed = 0
+
+  for (const label of labels) {
+    const ok = await createLabel(configs, label)
+    if (ok) {
+      created++
+    } else {
+      failed++
+    }
+  }
   log('Created all labels')
   log(chalk.bgBlueBright(extraGuideText))
+  return { created, failed }
 }
 
 export const deleteLabel = async (
   configs: ConfigType,
   labelNames: readonly string[],
-) => {
+): Promise<{ deleted: number; failed: number }> => {
+  let deleted = 0
+  let failed = 0
+
   for (const labelName of labelNames) {
     try {
+      log(chalk.cyan(`⏳ Deleting label "${labelName}"...`))
       const resp = await configs.octokit.request(
         'DELETE /repos/{owner}/{repo}/labels/{name}',
         {
@@ -70,11 +95,14 @@ export const deleteLabel = async (
       )
 
       if (resp.status === 204) {
+        deleted++
         log(chalk.green(`${resp.status}: Deleted ${labelName}`))
       } else {
+        failed++
         log(chalk.yellow(`${resp.status}: Something wrong with ${labelName}`))
       }
     } catch (error) {
+      failed++
       if (
         error &&
         typeof error === 'object' &&
@@ -91,6 +119,8 @@ export const deleteLabel = async (
       }
     }
   }
+
+  return { deleted, failed }
 }
 
 // get labels
@@ -112,16 +142,21 @@ const getLabels = async (configs: ConfigType): Promise<readonly string[]> => {
   }
 }
 
-export const deleteLabels = async (configs: ConfigType) => {
+export const deleteLabels = async (
+  configs: ConfigType,
+): Promise<{ deleted: number; failed: number }> => {
   // get all labels
   const names = await getLabels(configs)
 
   if (names.length === 0) {
     log(chalk.yellow('No labels found to delete'))
-    return
+    return { deleted: 0, failed: 0 }
   }
 
   log(chalk.blue(`Deleting ${names.length} labels...`))
+
+  let deleted = 0
+  let failed = 0
 
   for (const name of names) {
     try {
@@ -135,11 +170,14 @@ export const deleteLabels = async (configs: ConfigType) => {
       )
 
       if (resp.status === 204) {
+        deleted++
         log(chalk.green(`${resp.status}: Deleted ${name}`))
       } else {
+        failed++
         log(chalk.yellow(`${resp.status}: Something wrong with ${name}`))
       }
     } catch (error) {
+      failed++
       if (
         error &&
         typeof error === 'object' &&
@@ -159,4 +197,6 @@ export const deleteLabels = async (configs: ConfigType) => {
 
   log(chalk.blue('Finished deleting labels'))
   log(chalk.bgBlueBright(extraGuideText))
+
+  return { deleted, failed }
 }

@@ -94,6 +94,14 @@ These credentials will be securely saved and reused for future sessions.
 8. **Display your settings** - View your saved configuration
 9. **Exit**
 
+When you choose a create/delete/import action, you’ll be asked if you want to run in **dry-run mode**. Selecting “yes” shows what would happen without any API calls. Example:
+
+```
+=== Create preset labels summary ===
+Mode: dry run (no API calls executed)
+Created: 0  Failed: 0  Deleted: 0  Skipped: 24
+```
+
 ### Settings Management
 
 The tool now includes persistent configuration storage with enhanced security:
@@ -104,6 +112,12 @@ The tool now includes persistent configuration storage with enhanced security:
 - **Token encryption**: Your personal token is automatically encrypted using machine-specific keys
 - **Automatic migration**: Existing plain text configurations are automatically upgraded to encrypted format
 - **Token security**: Your personal token is never displayed in plain text, only an obfuscated preview is shown
+
+### Dry-run Mode & Progress
+
+- Select **yes** when prompted for dry-run to avoid any API calls; actions are listed as “Would create/delete…”.
+- Each API call shows short status lines (e.g., “Creating label…”, “Deleted …”).
+- A final summary reports created/deleted/skipped/failed counts and hints for next steps.
 
 ### Security Features
 

@@ -49,6 +49,15 @@ export const labelFilePath = {
   message: 'Please type the path to your JSON or YAML file',
 }
 
+export const dryRunToggle = {
+  type: 'toggle',
+  name: 'dryRun',
+  message: 'Run in dry-run mode? (no API calls will be made)',
+  active: 'yes',
+  inactive: 'no',
+  initial: false,
+}
+
 export const actionSelector = {
   type: 'multiselect',
   name: 'action',

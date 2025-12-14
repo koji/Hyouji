@@ -13,15 +13,31 @@ import {
 
 const log = console.log
 
+export type ImportSummary = {
+  attempted: number
+  succeeded: number
+  failed: number
+  skipped: number
+}
+
 export const importLabelsFromFile = async (
   configs: ConfigType,
   filePath: string,
-): Promise<void> => {
+  dryRun = false,
+): Promise<ImportSummary> => {
+  const summary: ImportSummary = {
+    attempted: 0,
+    succeeded: 0,
+    failed: 0,
+    skipped: 0,
+  }
+
   try {
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       log(chalk.red(`Error: File not found at path: ${filePath}`))
-      return
+      summary.failed += 1
+      return summary
     }
 
     // Detect file format based on extension
@@ -32,7 +48,8 @@ export const importLabelsFromFile = async (
           `Error: Unsupported file format. Supported formats: ${formatSupportedExtensions()}`,
         ),
       )
-      return
+      summary.failed += 1
+      return summary
     }
 
     // Read file content
@@ -54,13 +71,15 @@ export const importLabelsFromFile = async (
           `Parse error: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
         ),
       )
-      return
+      summary.failed += 1
+      return summary
     }
 
     // Validate structure (must be array)
     if (!Array.isArray(parsedData)) {
       log(chalk.red('Error: File must contain an array of label objects'))
-      return
+      summary.failed += 1
+      return summary
     }
 
     // Validate each label object
@@ -165,7 +184,23 @@ export const importLabelsFromFile = async (
     // Check if we have any valid labels to import
     if (validLabels.length === 0) {
       log(chalk.red('Error: No valid labels found in file'))
-      return
+      summary.failed += 1
+      return summary
+    }
+
+    summary.attempted = validLabels.length
+
+    if (dryRun) {
+      validLabels.forEach((label) => {
+        summary.skipped += 1
+        log(chalk.yellow(`[dry-run] Would create label "${label.name}"`))
+      })
+      log(
+        chalk.blue(
+          `Dry run summary: Will create ${validLabels.length} labels, delete 0.`,
+        ),
+      )
+      return summary
     }
 
     // Display number of labels to be imported
@@ -203,11 +238,14 @@ export const importLabelsFromFile = async (
           `✅ Import completed successfully! Created ${successCount} labels.`,
         ),
       )
+      summary.succeeded = successCount
     } else {
       log(chalk.yellow(`⚠️  Import completed with some errors:`))
       log(chalk.green(`  • Successfully created: ${successCount} labels`))
       log(chalk.red(`  • Failed to create: ${errorCount} labels`))
       log(chalk.blue(`  • Total processed: ${validLabels.length} labels`))
+      summary.succeeded = successCount
+      summary.failed += errorCount
     }
   } catch (error) {
     log(
@@ -215,5 +253,8 @@ export const importLabelsFromFile = async (
         `Error reading file: ${error instanceof Error ? error.message : 'Unknown error'}`,
       ),
     )
+    summary.failed += 1
   }
+
+  return summary
 }
