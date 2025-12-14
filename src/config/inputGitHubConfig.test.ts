@@ -7,7 +7,7 @@ vi.mock("prompts", () => ({
   default: vi.fn(),
 }));
 vi.mock("./configManager.js");
-vi.mock("./gitRepositoryDetector.js");
+vi.mock("../github/gitRepositoryDetector.js");
 
 vi.mock("@octokit/core", () => {
   class MockOctokit {
@@ -56,7 +56,7 @@ describe("getGitHubConfigs auto-detection integration", () => {
   it("should use auto-detected repository when detection succeeds", async () => {
     const { ConfigManager } = await import("./configManager.js");
     const { GitRepositoryDetector } = await import(
-      "./gitRepositoryDetector.js"
+      "../github/gitRepositoryDetector.js"
     );
 
     // Mock valid saved config
@@ -98,7 +98,7 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const prompts = (await import("prompts")).default;
     const { ConfigManager } = await import("./configManager.js");
     const { GitRepositoryDetector } = await import(
-      "./gitRepositoryDetector.js"
+      "../github/gitRepositoryDetector.js"
     );
 
     // Mock valid saved config
@@ -147,7 +147,7 @@ describe("getGitHubConfigs auto-detection integration", () => {
     const prompts = (await import("prompts")).default;
     const { ConfigManager } = await import("./configManager.js");
     const { GitRepositoryDetector } = await import(
-      "./gitRepositoryDetector.js"
+      "../github/gitRepositoryDetector.js"
     );
 
     // Mock valid saved config

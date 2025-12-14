@@ -3,13 +3,13 @@ import * as fs from 'fs'
 
 import { ConfigType, ImportLabelType } from '../types/index.js'
 
-import { createLabel } from './callApi.js'
+import { createLabel } from '../github/callApi.js'
 import {
   detectFileFormat,
   formatSupportedExtensions,
   parseJsonContent,
   parseYamlContent,
-} from './fileFormatUtils.js'
+} from '../utils/fileFormatUtils.js'
 
 const log = console.log
 

@@ -6,7 +6,7 @@ import { githubConfigs } from '../constant.js'
 import { ConfigType, StoredConfigType } from '../types/index.js'
 
 import { ConfigError, ConfigManager } from './configManager.js'
-import { GitRepositoryDetector } from './gitRepositoryDetector.js'
+import { GitRepositoryDetector } from '../github/gitRepositoryDetector.js'
 
 // Type for validation result from ConfigManager
 type ValidationResult = {
