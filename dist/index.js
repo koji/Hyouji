@@ -325,7 +325,11 @@ const createLabels = async (configs2) => {
       failed++;
     }
   }
-  log$4("Created all labels");
+  if (failed === 0) {
+    log$4(chalk.green("✓ Created all labels successfully"));
+  } else {
+    log$4(chalk.yellow(`Finished processing labels: ${created} created, ${failed} failed`));
+  }
   log$4(chalk.bgBlueBright(extraGuideText));
   return { created, failed };
 };
@@ -1288,7 +1292,7 @@ const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
       });
       log$1(
         chalk.blue(
-          `Dry run summary: Will create ${validLabels.length} labels, delete 0.`
+          `Dry run summary: Would create ${validLabels.length} labels.`
         )
       );
       return summary;
