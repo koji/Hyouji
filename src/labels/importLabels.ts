@@ -197,7 +197,7 @@ export const importLabelsFromFile = async (
       })
       log(
         chalk.blue(
-          `Dry run summary: Will create ${validLabels.length} labels, delete 0.`,
+          `Dry run summary: Would create ${validLabels.length} labels.`,
         ),
       )
       return summary
