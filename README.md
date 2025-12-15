@@ -94,6 +94,21 @@ These credentials will be securely saved and reused for future sessions.
 8. **Display your settings** - View your saved configuration
 9. **Exit**
 
+When you choose a create/delete/import action, you’ll be asked if you want to run in **dry-run mode**. Selecting “yes” shows what would happen without any API calls. Example:
+
+```
+=== Create preset labels summary ===
+Mode: dry run (no API calls executed)
+Created: 0  Failed: 0  Deleted: 0  Skipped: 24
+```
+
+Quick dry-run example (generate sample JSON then import it without touching GitHub):
+
+```bash
+hyouji            # choose “Generate sample JSON”
+hyouji            # choose “Import labels from JSON or YAML” -> pick hyouji.json -> select dry-run = yes
+```
+
 ### Settings Management
 
 The tool now includes persistent configuration storage with enhanced security:
@@ -104,6 +119,12 @@ The tool now includes persistent configuration storage with enhanced security:
 - **Token encryption**: Your personal token is automatically encrypted using machine-specific keys
 - **Automatic migration**: Existing plain text configurations are automatically upgraded to encrypted format
 - **Token security**: Your personal token is never displayed in plain text, only an obfuscated preview is shown
+
+### Dry-run Mode & Progress
+
+- Select **yes** when prompted for dry-run to avoid any API calls; actions are listed as “Would create/delete…”.
+- Each API call shows short status lines (e.g., “Creating label…”, “Deleted …”).
+- A final summary reports created/deleted/skipped/failed counts and hints for next steps.
 
 ### Security Features
 
@@ -132,22 +153,11 @@ If you want to create/delete a single label, you need to type the followings.
 
 - label name
 
-In terms of multiple labels, this script is using `label.js` to define name, color and description. The format is very simple.  
-If you want to put your own labels, you will need to modify `label.js` file.
+For multiple labels, use the import flow:
 
-```js
-module.exports = Object.freeze([
-  {
-    name: "Type: Bug Fix",
-    color: "FF8A65",
-    description: "Fix features that are not working",
-  },
-  {
-    name: "Type: Enhancement",
-    color: "64B5F7",
-    description: "Add new features",
-  },
-```
+- Prepare a JSON or YAML file (examples live in `examples/labels.{json,yaml}`).
+- Or generate fresh templates from the menu: **Generate sample JSON/YAML** will create `hyouji.json` or `hyouji.yaml` in your CWD.
+- Run **Import labels** and provide the file path. You can choose **dry-run** first to see what would be created without hitting the API.
 
 ## Quick Start
 

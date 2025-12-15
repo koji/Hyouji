@@ -1,6 +1,11 @@
 import chalk from "chalk";
 
-import { getAsciiText, initialText, linkToPersonalToken } from "./constant.js";
+import {
+  getAsciiText,
+  initialText,
+  labels,
+  linkToPersonalToken,
+} from "./constant.js";
 import {
   createLabel,
   createLabels,
@@ -9,6 +14,7 @@ import {
 } from "./github/callApi.js";
 import { ConfigManager } from "./config/configManager.js";
 import { getConfirmation } from "./cli/confirmToken.js";
+import { getDryRunChoice } from "./cli/dryRunPrompt.js";
 import { CryptoUtils } from "./config/cryptoUtils.js";
 import { generateSampleJson } from "./labels/generateSampleJson.js";
 import { generateSampleYaml } from "./labels/generateSampleYaml.js";
@@ -206,6 +212,48 @@ const initializeConfigs = async () => {
   }
 };
 
+type ActionSummary = {
+  created: number;
+  deleted: number;
+  skipped: number;
+  failed: number;
+  notes: string[];
+};
+
+const makeSummary = (): ActionSummary => ({
+  created: 0,
+  deleted: 0,
+  skipped: 0,
+  failed: 0,
+  notes: [],
+});
+
+const printSummary = (
+  action: string,
+  summary: ActionSummary,
+  dryRun: boolean
+) => {
+  log(chalk.cyan(`\n=== ${action} summary ===`));
+  if (dryRun) {
+    log(chalk.yellow("Mode: dry run (no API calls executed)"));
+  }
+  log(
+    chalk.green(`Created: ${summary.created}`) +
+      chalk.red(`  Failed: ${summary.failed}`) +
+      chalk.blue(`  Deleted: ${summary.deleted}`) +
+      chalk.yellow(`  Skipped: ${summary.skipped}`)
+  );
+  summary.notes.forEach((note) => log(chalk.gray(`- ${note}`)));
+  if (summary.failed > 0 && !dryRun) {
+    log(
+      chalk.yellow(
+        "Some operations failed. Re-run the command or check your credentials/permissions."
+      )
+    );
+  }
+  log(chalk.cyan("========================\n"));
+};
+
 const main = async () => {
   if (firstStart) {
     configs = await initializeConfigs();
@@ -219,43 +267,111 @@ const main = async () => {
     selectedIndex = await selectAction();
   }
 
+  if (selectedIndex === 8) {
+    console.log("exit");
+    process.exit(0);
+    return;
+  }
+
+  const dryRun =
+    selectedIndex >= 0 && selectedIndex <= 4 ? await getDryRunChoice() : false;
+
   switch (selectedIndex) {
     case 0: {
+      const summary = makeSummary();
       const newLabel = await getNewLabel();
-      await createLabel(configs, newLabel);
+      if (dryRun) {
+        log(
+          chalk.yellow(
+            `[dry-run] Would create label "${newLabel.name}" with color "${newLabel.color ?? "N/A"}"`
+          )
+        );
+        summary.skipped += 1;
+      } else {
+        const ok = await createLabel(configs, newLabel);
+        if (ok) {
+          summary.created += 1;
+        } else {
+          summary.failed += 1;
+        }
+      }
+      printSummary("Create a label", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
 
     case 1: {
-      // console.log('create labels');
-      await createLabels(configs);
+      const summary = makeSummary();
+      if (dryRun) {
+        log(
+          chalk.yellow(
+            `[dry-run] Would create ${labels.length} preset labels (no API calls)`
+          )
+        );
+        summary.skipped += labels.length;
+      } else {
+        const result = await createLabels(configs);
+        summary.created = result.created;
+        summary.failed = result.failed;
+      }
+      printSummary("Create preset labels", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
 
     case 2: {
-      // console.log('delete a label');
+      const summary = makeSummary();
       const targetLabel = await getTargetLabel();
-      await deleteLabel(configs, targetLabel);
+      if (dryRun) {
+        summary.skipped += targetLabel.length;
+        targetLabel.forEach((name) =>
+          log(chalk.yellow(`[dry-run] Would delete label "${name}"`))
+        );
+      } else {
+        const result = await deleteLabel(configs, targetLabel);
+        summary.deleted = result.deleted;
+        summary.failed = result.failed;
+      }
+      printSummary("Delete a label", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
 
     case 3: {
-      // console.log('delete all labels');
-      await deleteLabels(configs);
+      const summary = makeSummary();
+      if (dryRun) {
+        log(
+          chalk.yellow(
+            '[dry-run] Would delete all labels in the configured repository'
+          )
+        );
+        summary.skipped += 1;
+      } else {
+        const result = await deleteLabels(configs);
+        summary.deleted = result.deleted;
+        summary.failed = result.failed;
+        summary.notes.push("All labels processed");
+      }
+      printSummary("Delete all labels", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
 
     case 4: {
+      const summary = makeSummary();
       try {
         const filePath = await getLabelFilePath();
         if (filePath) {
-          await importLabelsFromFile(configs, filePath);
+          const result = await importLabelsFromFile(configs, filePath, dryRun);
+          summary.created = result.succeeded;
+          summary.failed = result.failed;
+          summary.skipped = result.skipped;
+          summary.notes.push(
+            `Processed ${result.attempted} label entries from file`
+          );
         } else {
           log(chalk.yellow("No file path provided. Returning to main menu."));
+          summary.skipped += 1;
         }
       } catch (error) {
         log(
@@ -265,7 +381,9 @@ const main = async () => {
             }`
           )
         );
+        summary.failed += 1;
       }
+      printSummary("Import labels", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }

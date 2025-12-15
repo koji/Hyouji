@@ -56,6 +56,14 @@ const labelFilePath = {
   name: "filePath",
   message: "Please type the path to your JSON or YAML file"
 };
+const dryRunToggle = {
+  type: "toggle",
+  name: "dryRun",
+  message: "Run in dry-run mode? (no API calls will be made)",
+  active: "yes",
+  inactive: "no",
+  initial: false
+};
 const actionSelector = {
   type: "multiselect",
   name: "action",
@@ -270,42 +278,67 @@ const extraGuideText = `If you don't see action selector, please hit space key.`
 const linkToPersonalToken = "https://github.com/settings/tokens";
 const log$4 = console.log;
 const createLabel = async (configs2, label) => {
-  const resp = await configs2.octokit.request(
-    "POST /repos/{owner}/{repo}/labels",
-    {
-      owner: configs2.owner,
-      repo: configs2.repo,
-      name: label.name,
-      color: label.color,
-      description: label.description
+  try {
+    log$4(chalk.cyan(`⏳ Creating label "${label.name}"...`));
+    const resp = await configs2.octokit.request(
+      "POST /repos/{owner}/{repo}/labels",
+      {
+        owner: configs2.owner,
+        repo: configs2.repo,
+        name: label.name,
+        color: label.color,
+        description: label.description
+      }
+    );
+    const status = resp.status;
+    switch (status) {
+      case 201:
+        log$4(chalk.green(`✓ ${resp.status}: Created ${label.name}`));
+        return true;
+      case 404:
+        log$4(chalk.red(`${resp.status}: Resource not found`));
+        return false;
+      case 422:
+        log$4(chalk.red(`${resp.status}: Validation failed`));
+        return false;
+      default:
+        log$4(chalk.yellow(`${resp.status}: Something wrong`));
+        return false;
     }
-  );
-  const status = resp.status;
-  switch (status) {
-    case 201:
-      log$4(chalk.green(`${resp.status}: Created ${label.name}`));
-      break;
-    case 404:
-      log$4(chalk.red(`${resp.status}: Resource not found`));
-      break;
-    case 422:
-      log$4(chalk.red(`${resp.status}: Validation failed`));
-      break;
-    default:
-      log$4(chalk.yellow(`${resp.status}: Something wrong`));
-      break;
+  } catch (error) {
+    log$4(
+      chalk.red(
+        `Error creating label "${label.name}": ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    );
+    return false;
   }
 };
 const createLabels = async (configs2) => {
-  labels.forEach(async (label) => {
-    createLabel(configs2, label);
-  });
-  log$4("Created all labels");
+  let created = 0;
+  let failed = 0;
+  for (const label of labels) {
+    const ok = await createLabel(configs2, label);
+    if (ok) {
+      created++;
+    } else {
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    log$4(chalk.green("✓ Created all labels successfully"));
+  } else {
+    log$4(chalk.yellow(`Finished processing labels: ${created} created, ${failed} failed`));
+  }
   log$4(chalk.bgBlueBright(extraGuideText));
+  return { created, failed };
 };
 const deleteLabel = async (configs2, labelNames) => {
+  let deleted = 0;
+  let failed = 0;
   for (const labelName of labelNames) {
     try {
+      log$4(chalk.cyan(`⏳ Deleting label "${labelName}"...`));
       const resp = await configs2.octokit.request(
         "DELETE /repos/{owner}/{repo}/labels/{name}",
         {
@@ -315,11 +348,14 @@ const deleteLabel = async (configs2, labelNames) => {
         }
       );
       if (resp.status === 204) {
+        deleted++;
         log$4(chalk.green(`${resp.status}: Deleted ${labelName}`));
       } else {
+        failed++;
         log$4(chalk.yellow(`${resp.status}: Something wrong with ${labelName}`));
       }
     } catch (error) {
+      failed++;
       if (error && typeof error === "object" && "status" in error && error.status === 404) {
         log$4(chalk.red(`404: Label "${labelName}" not found`));
       } else {
@@ -331,6 +367,7 @@ const deleteLabel = async (configs2, labelNames) => {
       }
     }
   }
+  return { deleted, failed };
 };
 const getLabels = async (configs2) => {
   const resp = await configs2.octokit.request(
@@ -352,9 +389,11 @@ const deleteLabels = async (configs2) => {
   const names = await getLabels(configs2);
   if (names.length === 0) {
     log$4(chalk.yellow("No labels found to delete"));
-    return;
+    return { deleted: 0, failed: 0 };
   }
   log$4(chalk.blue(`Deleting ${names.length} labels...`));
+  let deleted = 0;
+  let failed = 0;
   for (const name of names) {
     try {
       const resp = await configs2.octokit.request(
@@ -366,11 +405,14 @@ const deleteLabels = async (configs2) => {
         }
       );
       if (resp.status === 204) {
+        deleted++;
         log$4(chalk.green(`${resp.status}: Deleted ${name}`));
       } else {
+        failed++;
         log$4(chalk.yellow(`${resp.status}: Something wrong with ${name}`));
       }
     } catch (error) {
+      failed++;
       if (error && typeof error === "object" && "status" in error && error.status === 404) {
         log$4(chalk.red(`404: Label "${name}" not found`));
       } else {
@@ -384,6 +426,7 @@ const deleteLabels = async (configs2) => {
   }
   log$4(chalk.blue("Finished deleting labels"));
   log$4(chalk.bgBlueBright(extraGuideText));
+  return { deleted, failed };
 };
 const _CryptoUtils = class _CryptoUtils {
   /**
@@ -977,6 +1020,10 @@ const getConfirmation = async () => {
   const response = await prompts(holdToken);
   return response.value;
 };
+const getDryRunChoice = async () => {
+  const response = await prompts(dryRunToggle);
+  return Boolean(response.dryRun);
+};
 const log$3 = console.log;
 const generateSampleJson = async () => {
   try {
@@ -1103,11 +1150,18 @@ const formatSupportedExtensions = () => {
   return getSupportedExtensions().join(", ");
 };
 const log$1 = console.log;
-const importLabelsFromFile = async (configs2, filePath) => {
+const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
+  const summary = {
+    attempted: 0,
+    succeeded: 0,
+    failed: 0,
+    skipped: 0
+  };
   try {
     if (!fs.existsSync(filePath)) {
       log$1(chalk.red(`Error: File not found at path: ${filePath}`));
-      return;
+      summary.failed += 1;
+      return summary;
     }
     const format = detectFileFormat(filePath);
     if (!format) {
@@ -1116,7 +1170,8 @@ const importLabelsFromFile = async (configs2, filePath) => {
           `Error: Unsupported file format. Supported formats: ${formatSupportedExtensions()}`
         )
       );
-      return;
+      summary.failed += 1;
+      return summary;
     }
     const fileContent = fs.readFileSync(filePath, "utf8");
     let parsedData;
@@ -1134,11 +1189,13 @@ const importLabelsFromFile = async (configs2, filePath) => {
           `Parse error: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
         )
       );
-      return;
+      summary.failed += 1;
+      return summary;
     }
     if (!Array.isArray(parsedData)) {
       log$1(chalk.red("Error: File must contain an array of label objects"));
-      return;
+      summary.failed += 1;
+      return summary;
     }
     const validLabels = [];
     for (let i = 0; i < parsedData.length; i++) {
@@ -1224,7 +1281,21 @@ const importLabelsFromFile = async (configs2, filePath) => {
     }
     if (validLabels.length === 0) {
       log$1(chalk.red("Error: No valid labels found in file"));
-      return;
+      summary.failed += 1;
+      return summary;
+    }
+    summary.attempted = validLabels.length;
+    if (dryRun) {
+      validLabels.forEach((label) => {
+        summary.skipped += 1;
+        log$1(chalk.yellow(`[dry-run] Would create label "${label.name}"`));
+      });
+      log$1(
+        chalk.blue(
+          `Dry run summary: Would create ${validLabels.length} labels.`
+        )
+      );
+      return summary;
     }
     log$1(chalk.blue(`Starting import of ${validLabels.length} labels...`));
     log$1("");
@@ -1253,11 +1324,14 @@ const importLabelsFromFile = async (configs2, filePath) => {
           `✅ Import completed successfully! Created ${successCount} labels.`
         )
       );
+      summary.succeeded = successCount;
     } else {
       log$1(chalk.yellow(`⚠️  Import completed with some errors:`));
       log$1(chalk.green(`  • Successfully created: ${successCount} labels`));
       log$1(chalk.red(`  • Failed to create: ${errorCount} labels`));
       log$1(chalk.blue(`  • Total processed: ${validLabels.length} labels`));
+      summary.succeeded = successCount;
+      summary.failed += errorCount;
     }
   } catch (error) {
     log$1(
@@ -1265,7 +1339,9 @@ const importLabelsFromFile = async (configs2, filePath) => {
         `Error reading file: ${error instanceof Error ? error.message : "Unknown error"}`
       )
     );
+    summary.failed += 1;
   }
+  return summary;
 };
 const getTargetLabel = async () => {
   const response = await prompts(deleteLabel$1);
@@ -1753,6 +1829,32 @@ const initializeConfigs = async () => {
     return null;
   }
 };
+const makeSummary = () => ({
+  created: 0,
+  deleted: 0,
+  skipped: 0,
+  failed: 0,
+  notes: []
+});
+const printSummary = (action, summary, dryRun) => {
+  log(chalk.cyan(`
+=== ${action} summary ===`));
+  if (dryRun) {
+    log(chalk.yellow("Mode: dry run (no API calls executed)"));
+  }
+  log(
+    chalk.green(`Created: ${summary.created}`) + chalk.red(`  Failed: ${summary.failed}`) + chalk.blue(`  Deleted: ${summary.deleted}`) + chalk.yellow(`  Skipped: ${summary.skipped}`)
+  );
+  summary.notes.forEach((note) => log(chalk.gray(`- ${note}`)));
+  if (summary.failed > 0 && !dryRun) {
+    log(
+      chalk.yellow(
+        "Some operations failed. Re-run the command or check your credentials/permissions."
+      )
+    );
+  }
+  log(chalk.cyan("========================\n"));
+};
 const main = async () => {
   if (firstStart) {
     configs = await initializeConfigs();
@@ -1764,36 +1866,104 @@ const main = async () => {
   while (selectedIndex == 99) {
     selectedIndex = await selectAction();
   }
+  if (selectedIndex === 8) {
+    console.log("exit");
+    process.exit(0);
+    return;
+  }
+  const dryRun = selectedIndex >= 0 && selectedIndex <= 4 ? await getDryRunChoice() : false;
   switch (selectedIndex) {
     case 0: {
+      const summary = makeSummary();
       const newLabel2 = await getNewLabel();
-      await createLabel(configs, newLabel2);
+      if (dryRun) {
+        log(
+          chalk.yellow(
+            `[dry-run] Would create label "${newLabel2.name}" with color "${newLabel2.color ?? "N/A"}"`
+          )
+        );
+        summary.skipped += 1;
+      } else {
+        const ok = await createLabel(configs, newLabel2);
+        if (ok) {
+          summary.created += 1;
+        } else {
+          summary.failed += 1;
+        }
+      }
+      printSummary("Create a label", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
     case 1: {
-      await createLabels(configs);
+      const summary = makeSummary();
+      if (dryRun) {
+        log(
+          chalk.yellow(
+            `[dry-run] Would create ${labels.length} preset labels (no API calls)`
+          )
+        );
+        summary.skipped += labels.length;
+      } else {
+        const result = await createLabels(configs);
+        summary.created = result.created;
+        summary.failed = result.failed;
+      }
+      printSummary("Create preset labels", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
     case 2: {
+      const summary = makeSummary();
       const targetLabel = await getTargetLabel();
-      await deleteLabel(configs, targetLabel);
+      if (dryRun) {
+        summary.skipped += targetLabel.length;
+        targetLabel.forEach(
+          (name) => log(chalk.yellow(`[dry-run] Would delete label "${name}"`))
+        );
+      } else {
+        const result = await deleteLabel(configs, targetLabel);
+        summary.deleted = result.deleted;
+        summary.failed = result.failed;
+      }
+      printSummary("Delete a label", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
     case 3: {
-      await deleteLabels(configs);
+      const summary = makeSummary();
+      if (dryRun) {
+        log(
+          chalk.yellow(
+            "[dry-run] Would delete all labels in the configured repository"
+          )
+        );
+        summary.skipped += 1;
+      } else {
+        const result = await deleteLabels(configs);
+        summary.deleted = result.deleted;
+        summary.failed = result.failed;
+        summary.notes.push("All labels processed");
+      }
+      printSummary("Delete all labels", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
     case 4: {
+      const summary = makeSummary();
       try {
         const filePath = await getLabelFilePath();
         if (filePath) {
-          await importLabelsFromFile(configs, filePath);
+          const result = await importLabelsFromFile(configs, filePath, dryRun);
+          summary.created = result.succeeded;
+          summary.failed = result.failed;
+          summary.skipped = result.skipped;
+          summary.notes.push(
+            `Processed ${result.attempted} label entries from file`
+          );
         } else {
           log(chalk.yellow("No file path provided. Returning to main menu."));
+          summary.skipped += 1;
         }
       } catch (error) {
         log(
@@ -1801,7 +1971,9 @@ const main = async () => {
             `Error during label import: ${error instanceof Error ? error.message : "Unknown error"}`
           )
         );
+        summary.failed += 1;
       }
+      printSummary("Import labels", summary, dryRun);
       firstStart = firstStart && false;
       break;
     }
