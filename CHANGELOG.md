@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.16](2025-12-14)
+
+- feat: add optional dry-run flow for create/delete/import actions so users can preview changes without API calls
+- ux: show clearer progress logs plus per-action summaries of created/deleted/skipped/failed label operations
+- fix: improve label import validation and sequential preset creation handling
+
 ### [0.0.15](2025-12-14)
 
 - refactor: reorganize source into feature folders (`src/cli`, `src/config`, `src/github`, `src/labels`, `src/utils`) and remove legacy `src/lib`
