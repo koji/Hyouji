@@ -24,3 +24,10 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "🚨 **Safe-Chain Alert** 🚨\nSecurity check or build failed in: **${{ github.repository }}**\n🔍 View logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+          ${{ secrets.SAFE_CHAIN_DISCORD_WEBHOOK }}
