@@ -1,5 +1,8 @@
 # Hyouji(表示) GitHub Label Manager
 
+<img width="2816" height="1536" alt="hyouji_generated_image" src="https://github.com/user-attachments/assets/636382d1-a718-4289-81d7-2943f1962ce8" />
+
+
 ### article
 
 https://levelup.gitconnected.com/create-github-labels-from-terminal-158d4868fab  
