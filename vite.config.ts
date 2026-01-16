@@ -14,9 +14,8 @@ export default defineConfig({
         '@octokit/core',
         'prompts',
         'chalk',
-        'figlet',
         'oh-my-logo',
-        'js-yaml',
+        'yaml',
         'fs',
         'path',
         'os',
@@ -38,17 +37,7 @@ export default defineConfig({
         interop: 'auto',
       },
     },
-    target: 'node14',
+    target: 'node18',
     outDir: 'dist',
-    ssr: true,
-  },
-  ssr: {
-    noExternal: [],
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      charset: 'utf8',
-      platform: 'node',
-    },
   },
 })
