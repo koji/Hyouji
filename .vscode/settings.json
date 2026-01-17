@@ -4,6 +4,5 @@
   "editor.formatOnSave": true,
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "kiroAgent.configureMCP": "Disabled",
-  "chatgpt.openOnStartup": true
+  "kiroAgent.configureMCP": "Disabled"
 }
