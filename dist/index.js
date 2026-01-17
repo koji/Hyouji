@@ -56,14 +56,6 @@ const labelFilePath = {
   name: "filePath",
   message: "Please type the path to your JSON or YAML file"
 };
-const dryRunToggle = {
-  type: "toggle",
-  name: "dryRun",
-  message: "Run in dry-run mode? (no API calls will be made)",
-  active: "yes",
-  inactive: "no",
-  initial: false
-};
 const actionSelector = {
   type: "multiselect",
   name: "action",
@@ -274,6 +266,12 @@ Thank you!
 `;
   }
 };
+const dryRunToggle = {
+  type: "confirm",
+  name: "value",
+  message: "Do you want to run in dry-run mode?",
+  initial: false
+};
 const extraGuideText = `If you don't see action selector, please hit space key.`;
 const linkToPersonalToken = "https://github.com/settings/tokens";
 const log$4 = console.log;
@@ -428,7 +426,13 @@ const deleteLabels = async (configs2) => {
   log$4(chalk.bgBlueBright(extraGuideText));
   return { deleted, failed };
 };
-const _CryptoUtils = class _CryptoUtils {
+class CryptoUtils {
+  static {
+    this.ALGORITHM = "aes-256-cbc";
+  }
+  static {
+    this.ENCODING = "hex";
+  }
   /**
    * Generate a machine-specific key based on system information
    * This provides basic obfuscation without requiring user passwords
@@ -507,10 +511,7 @@ const _CryptoUtils = class _CryptoUtils {
     const middle = "*".repeat(Math.min(token.length - 8, 20));
     return `${start}${middle}${end}`;
   }
-};
-_CryptoUtils.ALGORITHM = "aes-256-cbc";
-_CryptoUtils.ENCODING = "hex";
-let CryptoUtils = _CryptoUtils;
+}
 class ConfigError extends Error {
   constructor(type, message, originalError) {
     super(message);
@@ -1348,7 +1349,10 @@ const getTargetLabel = async () => {
   return [response.name];
 };
 const GIT_COMMAND_TIMEOUT_MS = 5e3;
-const _GitRepositoryDetector = class _GitRepositoryDetector {
+class GitRepositoryDetector {
+  static {
+    this.execAsyncInternal = promisify(exec);
+  }
   /**
    * Overrides the internal execAsync function for testing purposes.
    * @param mock - The mock function to use for execAsync.
@@ -1544,11 +1548,8 @@ const _GitRepositoryDetector = class _GitRepositoryDetector {
       return { remotes: [] };
     }
   }
-};
-_GitRepositoryDetector.execAsyncInternal = promisify(exec);
-let GitRepositoryDetector = _GitRepositoryDetector;
+}
 const getGitHubConfigs = async () => {
-  var _a, _b;
   const configManager2 = new ConfigManager();
   let validationResult = {
     config: null,
@@ -1632,7 +1633,7 @@ const getGitHubConfigs = async () => {
     };
   }
   const promptConfig = [...githubConfigs];
-  if ((_a = validationResult.preservedData) == null ? void 0 : _a.owner) {
+  if (validationResult.preservedData?.owner) {
     const ownerPromptIndex = promptConfig.findIndex(
       (prompt) => prompt.name === "owner"
     );
@@ -1652,7 +1653,7 @@ const getGitHubConfigs = async () => {
         owner: response.owner,
         lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
       });
-      if (((_b = validationResult.preservedData) == null ? void 0 : _b.owner) && validationResult.preservedData.owner !== response.owner) {
+      if (validationResult.preservedData?.owner && validationResult.preservedData.owner !== response.owner) {
         console.log("✓ Configuration updated with new credentials");
       } else {
         console.log("✓ Configuration saved successfully");
