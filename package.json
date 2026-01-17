@@ -53,7 +53,7 @@
     "prepare-release": "run-s reset-hard test cov:check doc:html version doc:publish"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=22.22.0"
   },
   "dependencies": {
     "@octokit/core": "^7.0.6",
