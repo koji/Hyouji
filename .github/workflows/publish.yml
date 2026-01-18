@@ -104,7 +104,7 @@ jobs:
       - name: Setup Node.js for npm publishing
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "22.22.0"
           registry-url: "https://registry.npmjs.org"
 
       - name: Verify network connectivity and npm registry

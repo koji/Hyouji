@@ -19,7 +19,7 @@ This document validates the performance and reliability aspects of the GitHub Ac
 - name: Setup Node.js
   uses: actions/setup-node@v6
   with:
-    node-version: "22"
+    node-version: "22.22.0"
     cache: "npm" # Automatic npm cache management
 ```
 
