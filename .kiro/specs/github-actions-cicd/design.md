@@ -227,7 +227,7 @@ interface PackageVerification {
 ```yaml
 # Test environment configuration
 runs-on: ubuntu-latest
-node-version: "22"
+node-version: "22.22.0"
 ```
 
 ### Performance Optimization
