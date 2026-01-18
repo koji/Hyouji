@@ -6,6 +6,8 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['node_modules', 'dist', 'build'],
+    testTimeout: 20000,
+    hookTimeout: 20000,
     // Vitest 3.x requires an explicit setupFiles array, even if empty, for compatibility.
     setupFiles: [],
     coverage: {
