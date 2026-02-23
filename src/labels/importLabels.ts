@@ -13,7 +13,7 @@ import {
 
 const log = console.log
 
-export type ImportSummary = {
+type ImportSummary = {
   attempted: number
   succeeded: number
   failed: number

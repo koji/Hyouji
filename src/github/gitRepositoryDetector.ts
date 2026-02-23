@@ -5,14 +5,14 @@ import { promisify } from "util";
 
 const GIT_COMMAND_TIMEOUT_MS = 5000;
 
-export interface GitRepositoryInfo {
+interface GitRepositoryInfo {
   owner: string;
   repo: string;
   remoteUrl: string;
   detectionMethod: "origin" | "first-remote" | "manual";
 }
 
-export interface GitDetectionResult {
+interface GitDetectionResult {
   isGitRepository: boolean;
   repositoryInfo?: GitRepositoryInfo;
   error?: string;

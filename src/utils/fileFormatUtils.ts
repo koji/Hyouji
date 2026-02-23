@@ -4,7 +4,7 @@ import * as path from 'path'
 /**
  * Supported file formats for label import
  */
-export type SupportedFormat = 'json' | 'yaml'
+type SupportedFormat = 'json' | 'yaml'
 
 /**
  * Detects file format based on file extension
