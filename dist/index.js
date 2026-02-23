@@ -56,6 +56,14 @@ const labelFilePath = {
   name: "filePath",
   message: "Please type the path to your JSON or YAML file"
 };
+const dryRunToggle = {
+  type: "toggle",
+  name: "dryRun",
+  message: "Run in dry-run mode? (no API calls will be made)",
+  active: "yes",
+  inactive: "no",
+  initial: false
+};
 const actionSelector = {
   type: "multiselect",
   name: "action",
@@ -265,12 +273,6 @@ Please report this issue to https://github.com/koji/Hyouji/issues
 Thank you!
 `;
   }
-};
-const dryRunToggle = {
-  type: "confirm",
-  name: "value",
-  message: "Do you want to run in dry-run mode?",
-  initial: false
 };
 const extraGuideText = `If you don't see action selector, please hit space key.`;
 const linkToPersonalToken = "https://github.com/settings/tokens";

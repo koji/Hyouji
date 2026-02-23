@@ -6,7 +6,7 @@ import { StoredConfigType } from "../types";
 
 import { CryptoUtils } from "./cryptoUtils";
 
-export enum ConfigErrorType {
+enum ConfigErrorType {
   FILE_NOT_FOUND = "FILE_NOT_FOUND",
   PERMISSION_DENIED = "PERMISSION_DENIED",
   CORRUPTED_FILE = "CORRUPTED_FILE",
