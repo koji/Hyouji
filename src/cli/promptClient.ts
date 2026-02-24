@@ -49,7 +49,7 @@ const loadOpenTui = async (): Promise<OpenTuiModule | null> => {
   opentuiLoadAttempted = true
 
   try {
-    const loaded = (await import('@opentui/core')) as OpenTuiModule
+    const loaded = (await import('@opentui/core')) as unknown as OpenTuiModule
     opentuiModule = loaded
     return loaded
   } catch {
