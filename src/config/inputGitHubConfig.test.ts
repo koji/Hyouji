@@ -1,195 +1,180 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getGitHubConfigs } from "./inputGitHubConfig.js";
+import { getGitHubConfigs } from './inputGitHubConfig.js'
 
 // Mock dependencies
-vi.mock("prompts", () => ({
-  default: vi.fn(),
-}));
-vi.mock("./configManager.js");
-vi.mock("../github/gitRepositoryDetector.js");
+vi.mock('../cli/promptClient.js', () => ({
+  askText: vi.fn(),
+  askPassword: vi.fn(),
+}))
+vi.mock('./configManager.js')
+vi.mock('../github/gitRepositoryDetector.js')
 
-vi.mock("@octokit/core", () => {
+vi.mock('@octokit/core', () => {
   class MockOctokit {
     constructor(public options: { auth: string }) {}
-    request = vi.fn();
-    graphql = vi.fn();
+    request = vi.fn()
+    graphql = vi.fn()
     log = {
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
-    };
-    hook = vi.fn();
+    }
+    hook = vi.fn()
     retry = {
       retryRequest: vi.fn(),
-    };
+    }
   }
-  return { Octokit: MockOctokit };
-});
+  return { Octokit: MockOctokit }
+})
 
-vi.mock("../constant.js", () => ({
+vi.mock('../constant.js', () => ({
   githubConfigs: [
     {
-      type: "password",
-      name: "octokit",
-      message: "Please type your personal token",
+      type: 'password',
+      name: 'octokit',
+      message: 'Please type your personal token',
     },
     {
-      type: "text",
-      name: "owner",
-      message: "Please type your GitHub account",
+      type: 'text',
+      name: 'owner',
+      message: 'Please type your GitHub account',
     },
     {
-      type: "text",
-      name: "repo",
-      message: "Please type your target repo name",
+      type: 'text',
+      name: 'repo',
+      message: 'Please type your target repo name',
     },
   ],
-}));
+}))
 
-describe("getGitHubConfigs auto-detection integration", () => {
+describe('getGitHubConfigs auto-detection integration', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
-  it("should use auto-detected repository when detection succeeds", async () => {
-    const { ConfigManager } = await import("./configManager.js");
+  it('should use auto-detected repository when detection succeeds', async () => {
+    const { ConfigManager } = await import('./configManager.js')
     const { GitRepositoryDetector } = await import(
-      "../github/gitRepositoryDetector.js"
-    );
+      '../github/gitRepositoryDetector.js'
+    )
 
     // Mock valid saved config
-    vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
+    vi.spyOn(ConfigManager.prototype, 'loadValidatedConfig').mockResolvedValue({
       config: {
-        token: "test-token",
-        owner: "saved-owner",
-        lastUpdated: "2024-01-01T00:00:00.000Z",
+        token: 'test-token',
+        owner: 'saved-owner',
+        lastUpdated: '2024-01-01T00:00:00.000Z',
       },
       shouldPromptForCredentials: false,
-    });
+    })
     const mockDetectRepository = vi.fn().mockResolvedValue({
       isGitRepository: true,
       repositoryInfo: {
-        owner: "detected-owner",
-        repo: "detected-repo",
-        remoteUrl: "git@github.com:detected-owner/detected-repo.git",
-        detectionMethod: "origin",
+        owner: 'detected-owner',
+        repo: 'detected-repo',
+        remoteUrl: 'git@github.com:detected-owner/detected-repo.git',
+        detectionMethod: 'origin',
       },
-    });
+    })
 
-    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository
 
-    const result = await getGitHubConfigs();
+    const result = await getGitHubConfigs()
 
-    expect(result.owner).toBe("detected-owner");
-    expect(result.repo).toBe("detected-repo");
-    expect(result.fromSavedConfig).toBe(true);
-    expect(result.autoDetected).toBe(true);
-    expect(result.detectionMethod).toBe("origin");
+    expect(result.owner).toBe('detected-owner')
+    expect(result.repo).toBe('detected-repo')
+    expect(result.fromSavedConfig).toBe(true)
+    expect(result.autoDetected).toBe(true)
+    expect(result.detectionMethod).toBe('origin')
     expect(
-      (result.octokit as unknown as { options: { auth: string } }).options.auth
-    ).toBe("test-token");
+      (result.octokit as unknown as { options: { auth: string } }).options.auth,
+    ).toBe('test-token')
 
-    expect(mockDetectRepository).toHaveBeenCalledOnce();
-  });
+    expect(mockDetectRepository).toHaveBeenCalledOnce()
+  })
 
-  it("should fallback to manual input when auto-detection fails", async () => {
-    const prompts = (await import("prompts")).default;
-    const { ConfigManager } = await import("./configManager.js");
+  it('should fallback to manual input when auto-detection fails', async () => {
+    const { askText } = await import('../cli/promptClient.js')
+    const { ConfigManager } = await import('./configManager.js')
     const { GitRepositoryDetector } = await import(
-      "../github/gitRepositoryDetector.js"
-    );
+      '../github/gitRepositoryDetector.js'
+    )
 
     // Mock valid saved config
-    vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
+    vi.spyOn(ConfigManager.prototype, 'loadValidatedConfig').mockResolvedValue({
       config: {
-        token: "test-token",
-        owner: "saved-owner",
-        lastUpdated: "2024-01-01T00:00:00.000Z",
+        token: 'test-token',
+        owner: 'saved-owner',
+        lastUpdated: '2024-01-01T00:00:00.000Z',
       },
       shouldPromptForCredentials: false,
-    });
+    })
     const mockDetectRepository = vi.fn().mockResolvedValue({
       isGitRepository: false,
-      error: "Not a Git repository",
-    });
+      error: 'Not a Git repository',
+    })
 
-    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository
 
     // Mock manual input
-    vi.mocked(prompts).mockResolvedValue({
-      repo: "manual-repo",
-    });
+    vi.mocked(askText).mockResolvedValue('manual-repo')
 
-    const result = await getGitHubConfigs();
+    const result = await getGitHubConfigs()
 
-    expect(result.owner).toBe("saved-owner");
-    expect(result.repo).toBe("manual-repo");
-    expect(result.fromSavedConfig).toBe(true);
-    expect(result.autoDetected).toBe(false);
-    expect(result.detectionMethod).toBe("manual");
+    expect(result.owner).toBe('saved-owner')
+    expect(result.repo).toBe('manual-repo')
+    expect(result.fromSavedConfig).toBe(true)
+    expect(result.autoDetected).toBe(false)
+    expect(result.detectionMethod).toBe('manual')
     expect(
-      (result.octokit as unknown as { options: { auth: string } }).options.auth
-    ).toBe("test-token");
+      (result.octokit as unknown as { options: { auth: string } }).options.auth,
+    ).toBe('test-token')
 
-    expect(mockDetectRepository).toHaveBeenCalledOnce();
-    expect(prompts).toHaveBeenCalledWith([
-      {
-        type: "text",
-        name: "repo",
-        message: "Please type your target repo name",
-      },
-    ]);
-  });
+    expect(mockDetectRepository).toHaveBeenCalledOnce()
+    expect(askText).toHaveBeenCalledWith('Please type your target repo name')
+  })
 
-  it("should handle auto-detection errors gracefully", async () => {
-    const prompts = (await import("prompts")).default;
-    const { ConfigManager } = await import("./configManager.js");
+  it('should handle auto-detection errors gracefully', async () => {
+    const { askText } = await import('../cli/promptClient.js')
+    const { ConfigManager } = await import('./configManager.js')
     const { GitRepositoryDetector } = await import(
-      "../github/gitRepositoryDetector.js"
-    );
+      '../github/gitRepositoryDetector.js'
+    )
 
     // Mock valid saved config
-    vi.spyOn(ConfigManager.prototype, "loadValidatedConfig").mockResolvedValue({
+    vi.spyOn(ConfigManager.prototype, 'loadValidatedConfig').mockResolvedValue({
       config: {
-        token: "test-token",
-        owner: "saved-owner",
-        lastUpdated: "2024-01-01T00:00:00.000Z",
+        token: 'test-token',
+        owner: 'saved-owner',
+        lastUpdated: '2024-01-01T00:00:00.000Z',
       },
       shouldPromptForCredentials: false,
-    });
+    })
 
     // Mock auto-detection throwing an error
     const mockDetectRepository = vi
       .fn()
-      .mockRejectedValue(new Error("Git command failed"));
+      .mockRejectedValue(new Error('Git command failed'))
 
-    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository;
+    vi.mocked(GitRepositoryDetector).detectRepository = mockDetectRepository
 
     // Mock manual input
-    vi.mocked(prompts).mockResolvedValue({
-      repo: "manual-repo",
-    });
+    vi.mocked(askText).mockResolvedValue('manual-repo')
 
-    const result = await getGitHubConfigs();
+    const result = await getGitHubConfigs()
 
-    expect(result.owner).toBe("saved-owner");
-    expect(result.repo).toBe("manual-repo");
-    expect(result.fromSavedConfig).toBe(true);
-    expect(result.autoDetected).toBe(false);
-    expect(result.detectionMethod).toBe("manual");
+    expect(result.owner).toBe('saved-owner')
+    expect(result.repo).toBe('manual-repo')
+    expect(result.fromSavedConfig).toBe(true)
+    expect(result.autoDetected).toBe(false)
+    expect(result.detectionMethod).toBe('manual')
     expect(
-      (result.octokit as unknown as { options: { auth: string } }).options.auth
-    ).toBe("test-token");
+      (result.octokit as unknown as { options: { auth: string } }).options.auth,
+    ).toBe('test-token')
 
-    expect(mockDetectRepository).toHaveBeenCalledOnce();
-    expect(prompts).toHaveBeenCalledWith([
-      {
-        type: "text",
-        name: "repo",
-        message: "Please type your target repo name",
-      },
-    ]);
-  });
-});
+    expect(mockDetectRepository).toHaveBeenCalledOnce()
+    expect(askText).toHaveBeenCalledWith('Please type your target repo name')
+  })
+})

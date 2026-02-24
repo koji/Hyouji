@@ -1,18 +1,16 @@
 import { Octokit } from '@octokit/core'
 import chalk from 'chalk'
-import prompts from 'prompts'
-
+import { askPassword, askText } from '../cli/promptClient.js'
 import { githubConfigs } from '../constant.js'
-import { ConfigType, StoredConfigType } from '../types/index.js'
-
-import { ConfigError, ConfigManager } from './configManager.js'
 import { GitRepositoryDetector } from '../github/gitRepositoryDetector.js'
+import { ConfigType, StoredConfigType } from '../types/index.js'
+import { ConfigError, ConfigManager } from './configManager.js'
 
 // Type for validation result from ConfigManager
 type ValidationResult = {
-  config: StoredConfigType | null;
-  shouldPromptForCredentials: boolean;
-  preservedData?: Partial<StoredConfigType>;
+  config: StoredConfigType | null
+  shouldPromptForCredentials: boolean
+  preservedData?: Partial<StoredConfigType>
 }
 
 export const getGitHubConfigs = async (): Promise<ConfigType> => {
@@ -93,13 +91,10 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
     }
 
     // Fallback to manual input when auto-detection fails
-    const repoResponse = await prompts([
-      {
-        type: 'text',
-        name: 'repo',
-        message: 'Please type your target repo name',
-      },
-    ])
+    const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
+    const repo = await askText(
+      repoPrompt?.message ?? 'Please type your target repo name',
+    )
 
     const octokit = new Octokit({
       auth: validationResult.config.token,
@@ -108,7 +103,7 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
     return {
       octokit,
       owner: validationResult.config.owner,
-      repo: repoResponse.repo,
+      repo,
       fromSavedConfig: true,
       autoDetected: false,
       detectionMethod: 'manual',
@@ -116,36 +111,35 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
   }
 
   // No saved config or invalid config, prompt for credentials
-  const promptConfig = [...githubConfigs]
+  const tokenPrompt = githubConfigs.find((prompt) => prompt.name === 'octokit')
+  const ownerPrompt = githubConfigs.find((prompt) => prompt.name === 'owner')
+  const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
 
-  // If we have preserved data (like a valid owner), pre-fill it
-  if (validationResult.preservedData?.owner) {
-    const ownerPromptIndex = promptConfig.findIndex(
-      (prompt) => prompt.name === 'owner',
-    )
-    if (ownerPromptIndex !== -1) {
-      promptConfig[ownerPromptIndex] = {
-        ...promptConfig[ownerPromptIndex],
-        initial: validationResult.preservedData.owner,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as prompts.PromptObject<'text'>
-    }
-  }
-
-  const response = await prompts(promptConfig)
+  const octokitToken = await askPassword(
+    tokenPrompt?.message ?? 'Please type your personal token',
+  )
+  const owner = await askText(
+    ownerPrompt?.message ?? 'Please type your GitHub account',
+    {
+      initial: validationResult.preservedData?.owner,
+    },
+  )
+  const repo = await askText(
+    repoPrompt?.message ?? 'Please type your target repo name',
+  )
 
   // Save the new configuration for future use
-  if (response.octokit && response.owner) {
+  if (octokitToken && owner) {
     try {
       await configManager.saveConfig({
-        token: response.octokit,
-        owner: response.owner,
+        token: octokitToken,
+        owner,
         lastUpdated: new Date().toISOString(),
       })
 
       if (
         validationResult.preservedData?.owner &&
-        validationResult.preservedData.owner !== response.owner
+        validationResult.preservedData.owner !== owner
       ) {
         console.log('✓ Configuration updated with new credentials')
       } else {
@@ -171,13 +165,13 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
 
   // Create Octokit instance and return config
   const octokit = new Octokit({
-    auth: response.octokit,
+    auth: octokitToken,
   })
 
   return {
     octokit,
-    owner: response.owner,
-    repo: response.repo,
+    owner,
+    repo,
     fromSavedConfig: false,
     autoDetected: false,
     detectionMethod: 'manual',

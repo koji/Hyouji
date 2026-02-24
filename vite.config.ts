@@ -12,7 +12,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         '@octokit/core',
-        'prompts',
+        '@opentui/core',
         'chalk',
         'oh-my-logo',
         'yaml',
