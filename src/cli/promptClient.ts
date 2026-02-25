@@ -39,6 +39,8 @@ type SelectChoice = {
   value: number
 }
 
+const OPEN_TUI_INPUT_TIMEOUT_MS = 30_000
+
 let opentuiLoadAttempted = false
 let opentuiModule: OpenTuiModule | null = null
 
@@ -195,6 +197,11 @@ const askSelectWithOpenTui = async (
 
     select.focus?.()
 
+    if (!select.on && !renderer.keyInput?.on) {
+      await destroyRenderer()
+      return null
+    }
+
     const escapeValue =
       choices.find((choice) => choice.title.toLowerCase() === 'exit')?.value ??
       99
@@ -350,7 +357,12 @@ const askTextWithOpenTui = async (
     })
 
     inputField.setValue?.(currentValue)
-    inputField.on?.(core.InputRenderableEvents.CHANGE, (nextValue: unknown) => {
+    if (!inputField.on) {
+      await destroyRenderer()
+      return null
+    }
+
+    inputField.on(core.InputRenderableEvents.CHANGE, (nextValue: unknown) => {
       if (typeof nextValue === 'string') {
         currentValue = nextValue
       }
@@ -366,14 +378,29 @@ const askTextWithOpenTui = async (
       return null
     }
 
-    return await new Promise<string>((resolve) => {
+    return await new Promise<string | null>((resolve) => {
+      let settled = false
+      const timer = setTimeout(async () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        await destroyRenderer()
+        resolve(null)
+      }, OPEN_TUI_INPUT_TIMEOUT_MS)
+
       renderer.keyInput?.on?.('keypress', async (key: unknown) => {
+        if (settled) {
+          return
+        }
         if (
           typeof key === 'object' &&
           key !== null &&
           'name' in key &&
           (key.name === 'enter' || key.name === 'return')
         ) {
+          settled = true
+          clearTimeout(timer)
           await destroyRenderer()
           if (currentValue === '' && options.initial !== undefined) {
             resolve(options.initial)
