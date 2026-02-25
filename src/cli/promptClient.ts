@@ -205,7 +205,9 @@ const askSelectWithOpenTui = async (
 
     select.focus?.()
 
-    if (!select.on && !renderer.keyInput?.on) {
+    // Selection confirmation depends on SelectRenderable events.
+    // If the listener API is unavailable, fall back immediately.
+    if (!select.on) {
       await destroyRenderer()
       return null
     }
@@ -225,7 +227,7 @@ const askSelectWithOpenTui = async (
         resolve(value)
       }
 
-      select.on?.(
+      select.on(
         core.SelectRenderableEvents.ITEM_SELECTED,
         async (_index: unknown, option: unknown) => {
           if (
