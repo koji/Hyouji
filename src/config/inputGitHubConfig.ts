@@ -13,6 +13,21 @@ type ValidationResult = {
   preservedData?: Partial<StoredConfigType>
 }
 
+const askRequiredValue = async (
+  ask: () => Promise<string>,
+  fieldName: string,
+): Promise<string> => {
+  while (true) {
+    const value = (await ask()).trim()
+    if (value.length > 0) {
+      return value
+    }
+    console.log(
+      chalk.yellow(`⚠️  ${fieldName} cannot be empty. Please try again.`),
+    )
+  }
+}
+
 export const getGitHubConfigs = async (): Promise<ConfigType> => {
   const configManager = new ConfigManager()
 
@@ -92,8 +107,9 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
 
     // Fallback to manual input when auto-detection fails
     const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
-    const repo = await askText(
-      repoPrompt?.message ?? 'Please type your target repo name',
+    const repo = await askRequiredValue(
+      () => askText(repoPrompt?.message ?? 'Please type your target repo name'),
+      'Repository name',
     )
 
     const octokit = new Octokit({
@@ -115,51 +131,53 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
   const ownerPrompt = githubConfigs.find((prompt) => prompt.name === 'owner')
   const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
 
-  const octokitToken = await askPassword(
-    tokenPrompt?.message ?? 'Please type your personal token',
+  const octokitToken = await askRequiredValue(
+    () =>
+      askPassword(tokenPrompt?.message ?? 'Please type your personal token'),
+    'Personal token',
   )
-  const owner = await askText(
-    ownerPrompt?.message ?? 'Please type your GitHub account',
-    {
-      initial: validationResult.preservedData?.owner,
-    },
+  const owner = await askRequiredValue(
+    () =>
+      askText(ownerPrompt?.message ?? 'Please type your GitHub account', {
+        initial: validationResult.preservedData?.owner,
+      }),
+    'GitHub account',
   )
-  const repo = await askText(
-    repoPrompt?.message ?? 'Please type your target repo name',
+  const repo = await askRequiredValue(
+    () => askText(repoPrompt?.message ?? 'Please type your target repo name'),
+    'Repository name',
   )
 
   // Save the new configuration for future use
-  if (octokitToken && owner) {
-    try {
-      await configManager.saveConfig({
-        token: octokitToken,
-        owner,
-        lastUpdated: new Date().toISOString(),
-      })
+  try {
+    await configManager.saveConfig({
+      token: octokitToken,
+      owner,
+      lastUpdated: new Date().toISOString(),
+    })
 
-      if (
-        validationResult.preservedData?.owner &&
-        validationResult.preservedData.owner !== owner
-      ) {
-        console.log('✓ Configuration updated with new credentials')
-      } else {
-        console.log('✓ Configuration saved successfully')
-      }
-    } catch (error) {
-      if (error instanceof ConfigError) {
-        console.error(`❌ ${ConfigManager.getErrorMessage(error)}`)
+    if (
+      validationResult.preservedData?.owner &&
+      validationResult.preservedData.owner !== owner
+    ) {
+      console.log('✓ Configuration updated with new credentials')
+    } else {
+      console.log('✓ Configuration saved successfully')
+    }
+  } catch (error) {
+    if (error instanceof ConfigError) {
+      console.error(`❌ ${ConfigManager.getErrorMessage(error)}`)
 
-        if (!ConfigManager.isRecoverableError(error)) {
-          console.error(
-            '   This may affect future sessions. Please resolve the issue or contact support.',
-          )
-        }
-      } else {
-        console.warn(
-          '⚠️  Failed to save configuration:',
-          error instanceof Error ? error.message : 'Unknown error',
+      if (!ConfigManager.isRecoverableError(error)) {
+        console.error(
+          '   This may affect future sessions. Please resolve the issue or contact support.',
         )
       }
+    } else {
+      console.warn(
+        '⚠️  Failed to save configuration:',
+        error instanceof Error ? error.message : 'Unknown error',
+      )
     }
   }
 

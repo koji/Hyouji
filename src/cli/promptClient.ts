@@ -361,6 +361,11 @@ const askTextWithOpenTui = async (
     renderer.root.add(root)
     inputField.focus?.()
 
+    if (!renderer.keyInput?.on) {
+      await destroyRenderer()
+      return null
+    }
+
     return await new Promise<string>((resolve) => {
       renderer.keyInput?.on?.('keypress', async (key: unknown) => {
         if (
