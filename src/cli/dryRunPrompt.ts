@@ -1,8 +1,6 @@
-import prompts from 'prompts'
-
 import { dryRunToggle } from '../constant.js'
+import { askConfirm } from './promptClient.js'
 
 export const getDryRunChoice = async (): Promise<boolean> => {
-  const response = await prompts(dryRunToggle)
-  return Boolean(response.dryRun)
+  return askConfirm(dryRunToggle.message, dryRunToggle.initial)
 }

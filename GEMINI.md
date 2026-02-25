@@ -10,7 +10,7 @@ This project is a command-line tool named "Hyouji" (表示), which means "displa
 *   **Language:** TypeScript
 *   **Framework/Libraries:**
     *   `@octokit/core`: For interacting with the GitHub API.
-    *   `prompts`: For creating interactive command-line prompts.
+    *   `@opentui/core`: For interactive terminal UI prompts (selection and input handling).
     *   `chalk`: for styling terminal output.
     *   `yaml`: For parsing YAML files.
 *   **Build Tool:** Vite
@@ -21,11 +21,17 @@ This project is a command-line tool named "Hyouji" (表示), which means "displa
 
 The application is structured as a monolithic CLI tool. The main entry point is `src/index.ts`, which orchestrates the user interaction flow and calls various modules to handle specific tasks. Configuration, including the GitHub token, is stored in a JSON file in the user's home directory and is encrypted for security.
 
+Interactive prompts are centralized in `src/cli/promptClient.ts`:
+
+*   Primary path: OpenTUI (`@opentui/core`) for TUI-based selection/input.
+*   Fallback path: Node readline/raw input when OpenTUI is unavailable.
+*   Action selection supports `Esc` to exit (same behavior as choosing the `exit` action).
+
 ## Building and Running
 
 ### Prerequisites
 
-*   Node.js (version 10 or higher)
+*   Node.js (`>=22.22.0`)
 *   A package manager like `npm`, `yarn`, `pnpm`, or `bun`.
 
 ### Installation
@@ -64,12 +70,24 @@ To run the application after building it, use the following command:
 bun run start
 ```
 
+Equivalent npm command:
+
+```bash
+npm run start
+```
+
 ### Running in development mode
 
 To build the project and watch for changes, run:
 
 ```bash
 bun run dev
+```
+
+Equivalent npm command:
+
+```bash
+npm run dev
 ```
 
 ## Development Conventions
@@ -82,10 +100,22 @@ The project uses Vitest for unit and integration testing. To run the tests, use 
 bun run test
 ```
 
+Equivalent npm command:
+
+```bash
+npm run test
+```
+
 To run the tests in watch mode, use:
 
 ```bash
 bun run test:watch
+```
+
+Equivalent npm command:
+
+```bash
+npm run test:watch
 ```
 
 ### Linting and Formatting
@@ -96,10 +126,22 @@ The project uses Biome for linting and formatting. To lint the code, run:
 bun run lint
 ```
 
+Equivalent npm command:
+
+```bash
+npm run lint
+```
+
 To automatically fix linting and formatting issues, run:
 
 ```bash
 bun run lint:fix
+```
+
+Equivalent npm command:
+
+```bash
+npm run lint:fix
 ```
 
 ### Contribution Guidelines

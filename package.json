@@ -1,6 +1,6 @@
 {
   "name": "hyouji",
-  "version": "0.0.17",
+  "version": "0.1.0",
   "description": "Hyouji (表示) — A command-line tool for organizing and displaying GitHub labels with clarity and harmony.",
   "main": "dist/index.js",
   "author": "koji <baxin1919@gmail.com>",
@@ -52,9 +52,9 @@
   },
   "dependencies": {
     "@octokit/core": "^7.0.6",
+    "@opentui/core": "0.1.80",
     "chalk": "^5.6.2",
     "oh-my-logo": "^0.3.2",
-    "prompts": "^2.4.2",
     "yaml": "^2.8.1"
   },
   "devDependencies": {

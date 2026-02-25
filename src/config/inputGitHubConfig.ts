@@ -1,18 +1,35 @@
 import { Octokit } from '@octokit/core'
 import chalk from 'chalk'
-import prompts from 'prompts'
-
+import { askPassword, askText } from '../cli/promptClient.js'
 import { githubConfigs } from '../constant.js'
-import { ConfigType, StoredConfigType } from '../types/index.js'
-
-import { ConfigError, ConfigManager } from './configManager.js'
 import { GitRepositoryDetector } from '../github/gitRepositoryDetector.js'
+import { ConfigType, StoredConfigType } from '../types/index.js'
+import { ConfigError, ConfigManager } from './configManager.js'
 
 // Type for validation result from ConfigManager
 type ValidationResult = {
-  config: StoredConfigType | null;
-  shouldPromptForCredentials: boolean;
-  preservedData?: Partial<StoredConfigType>;
+  config: StoredConfigType | null
+  shouldPromptForCredentials: boolean
+  preservedData?: Partial<StoredConfigType>
+}
+
+const askRequiredValue = async (
+  ask: () => Promise<string | null>,
+  fieldName: string,
+): Promise<string> => {
+  while (true) {
+    const rawValue = await ask()
+    if (rawValue === null) {
+      throw new Error(`${fieldName} input was canceled by user.`)
+    }
+    const value = rawValue.trim()
+    if (value.length > 0) {
+      return value
+    }
+    console.log(
+      chalk.yellow(`⚠️  ${fieldName} cannot be empty. Please try again.`),
+    )
+  }
 }
 
 export const getGitHubConfigs = async (): Promise<ConfigType> => {
@@ -93,13 +110,11 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
     }
 
     // Fallback to manual input when auto-detection fails
-    const repoResponse = await prompts([
-      {
-        type: 'text',
-        name: 'repo',
-        message: 'Please type your target repo name',
-      },
-    ])
+    const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
+    const repo = await askRequiredValue(
+      () => askText(repoPrompt?.message ?? 'Please type your target repo name'),
+      'Repository name',
+    )
 
     const octokit = new Octokit({
       auth: validationResult.config.token,
@@ -108,7 +123,7 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
     return {
       octokit,
       owner: validationResult.config.owner,
-      repo: repoResponse.repo,
+      repo,
       fromSavedConfig: true,
       autoDetected: false,
       detectionMethod: 'manual',
@@ -116,68 +131,69 @@ export const getGitHubConfigs = async (): Promise<ConfigType> => {
   }
 
   // No saved config or invalid config, prompt for credentials
-  const promptConfig = [...githubConfigs]
+  const tokenPrompt = githubConfigs.find((prompt) => prompt.name === 'octokit')
+  const ownerPrompt = githubConfigs.find((prompt) => prompt.name === 'owner')
+  const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
 
-  // If we have preserved data (like a valid owner), pre-fill it
-  if (validationResult.preservedData?.owner) {
-    const ownerPromptIndex = promptConfig.findIndex(
-      (prompt) => prompt.name === 'owner',
-    )
-    if (ownerPromptIndex !== -1) {
-      promptConfig[ownerPromptIndex] = {
-        ...promptConfig[ownerPromptIndex],
-        initial: validationResult.preservedData.owner,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as prompts.PromptObject<'text'>
-    }
-  }
-
-  const response = await prompts(promptConfig)
+  const octokitToken = await askRequiredValue(
+    () =>
+      askPassword(tokenPrompt?.message ?? 'Please type your personal token'),
+    'Personal token',
+  )
+  const owner = await askRequiredValue(
+    () =>
+      askText(ownerPrompt?.message ?? 'Please type your GitHub account', {
+        initial: validationResult.preservedData?.owner,
+      }),
+    'GitHub account',
+  )
+  const repo = await askRequiredValue(
+    () => askText(repoPrompt?.message ?? 'Please type your target repo name'),
+    'Repository name',
+  )
 
   // Save the new configuration for future use
-  if (response.octokit && response.owner) {
-    try {
-      await configManager.saveConfig({
-        token: response.octokit,
-        owner: response.owner,
-        lastUpdated: new Date().toISOString(),
-      })
+  try {
+    await configManager.saveConfig({
+      token: octokitToken,
+      owner,
+      lastUpdated: new Date().toISOString(),
+    })
 
-      if (
-        validationResult.preservedData?.owner &&
-        validationResult.preservedData.owner !== response.owner
-      ) {
-        console.log('✓ Configuration updated with new credentials')
-      } else {
-        console.log('✓ Configuration saved successfully')
-      }
-    } catch (error) {
-      if (error instanceof ConfigError) {
-        console.error(`❌ ${ConfigManager.getErrorMessage(error)}`)
+    if (
+      validationResult.preservedData?.owner &&
+      validationResult.preservedData.owner !== owner
+    ) {
+      console.log('✓ Configuration updated with new credentials')
+    } else {
+      console.log('✓ Configuration saved successfully')
+    }
+  } catch (error) {
+    if (error instanceof ConfigError) {
+      console.error(`❌ ${ConfigManager.getErrorMessage(error)}`)
 
-        if (!ConfigManager.isRecoverableError(error)) {
-          console.error(
-            '   This may affect future sessions. Please resolve the issue or contact support.',
-          )
-        }
-      } else {
-        console.warn(
-          '⚠️  Failed to save configuration:',
-          error instanceof Error ? error.message : 'Unknown error',
+      if (!ConfigManager.isRecoverableError(error)) {
+        console.error(
+          '   This may affect future sessions. Please resolve the issue or contact support.',
         )
       }
+    } else {
+      console.warn(
+        '⚠️  Failed to save configuration:',
+        error instanceof Error ? error.message : 'Unknown error',
+      )
     }
   }
 
   // Create Octokit instance and return config
   const octokit = new Octokit({
-    auth: response.octokit,
+    auth: octokitToken,
   })
 
   return {
     octokit,
-    owner: response.owner,
-    repo: response.repo,
+    owner,
+    repo,
     fromSavedConfig: false,
     autoDetected: false,
     detectionMethod: 'manual',
