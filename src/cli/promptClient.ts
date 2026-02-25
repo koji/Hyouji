@@ -273,11 +273,15 @@ const askSelectWithRawInput = async (
   return await new Promise<number>((resolve) => {
     let digits = ''
     const wasRaw = input.isRaw
+    const wasPaused = input.isPaused()
 
     const cleanup = () => {
       input.removeListener('keypress', onKeypress)
       if (!wasRaw) {
         input.setRawMode(false)
+      }
+      if (wasPaused) {
+        input.pause()
       }
       output.write('\n')
     }
@@ -347,11 +351,15 @@ const askPasswordWithRawInput = async (
   return await new Promise<string>((resolve) => {
     let value = ''
     const wasRaw = input.isRaw
+    const wasPaused = input.isPaused()
 
     const cleanup = () => {
       input.removeListener('keypress', onKeypress)
       if (!wasRaw) {
         input.setRawMode(false)
+      }
+      if (wasPaused) {
+        input.pause()
       }
       output.write('\n')
     }
