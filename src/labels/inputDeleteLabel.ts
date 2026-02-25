@@ -1,3 +1,4 @@
+import chalk from 'chalk'
 import { askText } from '../cli/promptClient.js'
 import { deleteLabel } from '../constant.js'
 

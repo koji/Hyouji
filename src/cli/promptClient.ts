@@ -91,6 +91,10 @@ export const askText = async (
 }
 
 export const askPassword = async (message: string): Promise<string> => {
+  const masked = await askPasswordWithRawInput(message)
+  if (masked !== null) {
+    return masked
+  }
   return askText(message)
 }
 
@@ -321,6 +325,68 @@ const askSelectWithRawInput = async (
       if (/^[0-9]$/.test(str)) {
         digits += str
         output.write(str)
+      }
+    }
+
+    emitKeypressEvents(input)
+    input.setRawMode(true)
+    input.resume()
+    input.on('keypress', onKeypress)
+  })
+}
+
+const askPasswordWithRawInput = async (
+  message: string,
+): Promise<string | null> => {
+  if (!input.isTTY || typeof input.setRawMode !== 'function') {
+    return null
+  }
+
+  output.write(`${message}: `)
+
+  return await new Promise<string>((resolve) => {
+    let value = ''
+    const wasRaw = input.isRaw
+
+    const cleanup = () => {
+      input.removeListener('keypress', onKeypress)
+      if (!wasRaw) {
+        input.setRawMode(false)
+      }
+      output.write('\n')
+    }
+
+    const resolveValue = (password: string) => {
+      cleanup()
+      resolve(password)
+    }
+
+    const onKeypress = (str: string, key: { name?: string } | undefined) => {
+      if (!key) {
+        return
+      }
+
+      if (key.name === 'return' || key.name === 'enter') {
+        resolveValue(value)
+        return
+      }
+
+      if (key.name === 'backspace') {
+        if (value.length > 0) {
+          value = value.slice(0, -1)
+          output.write('\b \b')
+        }
+        return
+      }
+
+      if (key.name === 'escape' || key.name === 'esc') {
+        resolveValue('')
+        return
+      }
+
+      if (str.length === 1 && str >= ' ') {
+        value += str
+        output.write('*')
       }
     }
 
