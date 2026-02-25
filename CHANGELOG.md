@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.0](2026-02-25)
+
+- feat: replace `prompts` with a unified prompt client backed by OpenTUI with Node readline/raw-input fallbacks
+- feat: support keyboard cancellation/escape behavior consistently in action selection and confirmation flows
+- fix: prevent empty required inputs (token/owner/repo/label name/file path) from silently proceeding
+- fix: mask password/token input in terminal to avoid plain-text credential exposure
+- fix: harden prompt lifecycle handling (cleanup, pause/raw-mode restore, fallback guards, timeout paths) to avoid hangs
+- refactor: remove brittle prompt-order dependencies by selecting prompt messages via field names
+
+### [0.0.17](2026-01-18)
+
+- feat: add repository auto-detection from local Git remotes, with manual fallback when detection fails
+- fix: strengthen saved-config validation and error handling around invalid or missing credentials
+- security: improve configuration persistence flow for encrypted token usage and migration handling
+
 ### [0.0.16](2025-12-14)
 
 - feat: add optional dry-run flow for create/delete/import actions so users can preview changes without API calls
