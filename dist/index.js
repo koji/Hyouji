@@ -1044,6 +1044,8 @@ class ConfigManager {
     ].includes(error.type)
   }
 }
+const OPEN_TUI_INPUT_TIMEOUT_MS = 3e4
+const ESCAPE_SELECTION_VALUE = 99
 let opentuiLoadAttempted = false
 let opentuiModule = null
 const loadOpenTui = async () => {
@@ -1084,6 +1086,10 @@ const askText = async (message, options = {}) => {
   return answer
 }
 const askPassword = async (message) => {
+  const masked = await askPasswordWithRawInput(message)
+  if (masked !== null) {
+    return masked
+  }
   return askText(message)
 }
 const askConfirm = async (message, initial = true) => {
@@ -1095,6 +1101,9 @@ const askConfirm = async (message, initial = true) => {
     return true
   }
   if (value === 0) {
+    return false
+  }
+  if (value === ESCAPE_SELECTION_VALUE) {
     return false
   }
   return initial
@@ -1171,6 +1180,10 @@ const askSelectWithOpenTui = async (core, message, choices) => {
     root.add(select)
     renderer.root.add(root)
     select.focus?.()
+    if (!select.on) {
+      await destroyRenderer()
+      return null
+    }
     const escapeValue =
       choices.find((choice) => choice.title.toLowerCase() === 'exit')?.value ??
       99
@@ -1184,7 +1197,7 @@ const askSelectWithOpenTui = async (core, message, choices) => {
         await destroyRenderer()
         resolve(value)
       }
-      select.on?.(
+      select.on(
         core.SelectRenderableEvents.ITEM_SELECTED,
         async (_index, option) => {
           if (
@@ -1225,10 +1238,14 @@ const askSelectWithRawInput = async (choices) => {
   return await new Promise((resolve) => {
     let digits = ''
     const wasRaw = stdin.isRaw
+    const wasPaused = stdin.isPaused()
     const cleanup = () => {
       stdin.removeListener('keypress', onKeypress)
       if (!wasRaw) {
         stdin.setRawMode(false)
+      }
+      if (wasPaused) {
+        stdin.pause()
       }
       stdout.write('\n')
     }
@@ -1237,6 +1254,9 @@ const askSelectWithRawInput = async (choices) => {
       resolve(value)
     }
     const onKeypress = (str, key) => {
+      if (!key) {
+        return
+      }
       if (key.name === 'escape' || key.name === 'esc') {
         resolveValue(escapeValue)
         return
@@ -1275,6 +1295,59 @@ const askSelectWithRawInput = async (choices) => {
     stdin.on('keypress', onKeypress)
   })
 }
+const askPasswordWithRawInput = async (message) => {
+  if (!stdin.isTTY || typeof stdin.setRawMode !== 'function') {
+    return null
+  }
+  stdout.write(`${message}: `)
+  return await new Promise((resolve) => {
+    let value = ''
+    const wasRaw = stdin.isRaw
+    const wasPaused = stdin.isPaused()
+    const cleanup = () => {
+      stdin.removeListener('keypress', onKeypress)
+      if (!wasRaw) {
+        stdin.setRawMode(false)
+      }
+      if (wasPaused) {
+        stdin.pause()
+      }
+      stdout.write('\n')
+    }
+    const resolveValue = (password) => {
+      cleanup()
+      resolve(password)
+    }
+    const onKeypress = (str, key) => {
+      if (!key) {
+        return
+      }
+      if (key.name === 'return' || key.name === 'enter') {
+        resolveValue(value)
+        return
+      }
+      if (key.name === 'backspace') {
+        if (value.length > 0) {
+          value = value.slice(0, -1)
+          stdout.write('\b \b')
+        }
+        return
+      }
+      if (key.name === 'escape' || key.name === 'esc') {
+        resolveValue(null)
+        return
+      }
+      if (str.length === 1 && str >= ' ') {
+        value += str
+        stdout.write('*')
+      }
+    }
+    emitKeypressEvents(stdin)
+    stdin.setRawMode(true)
+    stdin.resume()
+    stdin.on('keypress', onKeypress)
+  })
+}
 const askTextWithOpenTui = async (core, message, options) => {
   const renderer = await core.createCliRenderer({ exitOnCtrlC: true })
   let destroyed = false
@@ -1302,7 +1375,11 @@ const askTextWithOpenTui = async (core, message, options) => {
       placeholder: options.initial ?? '',
     })
     inputField.setValue?.(currentValue)
-    inputField.on?.(core.InputRenderableEvents.CHANGE, (nextValue) => {
+    if (!inputField.on) {
+      await destroyRenderer()
+      return null
+    }
+    inputField.on(core.InputRenderableEvents.CHANGE, (nextValue) => {
       if (typeof nextValue === 'string') {
         currentValue = nextValue
       }
@@ -1311,14 +1388,32 @@ const askTextWithOpenTui = async (core, message, options) => {
     root.add(inputField)
     renderer.root.add(root)
     inputField.focus?.()
+    if (!renderer.keyInput?.on) {
+      await destroyRenderer()
+      return null
+    }
     return await new Promise((resolve) => {
+      let settled = false
+      const timer = setTimeout(async () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        await destroyRenderer()
+        resolve(null)
+      }, OPEN_TUI_INPUT_TIMEOUT_MS)
       renderer.keyInput?.on?.('keypress', async (key) => {
+        if (settled) {
+          return
+        }
         if (
           typeof key === 'object' &&
           key !== null &&
           'name' in key &&
           (key.name === 'enter' || key.name === 'return')
         ) {
+          settled = true
+          clearTimeout(timer)
           await destroyRenderer()
           if (currentValue === '' && options.initial !== void 0) {
             resolve(options.initial)
@@ -1665,8 +1760,13 @@ const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
   return summary
 }
 const getTargetLabel = async () => {
-  const name = await askText(deleteLabel$1.message)
-  return [name]
+  while (true) {
+    const name = (await askText(deleteLabel$1.message)).trim()
+    if (name.length > 0) {
+      return [name]
+    }
+    console.log(chalk.yellow('Label name cannot be empty. Please try again.'))
+  }
 }
 const GIT_COMMAND_TIMEOUT_MS = 5e3
 class GitRepositoryDetector {
@@ -1891,6 +1991,21 @@ class GitRepositoryDetector {
     }
   }
 }
+const askRequiredValue = async (ask, fieldName) => {
+  while (true) {
+    const rawValue = await ask()
+    if (rawValue === null) {
+      throw new Error(`${fieldName} input was canceled by user.`)
+    }
+    const value = rawValue.trim()
+    if (value.length > 0) {
+      return value
+    }
+    console.log(
+      chalk.yellow(`⚠️  ${fieldName} cannot be empty. Please try again.`),
+    )
+  }
+}
 const getGitHubConfigs = async () => {
   const configManager2 = new ConfigManager()
   let validationResult = {
@@ -1956,8 +2071,10 @@ const getGitHubConfigs = async () => {
       }
     }
     const repoPrompt2 = githubConfigs.find((prompt) => prompt.name === 'repo')
-    const repo2 = await askText(
-      repoPrompt2?.message ?? 'Please type your target repo name',
+    const repo2 = await askRequiredValue(
+      () =>
+        askText(repoPrompt2?.message ?? 'Please type your target repo name'),
+      'Repository name',
     )
     const octokit2 = new Octokit({
       auth: validationResult.config.token,
@@ -1974,47 +2091,49 @@ const getGitHubConfigs = async () => {
   const tokenPrompt = githubConfigs.find((prompt) => prompt.name === 'octokit')
   const ownerPrompt = githubConfigs.find((prompt) => prompt.name === 'owner')
   const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
-  const octokitToken = await askPassword(
-    tokenPrompt?.message ?? 'Please type your personal token',
+  const octokitToken = await askRequiredValue(
+    () =>
+      askPassword(tokenPrompt?.message ?? 'Please type your personal token'),
+    'Personal token',
   )
-  const owner = await askText(
-    ownerPrompt?.message ?? 'Please type your GitHub account',
-    {
-      initial: validationResult.preservedData?.owner,
-    },
+  const owner = await askRequiredValue(
+    () =>
+      askText(ownerPrompt?.message ?? 'Please type your GitHub account', {
+        initial: validationResult.preservedData?.owner,
+      }),
+    'GitHub account',
   )
-  const repo = await askText(
-    repoPrompt?.message ?? 'Please type your target repo name',
+  const repo = await askRequiredValue(
+    () => askText(repoPrompt?.message ?? 'Please type your target repo name'),
+    'Repository name',
   )
-  if (octokitToken && owner) {
-    try {
-      await configManager2.saveConfig({
-        token: octokitToken,
-        owner,
-        lastUpdated: /* @__PURE__ */ new Date().toISOString(),
-      })
-      if (
-        validationResult.preservedData?.owner &&
-        validationResult.preservedData.owner !== owner
-      ) {
-        console.log('✓ Configuration updated with new credentials')
-      } else {
-        console.log('✓ Configuration saved successfully')
-      }
-    } catch (error) {
-      if (error instanceof ConfigError) {
-        console.error(`❌ ${ConfigManager.getErrorMessage(error)}`)
-        if (!ConfigManager.isRecoverableError(error)) {
-          console.error(
-            '   This may affect future sessions. Please resolve the issue or contact support.',
-          )
-        }
-      } else {
-        console.warn(
-          '⚠️  Failed to save configuration:',
-          error instanceof Error ? error.message : 'Unknown error',
+  try {
+    await configManager2.saveConfig({
+      token: octokitToken,
+      owner,
+      lastUpdated: /* @__PURE__ */ new Date().toISOString(),
+    })
+    if (
+      validationResult.preservedData?.owner &&
+      validationResult.preservedData.owner !== owner
+    ) {
+      console.log('✓ Configuration updated with new credentials')
+    } else {
+      console.log('✓ Configuration saved successfully')
+    }
+  } catch (error) {
+    if (error instanceof ConfigError) {
+      console.error(`❌ ${ConfigManager.getErrorMessage(error)}`)
+      if (!ConfigManager.isRecoverableError(error)) {
+        console.error(
+          '   This may affect future sessions. Please resolve the issue or contact support.',
         )
       }
+    } else {
+      console.warn(
+        '⚠️  Failed to save configuration:',
+        error instanceof Error ? error.message : 'Unknown error',
+      )
     }
   }
   const octokit = new Octokit({
@@ -2030,12 +2149,27 @@ const getGitHubConfigs = async () => {
   }
 }
 const getLabelFilePath = async () => {
-  return askText(labelFilePath.message)
+  while (true) {
+    const filePath = (await askText(labelFilePath.message)).trim()
+    if (filePath.length > 0) {
+      return filePath
+    }
+    console.log('File path cannot be empty. Please try again.')
+  }
+}
+const getPromptMessage = (field, fallback) => {
+  return newLabel.find((prompt) => prompt.name === field)?.message ?? fallback
 }
 const getNewLabel = async () => {
-  const name = await askText(newLabel[0].message)
-  const color = await askText(newLabel[1].message)
-  const description = await askText(newLabel[2].message)
+  const name = await askText(
+    getPromptMessage('name', 'Please type new label name'),
+  )
+  const color = await askText(
+    getPromptMessage('color', 'Please type label color without "#" '),
+  )
+  const description = await askText(
+    getPromptMessage('description', 'Please type label description'),
+  )
   return {
     name,
     color,
