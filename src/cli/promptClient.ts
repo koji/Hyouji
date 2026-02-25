@@ -90,7 +90,7 @@ export const askText = async (
   return answer
 }
 
-export const askPassword = async (message: string): Promise<string | null> => {
+export const askPassword = async (message: string): Promise<string> => {
   const masked = await askPasswordWithRawInput(message)
   if (masked !== null) {
     return masked
