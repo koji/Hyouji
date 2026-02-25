@@ -90,7 +90,7 @@ export const askText = async (
   return answer
 }
 
-export const askPassword = async (message: string): Promise<string> => {
+export const askPassword = async (message: string): Promise<string | null> => {
   const masked = await askPasswordWithRawInput(message)
   if (masked !== null) {
     return masked
@@ -348,7 +348,7 @@ const askPasswordWithRawInput = async (
 
   output.write(`${message}: `)
 
-  return await new Promise<string>((resolve) => {
+  return await new Promise<string | null>((resolve) => {
     let value = ''
     const wasRaw = input.isRaw
     const wasPaused = input.isPaused()
@@ -364,7 +364,7 @@ const askPasswordWithRawInput = async (
       output.write('\n')
     }
 
-    const resolveValue = (password: string) => {
+    const resolveValue = (password: string | null) => {
       cleanup()
       resolve(password)
     }
@@ -388,7 +388,7 @@ const askPasswordWithRawInput = async (
       }
 
       if (key.name === 'escape' || key.name === 'esc') {
-        resolveValue('')
+        resolveValue(null)
         return
       }
 

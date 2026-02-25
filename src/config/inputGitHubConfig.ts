@@ -14,11 +14,15 @@ type ValidationResult = {
 }
 
 const askRequiredValue = async (
-  ask: () => Promise<string>,
+  ask: () => Promise<string | null>,
   fieldName: string,
 ): Promise<string> => {
   while (true) {
-    const value = (await ask()).trim()
+    const rawValue = await ask()
+    if (rawValue === null) {
+      throw new Error(`${fieldName} input was canceled by user.`)
+    }
+    const value = rawValue.trim()
     if (value.length > 0) {
       return value
     }
