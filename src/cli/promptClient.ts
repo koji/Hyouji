@@ -40,6 +40,7 @@ type SelectChoice = {
 }
 
 const OPEN_TUI_INPUT_TIMEOUT_MS = 30_000
+const ESCAPE_SELECTION_VALUE = 99
 
 let opentuiLoadAttempted = false
 let opentuiModule: OpenTuiModule | null = null
@@ -105,6 +106,9 @@ export const askConfirm = async (
     return true
   }
   if (value === 0) {
+    return false
+  }
+  if (value === ESCAPE_SELECTION_VALUE) {
     return false
   }
   return initial
