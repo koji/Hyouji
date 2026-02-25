@@ -86,21 +86,44 @@ jobs:
           BUN_ISSUES=""
           if [ -s bun-audit.json ]; then
             BUN_ISSUES=$(jq -r '
+              def id_candidates:
+                (.advisory_id // .id // empty) as $raw
+                | if ($raw|type)=="array" then $raw else [$raw] end
+                | map(select(type=="string"));
+              def take_n($n): if length>$n then (.[0:$n]|join(",") + " +" + ((length-$n)|tostring) + " more") else join(",") end;
+              def prefer_id:
+                (id_candidates | map(select(test("^GHSA-")))) as $ghsa
+                | if ($ghsa|length)>0 then ($ghsa|take_n(3)) else
+                    (id_candidates | map(select(test("^OSV-")))) as $osv
+                    | if ($osv|length)>0 then ($osv|take_n(3)) else
+                        if (id_candidates|length)>0 then (id_candidates|take_n(3)) else "unknown" end
+                      end
+                  end;
               ..
               | objects
               | select(.name? and .severity?)
-              | "\(.name)@\(.version // "unknown") (\(.severity))"
-            ' bun-audit.json | sort -u)
+              | "\(.name)@\(.version // "unknown") (\(.severity)) [\(prefer_id)]"
+            ' bun-audit.json | sort -fu)
           fi
 
           OSV_ISSUES=""
           if [ -s osv-results.json ]; then
             OSV_ISSUES=$(jq -r '
-              .results[]
-              .packages[]
+              def take_n($n): if length>$n then (.[0:$n]|join(",") + " +" + ((length-$n)|tostring) + " more") else join(",") end;
+              def prefer_ids:
+                (.vulnerabilities | map(.id) | map(select(type=="string"))) as $ids
+                | ($ids | map(select(test("^GHSA-")))) as $ghsa
+                | if ($ghsa|length)>0 then ($ghsa|take_n(3)) else
+                    ($ids | map(select(test("^OSV-")))) as $osv
+                    | if ($osv|length)>0 then ($osv|take_n(3)) else ($ids|take_n(3)) end
+                  end;
+              | select(.results? != null)
+              | .results[]
+              | select(.packages? != null)
+              | .packages[]
               | select(.vulnerabilities | length > 0)
-              | "\(.Package.name)@\(.Package.version)"
-            ' osv-results.json | sort -u)
+              | "\(.package.name)@\(.package.version // "unknown") [\(prefer_ids)]"
+            ' osv-results.json | sort -fu)
           fi
 
           if [ -z "$BUN_ISSUES$OSV_ISSUES" ]; then
