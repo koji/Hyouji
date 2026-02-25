@@ -284,6 +284,10 @@ const askSelectWithRawInput = async (
     }
 
     const onKeypress = (str: string, key: { name?: string } | undefined) => {
+      if (!key) {
+        return
+      }
+
       if (key.name === 'escape' || key.name === 'esc') {
         resolveValue(escapeValue)
         return
