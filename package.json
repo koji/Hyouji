@@ -24,7 +24,8 @@
     "表示",
     "Hyouji(表示)",
     "JSON",
-    "yaml"
+    "yaml",
+    "tui"
   ],
   "scripts": {
     "start": "node dist/index.js",
