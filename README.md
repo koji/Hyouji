@@ -20,7 +20,9 @@ https://levelup.gitconnected.com/create-github-labels-from-terminal-158d4868fab
 
 ![hyouji_terminal](./hyouji.png)
 
-https://github.com/user-attachments/assets/739f185a-1bd0-411b-8947-dd4600c452c8
+https://github.com/user-attachments/assets/d7960f58-031e-4c08-86ff-f14762915c7f
+
+
 
 ### Labels API
 
