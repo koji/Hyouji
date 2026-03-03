@@ -89,6 +89,9 @@ jobs:
     if: needs.validate.outputs.should-publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -107,9 +110,20 @@ jobs:
           node-version: "22.22.0"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Verify npm CLI version for trusted publishing
+        run: |
+          NPM_VERSION=$(npm --version)
+          echo "npm version: $NPM_VERSION"
+          if ! node -e "const [maj,min]=process.argv[1].split('.').map(Number); process.exit((maj>11 || (maj===11 && min>=5))?0:1)" "$NPM_VERSION"; then
+            echo "Updating npm to latest for OIDC trusted publishing support..."
+            npm i -g npm@latest
+            echo "Updated npm version: $(npm --version)"
+          fi
+
       - name: Verify network connectivity and npm registry
         run: |
           echo "Checking network connectivity and npm registry access..."
+          echo "Using npm Trusted Publisher (OIDC) authentication"
 
           # Test npm registry connectivity with retry
           for i in {1..3}; do
@@ -295,78 +309,6 @@ jobs:
             console.log('✓ Package integrity verified');
           "
 
-      # Secure npm authentication
-      - name: Configure npm authentication
-        run: |
-          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
-            echo "❌ Error: NPM_TOKEN secret is not configured"
-            echo "Please add NPM_TOKEN as a repository secret with your npm authentication token"
-            exit 1
-          fi
-
-          # Validate token format
-          echo "Validating NPM_TOKEN format..."
-          if [[ ! "$NPM_TOKEN" =~ ^npm_.* ]]; then
-            echo "⚠️  Warning: NPM_TOKEN doesn't start with 'npm_'"
-            echo "Modern npm tokens should start with 'npm_' prefix"
-            echo "If you're using an older token format, it may still work"
-          else
-            echo "✓ NPM_TOKEN format looks correct"
-          fi
-
-          # Configure npm to use the token using npm config commands
-          npm config set //registry.npmjs.org/:_authToken "${{ secrets.NPM_TOKEN }}"
-          npm config set registry https://registry.npmjs.org/
-
-          # Verify the configuration was set
-          echo "npm configuration after setup:"
-          npm config list
-
-          echo "✓ npm authentication configured"
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Verify npm authentication
-        run: |
-          # Debug: Check npm configuration
-          echo "Checking npm configuration:"
-          echo "Registry: $(npm config get registry)"
-          echo "Auth token configured: $(npm config get //registry.npmjs.org/:_authToken | sed 's/.*/***MASKED***/')"
-          echo ""
-
-          # Debug: Check npm configuration
-          echo "npm configuration:"
-          npm config list
-          echo ""
-
-          # Test authentication by checking whoami (this will fail gracefully if auth is invalid)
-          echo "Testing npm authentication..."
-          if npm whoami > /dev/null 2>&1; then
-            NPM_USER=$(npm whoami)
-            echo "✓ Successfully authenticated as npm user: $NPM_USER"
-          else
-            echo "❌ npm authentication failed"
-            echo ""
-            echo "Debugging information:"
-            echo "- NPM_TOKEN secret is set: ${{ secrets.NPM_TOKEN != '' }}"
-            echo "- Token length: ${#NPM_TOKEN}"
-            echo "- Token starts with: ${NPM_TOKEN:0:8}..."
-            echo ""
-            echo "Common issues:"
-            echo "1. Token may be expired or invalid"
-            echo "2. Token may not have publishing permissions"
-            echo "3. Token format may be incorrect (should start with 'npm_')"
-            echo "4. Account may require 2FA for publishing"
-            echo ""
-            echo "Please verify:"
-            echo "- NPM_TOKEN is a valid automation token from https://www.npmjs.com/settings/tokens"
-            echo "- Token has 'Automation' type with read/write permissions"
-            echo "- Your npm account has publishing permissions for this package"
-            exit 1
-          fi
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       # npm publishing with comprehensive error handling and retry
       - name: Publish to npm
         run: |
@@ -401,16 +343,16 @@ jobs:
                 echo "❌ Error: Failed to publish package after 3 attempts"
                 echo ""
                 echo "Common publishing issues:"
-                echo "  - Authentication problems (check NPM_TOKEN)"
+                echo "  - Authentication problems (check npm Trusted Publisher OIDC settings)"
                 echo "  - Network connectivity issues"
                 echo "  - Package validation failures"
                 echo "  - Registry temporary unavailability"
                 echo ""
                 echo "Troubleshooting steps:"
-                echo "  1. Verify NPM_TOKEN has publishing permissions"
+                echo "  1. Verify npm Trusted Publisher is configured for this repo/workflow"
                 echo "  2. Check package.json for required fields"
                 echo "  3. Ensure package name is available"
-                echo "  4. Try publishing manually: npm publish --access public"
+                echo "  4. Confirm workflow has permissions: id-token: write and contents: read"
                 exit 1
               fi
               
@@ -418,9 +360,6 @@ jobs:
               sleep 30
             fi
           done
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       # Post-publish verification with retry
       - name: Verify npm publication
         run: |
@@ -594,14 +533,14 @@ jobs:
           echo "📦 Package: $PACKAGE_NAME@$PACKAGE_VERSION"
           echo ""
           echo "🔍 Common publishing issues:"
-          echo "  - Authentication: Check NPM_TOKEN secret"
+          echo "  - Authentication: Check npm Trusted Publisher (OIDC) settings"
           echo "  - Version conflict: Version may already exist on npm"
           echo "  - Network issues: Temporary npm registry problems"
           echo "  - Validation failures: Code quality or test issues"
           echo ""
           echo "🛠️ Troubleshooting steps:"
           echo "  1. Check the workflow logs for specific error messages"
-          echo "  2. Verify NPM_TOKEN has publishing permissions"
+          echo "  2. Verify Trusted Publisher repository/workflow mapping"
           echo "  3. Ensure package.json version is unique"
           echo "  4. Run validation steps locally: bun run lint && bun test && bun run build"
           echo ""
