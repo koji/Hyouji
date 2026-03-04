@@ -115,8 +115,8 @@ jobs:
           NPM_VERSION=$(npm --version)
           echo "npm version: $NPM_VERSION"
           if ! node -e "const [maj,min]=process.argv[1].split('.').map(Number); process.exit((maj>11 || (maj===11 && min>=5))?0:1)" "$NPM_VERSION"; then
-            echo "Updating npm to latest for OIDC trusted publishing support..."
-            npm i -g npm@latest
+            echo "Updating npm to version 11.5.0 for OIDC trusted publishing support..."
+            npm i -g npm@11.5.0
             echo "Updated npm version: $(npm --version)"
           fi
 
