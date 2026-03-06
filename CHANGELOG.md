@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.1.1](2026-03-04)
 - modify publish workflow by @koji in https://github.com/koji/Hyouji/pull/120
-- doc: update READ.md to add a new video
+- doc: update README.md to add a new video
 
 ### [0.1.0](2026-02-25)
 
