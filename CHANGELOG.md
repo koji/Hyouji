@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.1](2026-03-04)
+- modify publish workflow by @koji in https://github.com/koji/Hyouji/pull/120
+- doc: update README.md to add a new video
+
 ### [0.1.0](2026-02-25)
 
 - feat: replace `prompts` with a unified prompt client backed by OpenTUI with Node readline/raw-input fallbacks
