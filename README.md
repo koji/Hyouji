@@ -8,9 +8,9 @@
 https://levelup.gitconnected.com/create-github-labels-from-terminal-158d4868fab  
 https://github.com/koji/Hyouji/blob/main/blog/article.md  
 
-[![CI](https://github.com/koji/github-label-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/koji/github-label-manager/actions/workflows/ci.yml)
-[![Publish](https://github.com/koji/github-label-manager/actions/workflows/publish.yml/badge.svg)](https://github.com/koji/github-label-manager/actions/workflows/publish.yml)
-[![npm version](https://badge.fury.io/js/github-label-manager.svg)](https://badge.fury.io/js/github-label-manager)
+[![CI](https://github.com/koji/hyouji/actions/workflows/ci.yml/badge.svg)](https://github.com/koji/hyouji/actions/workflows/ci.yml)
+[![Publish](https://github.com/koji/hyouji/actions/workflows/publish.yml/badge.svg)](https://github.com/koji/hyouji/actions/workflows/publish.yml)
+[![npm version](https://badge.fury.io/js/hyouji.svg)](https://badge.fury.io/js/hyouji)
 
 A simple CLI tool to create/delete labels with GitHub Labels API. Now available as a global npm package with persistent configuration storage.
 
@@ -120,7 +120,7 @@ The tool now includes persistent configuration storage with enhanced security:
 
 - **Automatic saving**: Your GitHub token and username are saved after first use
 - **Settings display**: Use option 6 to view your current configuration
-- **Secure storage**: Configuration is stored in `~/.config/github-label-manager/config.json`
+- **Secure storage**: Configuration is stored in `~/.config/hyouji/config.json`
 - **Token encryption**: Your personal token is automatically encrypted using machine-specific keys
 - **Automatic migration**: Existing plain text configurations are automatically upgraded to encrypted format
 - **Token security**: Your personal token is never displayed in plain text, only an obfuscated preview is shown
@@ -326,8 +326,8 @@ The "Create multiple labels" option uses predefined labels from `src/constant.ts
 
 Your settings are stored in:
 
-- **Primary**: `~/.config/github-label-manager/config.json`
-- **Fallback**: `~/.github-label-manager-config.json`
+- **Primary**: `~/.config/hyouji/config.json`
+- **Fallback**: `~/.hyouji-config.json`
 
 ### Viewing Your Settings
 
@@ -366,8 +366,6 @@ If you encounter file permission errors:
 
 - Node.js 20 or higher
 - GitHub Personal Access Token with `repo` scope
-
-https://user-images.githubusercontent.com/474225/130368605-b5c6410f-53f6-4ef0-b321-8950edeebf7d.mov
 
 ## Articles
 
