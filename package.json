@@ -63,11 +63,13 @@
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "^4.0.17",
     "@vitest/ui": "^4.0.17",
+    "@voidzero-dev/vite-plus-core": "^0.1.11",
     "knip": "^5.85.0",
     "lefthook": "^2.1.1",
     "standard-version": "^9.5.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
+    "vite-plus": "^0.1.11",
     "vitest": "^4.0.17"
   },
   "files": [

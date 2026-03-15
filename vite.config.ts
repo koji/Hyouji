@@ -1,5 +1,6 @@
 import { resolve } from 'path'
-import { defineConfig } from 'vite'
+// import { defineConfig } from 'vite'
+import { defineConfig } from 'vite-plus'
 
 export default defineConfig({
   build: {
