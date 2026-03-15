@@ -60,10 +60,6 @@ const deleteLabel$1 = {
 const labelFilePath = {
   message: 'Please type the path to your JSON or YAML file',
 }
-const dryRunToggle = {
-  message: 'Run in dry-run mode? (no API calls will be made)',
-  initial: false,
-}
 const actionSelector = {
   message: 'Please select an action',
   choices: [
@@ -268,6 +264,10 @@ Please report this issue to https://github.com/koji/Hyouji/issues
 Thank you!
 `
   }
+}
+const dryRunToggle = {
+  message: 'Do you want to run in dry-run mode?',
+  initial: false,
 }
 const extraGuideText = `If you don't see action selector, please hit space key.`
 const linkToPersonalToken = 'https://github.com/settings/tokens'
