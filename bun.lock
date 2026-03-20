@@ -7,8 +7,8 @@
       "dependencies": {
         "@octokit/core": "^7.0.6",
         "@opentui/core": "0.1.80",
-        "chalk": "^5.6.2",
-        "oh-my-logo": "^0.3.2",
+        "chalk": "5.6.2",
+        "oh-my-logo": "0.4.0",
         "yaml": "^2.8.1",
       },
       "devDependencies": {
@@ -736,7 +736,7 @@
 
     "obug": ["obug@2.1.1", "", {}, "sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ=="],
 
-    "oh-my-logo": ["oh-my-logo@0.3.2", "", { "dependencies": { "commander": "^11.1.0", "figlet": "^1.7.0", "gradient-string": "^2.0.2", "ink": "^5.0.1", "ink-big-text": "^2.0.0", "ink-gradient": "^3.0.0", "react": "^18.3.1" }, "bin": { "oh-my-logo": "dist/index.js" } }, "sha512-AX6OCR1v8rlS3e/5pgCgd9w4nxLE4pisYzGwSpmgCub76FbsxcwjPf9Sk9o2BZa1BT1Jyzu25sPr9Sp4jeipog=="],
+    "oh-my-logo": ["oh-my-logo@0.4.0", "", { "dependencies": { "commander": "^11.1.0", "figlet": "^1.7.0", "gradient-string": "^2.0.2", "ink": "^5.0.1", "ink-big-text": "^2.0.0", "ink-gradient": "^3.0.0", "react": "^18.3.1" }, "bin": { "oh-my-logo": "dist/index.js" } }, "sha512-Angf5XGXkJrNgeAV9KGPdi08Q/QUtK7MWkIFQTQk0pNX8lXjBKw+e5R9u4TnK4Oq4kYVcBiDZdU+yF/nHLaUyQ=="],
 
     "omggif": ["omggif@1.0.10", "", {}, "sha512-LMJTtvgc/nugXj0Vcrrs68Mn2D1r0zf630VNtqtpI1FEO7e+O9FP4gqs9AcnBaSEeoHIPm28u6qgPR0oyEpGSw=="],
 
