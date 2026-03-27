@@ -60,13 +60,13 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.11",
-    "@types/node": "^24.10.0",
+    "@types/node": "25.5.0",
     "@vitest/coverage-v8": "^4.0.17",
     "@vitest/ui": "^4.0.17",
     "knip": "^5.85.0",
     "lefthook": "^2.1.1",
     "standard-version": "^9.5.0",
-    "typescript": "^5.9.3",
+    "typescript": "6.0.2",
     "vite": "^7.3.1",
     "vitest": "^4.0.17"
   },
