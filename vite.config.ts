@@ -35,7 +35,6 @@ export default defineConfig({
       output: {
         banner: '#!/usr/bin/env node',
         entryFileNames: 'index.js',
-        interop: 'auto',
       },
     },
     target: 'node22',
@@ -46,8 +45,7 @@ export default defineConfig({
     noExternal: [],
   },
   optimizeDeps: {
-    esbuildOptions: {
-      charset: 'utf8',
+    rolldownOptions: {
       platform: 'node',
     },
   },

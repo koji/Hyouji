@@ -20,7 +20,8 @@ import { dirname, join } from 'path'
 import { promisify } from 'util'
 import YAML from 'yaml'
 
-const githubConfigs = [
+//#region src/constant.js
+var githubConfigs = [
   {
     type: 'password',
     name: 'octokit',
@@ -37,7 +38,7 @@ const githubConfigs = [
     message: 'Please type your target repo name',
   },
 ]
-const newLabel = [
+var newLabel = [
   {
     type: 'text',
     name: 'name',
@@ -54,35 +55,66 @@ const newLabel = [
     message: 'Please type label description',
   },
 ]
-const deleteLabel$1 = {
+var deleteLabel$1 = {
+  type: 'text',
+  name: 'name',
   message: 'Please type label name you want to delete',
 }
-const labelFilePath = {
+var labelFilePath = {
+  type: 'text',
+  name: 'filePath',
   message: 'Please type the path to your JSON or YAML file',
 }
-const dryRunToggle = {
-  message: 'Run in dry-run mode? (no API calls will be made)',
-  initial: false,
-}
-const actionSelector = {
+var actionSelector = {
+  type: 'multiselect',
+  name: 'action',
   message: 'Please select an action',
   choices: [
-    { title: 'create a label', value: 0 },
-    { title: 'create multiple labels', value: 1 },
-    { title: 'delete a label', value: 2 },
-    { title: 'delete all labels', value: 3 },
-    { title: 'import labels from JSON or YAML', value: 4 },
-    { title: 'Generate sample JSON', value: 5 },
-    { title: 'Generate sample YAML', value: 6 },
-    { title: 'Display your settings', value: 7 },
-    { title: 'exit', value: 8 },
+    {
+      title: 'create a label',
+      value: 0,
+    },
+    {
+      title: 'create multiple labels',
+      value: 1,
+    },
+    {
+      title: 'delete a label',
+      value: 2,
+    },
+    {
+      title: 'delete all labels',
+      value: 3,
+    },
+    {
+      title: 'import labels from JSON or YAML',
+      value: 4,
+    },
+    {
+      title: 'Generate sample JSON',
+      value: 5,
+    },
+    {
+      title: 'Generate sample YAML',
+      value: 6,
+    },
+    {
+      title: 'Display your settings',
+      value: 7,
+    },
+    {
+      title: 'exit',
+      value: 8,
+    },
   ],
 }
-const holdToken = {
+var holdToken = {
+  type: 'confirm',
+  name: 'value',
   message: 'Do you have a personal token?',
   initial: true,
 }
-const sampleData = [
+var sampleData = [
   {
     name: 'Type: Bug Fix',
     color: 'FF8A65',
@@ -99,164 +131,160 @@ const sampleData = [
     description: 'Improve existing functionality',
   },
 ]
-const labels =
-  // the following labels are based on this post
-  // https://qiita.com/willow-micro/items/51eeb3efe5b4192a4abd
-  [
-    {
-      name: 'Type: Bug Fix',
-      color: 'FF8A65',
-      description: 'Fix features that are not working',
-    },
-    {
-      name: 'Type: Enhancement',
-      color: '64B5F7',
-      description: 'Add new features',
-    },
-    {
-      name: 'Type: Improvement',
-      color: '4DB6AC',
-      description: 'Improve existing functionality',
-    },
-    {
-      name: 'Type: Modification',
-      color: '4DD0E1',
-      description: 'Modify existing functionality',
-    },
-    {
-      name: 'Type: Optimization',
-      color: 'BA68C8',
-      description: 'Optimized existing functionality',
-    },
-    {
-      name: 'Type: Security Fix',
-      color: 'FF8A65',
-      description: 'Fix security issue',
-    },
-    {
-      name: 'Status: Available',
-      color: '81C784',
-      description: 'Waiting for working on it',
-    },
-    {
-      name: 'Status: In Progress',
-      color: '64B5F7',
-      description: 'Currently working on it',
-    },
-    {
-      name: 'Status: Completed',
-      color: '4DB6AC',
-      description: 'Worked on it and completed',
-    },
-    {
-      name: 'Status: Canceled',
-      color: 'E57373',
-      description: 'Worked on it, but canceled',
-    },
-    {
-      name: 'Status: Inactive (Abandoned)',
-      color: '90A4AF',
-      description: 'For now, there is no plan to work on it',
-    },
-    {
-      name: 'Status: Inactive (Duplicate)',
-      color: '90A4AF',
-      description: 'This issue is duplicated',
-    },
-    {
-      name: 'Status: Inactive (Invalid)',
-      color: '90A4AF',
-      description: 'This issue is invalid',
-    },
-    {
-      name: "Status: Inactive (Won't Fix)",
-      color: '90A4AF',
-      description: 'There is no plan to fix this issue',
-    },
-    {
-      name: 'Status: Pending',
-      color: 'A2887F',
-      description: 'Worked on it, but suspended',
-    },
-    {
-      name: 'Priority: ASAP',
-      color: 'FF8A65',
-      description: 'We must work on it asap',
-    },
-    {
-      name: 'Priority: High',
-      color: 'FFB74D',
-      description: 'We must work on it',
-    },
-    {
-      name: 'Priority: Medium',
-      color: 'FFF177',
-      description: 'We need to work on it',
-    },
-    {
-      name: 'Priority: Low',
-      color: 'DCE775',
-      description: 'We should work on it',
-    },
-    {
-      name: 'Priority: Safe',
-      color: '81C784',
-      description: 'We would work on it',
-    },
-    {
-      name: 'Effort Effortless',
-      color: '81C784',
-      description: 'No efforts are expected',
-    },
-    {
-      name: 'Effort Heavy',
-      color: 'FFB74D',
-      description: 'Heavy efforts are expected',
-    },
-    {
-      name: 'Effort Normal',
-      color: 'FFF177',
-      description: 'Normal efforts are expected',
-    },
-    {
-      name: 'Effort Light',
-      color: 'DCE775',
-      description: 'Light efforts are expected',
-    },
-    {
-      name: 'Effort Painful',
-      color: 'FF8A65',
-      description: 'Painful efforts are expected',
-    },
-    {
-      name: 'Feedback Discussion',
-      color: 'F06293',
-      description: 'A discussion about features',
-    },
-    {
-      name: 'Feedback Question',
-      color: 'F06293',
-      description: 'A question about features',
-    },
-    {
-      name: 'Feedback Suggestion',
-      color: 'F06293',
-      description: 'A suggestion about features',
-    },
-    {
-      name: 'Docs',
-      color: '000',
-      description: 'Documentation',
-    },
-  ]
-const initialText = `Please input your GitHub info`
-const getAsciiText = async () => {
+var labels = [
+  {
+    name: 'Type: Bug Fix',
+    color: 'FF8A65',
+    description: 'Fix features that are not working',
+  },
+  {
+    name: 'Type: Enhancement',
+    color: '64B5F7',
+    description: 'Add new features',
+  },
+  {
+    name: 'Type: Improvement',
+    color: '4DB6AC',
+    description: 'Improve existing functionality',
+  },
+  {
+    name: 'Type: Modification',
+    color: '4DD0E1',
+    description: 'Modify existing functionality',
+  },
+  {
+    name: 'Type: Optimization',
+    color: 'BA68C8',
+    description: 'Optimized existing functionality',
+  },
+  {
+    name: 'Type: Security Fix',
+    color: 'FF8A65',
+    description: 'Fix security issue',
+  },
+  {
+    name: 'Status: Available',
+    color: '81C784',
+    description: 'Waiting for working on it',
+  },
+  {
+    name: 'Status: In Progress',
+    color: '64B5F7',
+    description: 'Currently working on it',
+  },
+  {
+    name: 'Status: Completed',
+    color: '4DB6AC',
+    description: 'Worked on it and completed',
+  },
+  {
+    name: 'Status: Canceled',
+    color: 'E57373',
+    description: 'Worked on it, but canceled',
+  },
+  {
+    name: 'Status: Inactive (Abandoned)',
+    color: '90A4AF',
+    description: 'For now, there is no plan to work on it',
+  },
+  {
+    name: 'Status: Inactive (Duplicate)',
+    color: '90A4AF',
+    description: 'This issue is duplicated',
+  },
+  {
+    name: 'Status: Inactive (Invalid)',
+    color: '90A4AF',
+    description: 'This issue is invalid',
+  },
+  {
+    name: "Status: Inactive (Won't Fix)",
+    color: '90A4AF',
+    description: 'There is no plan to fix this issue',
+  },
+  {
+    name: 'Status: Pending',
+    color: 'A2887F',
+    description: 'Worked on it, but suspended',
+  },
+  {
+    name: 'Priority: ASAP',
+    color: 'FF8A65',
+    description: 'We must work on it asap',
+  },
+  {
+    name: 'Priority: High',
+    color: 'FFB74D',
+    description: 'We must work on it',
+  },
+  {
+    name: 'Priority: Medium',
+    color: 'FFF177',
+    description: 'We need to work on it',
+  },
+  {
+    name: 'Priority: Low',
+    color: 'DCE775',
+    description: 'We should work on it',
+  },
+  {
+    name: 'Priority: Safe',
+    color: '81C784',
+    description: 'We would work on it',
+  },
+  {
+    name: 'Effort Effortless',
+    color: '81C784',
+    description: 'No efforts are expected',
+  },
+  {
+    name: 'Effort Heavy',
+    color: 'FFB74D',
+    description: 'Heavy efforts are expected',
+  },
+  {
+    name: 'Effort Normal',
+    color: 'FFF177',
+    description: 'Normal efforts are expected',
+  },
+  {
+    name: 'Effort Light',
+    color: 'DCE775',
+    description: 'Light efforts are expected',
+  },
+  {
+    name: 'Effort Painful',
+    color: 'FF8A65',
+    description: 'Painful efforts are expected',
+  },
+  {
+    name: 'Feedback Discussion',
+    color: 'F06293',
+    description: 'A discussion about features',
+  },
+  {
+    name: 'Feedback Question',
+    color: 'F06293',
+    description: 'A question about features',
+  },
+  {
+    name: 'Feedback Suggestion',
+    color: 'F06293',
+    description: 'A suggestion about features',
+  },
+  {
+    name: 'Docs',
+    color: '000',
+    description: 'Documentation',
+  },
+]
+var initialText = `Please input your GitHub info`
+var getAsciiText = async () => {
   try {
-    const result = await renderFilled('Hyouji', {
+    return await renderFilled('Hyouji', {
       palette: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
       direction: 'diagonal',
     })
-    return result
   } catch (error) {
     console.error('Error rendering ASCII art:', error)
     return `
@@ -269,24 +297,31 @@ Thank you!
 `
   }
 }
-const extraGuideText = `If you don't see action selector, please hit space key.`
-const linkToPersonalToken = 'https://github.com/settings/tokens'
-const log$4 = console.log
-const createLabel = async (configs2, label) => {
+var dryRunToggle = {
+  type: 'confirm',
+  name: 'value',
+  message: 'Do you want to run in dry-run mode?',
+  initial: false,
+}
+var extraGuideText = `If you don't see action selector, please hit space key.`
+var linkToPersonalToken = 'https://github.com/settings/tokens'
+//#endregion
+//#region src/github/callApi.ts
+var log$4 = console.log
+var createLabel = async (configs, label) => {
   try {
     log$4(chalk.cyan(`⏳ Creating label "${label.name}"...`))
-    const resp = await configs2.octokit.request(
+    const resp = await configs.octokit.request(
       'POST /repos/{owner}/{repo}/labels',
       {
-        owner: configs2.owner,
-        repo: configs2.repo,
+        owner: configs.owner,
+        repo: configs.repo,
         name: label.name,
         color: label.color,
         description: label.description,
       },
     )
-    const status = resp.status
-    switch (status) {
+    switch (resp.status) {
       case 201:
         log$4(chalk.green(`✓ ${resp.status}: Created ${label.name}`))
         return true
@@ -309,40 +344,36 @@ const createLabel = async (configs2, label) => {
     return false
   }
 }
-const createLabels = async (configs2) => {
+var createLabels = async (configs) => {
   let created = 0
   let failed = 0
-  for (const label of labels) {
-    const ok = await createLabel(configs2, label)
-    if (ok) {
-      created++
-    } else {
-      failed++
-    }
-  }
-  if (failed === 0) {
-    log$4(chalk.green('✓ Created all labels successfully'))
-  } else {
+  for (const label of labels)
+    if (await createLabel(configs, label)) created++
+    else failed++
+  if (failed === 0) log$4(chalk.green('✓ Created all labels successfully'))
+  else
     log$4(
       chalk.yellow(
         `Finished processing labels: ${created} created, ${failed} failed`,
       ),
     )
-  }
   log$4(chalk.bgBlueBright(extraGuideText))
-  return { created, failed }
+  return {
+    created,
+    failed,
+  }
 }
-const deleteLabel = async (configs2, labelNames) => {
+var deleteLabel = async (configs, labelNames) => {
   let deleted = 0
   let failed = 0
-  for (const labelName of labelNames) {
+  for (const labelName of labelNames)
     try {
       log$4(chalk.cyan(`⏳ Deleting label "${labelName}"...`))
-      const resp = await configs2.octokit.request(
+      const resp = await configs.octokit.request(
         'DELETE /repos/{owner}/{repo}/labels/{name}',
         {
-          owner: configs2.owner,
-          repo: configs2.repo,
+          owner: configs.owner,
+          repo: configs.repo,
           name: labelName,
         },
       )
@@ -360,51 +391,53 @@ const deleteLabel = async (configs2, labelNames) => {
         typeof error === 'object' &&
         'status' in error &&
         error.status === 404
-      ) {
+      )
         log$4(chalk.red(`404: Label "${labelName}" not found`))
-      } else {
+      else
         log$4(
           chalk.red(
             `Error deleting label "${labelName}": ${error instanceof Error ? error.message : 'Unknown error'}`,
           ),
         )
-      }
     }
+  return {
+    deleted,
+    failed,
   }
-  return { deleted, failed }
 }
-const getLabels = async (configs2) => {
-  const resp = await configs2.octokit.request(
+var getLabels = async (configs) => {
+  const resp = await configs.octokit.request(
     'GET /repos/{owner}/{repo}/labels',
     {
-      owner: configs2.owner,
-      repo: configs2.repo,
+      owner: configs.owner,
+      repo: configs.repo,
     },
   )
-  if (resp.status === 200) {
-    const names = await resp.data.map((label) => label.name)
-    return names
-  } else {
+  if (resp.status === 200) return await resp.data.map((label) => label.name)
+  else {
     log$4(chalk.red('something wrong'))
     return []
   }
 }
-const deleteLabels = async (configs2) => {
-  const names = await getLabels(configs2)
+var deleteLabels = async (configs) => {
+  const names = await getLabels(configs)
   if (names.length === 0) {
     log$4(chalk.yellow('No labels found to delete'))
-    return { deleted: 0, failed: 0 }
+    return {
+      deleted: 0,
+      failed: 0,
+    }
   }
   log$4(chalk.blue(`Deleting ${names.length} labels...`))
   let deleted = 0
   let failed = 0
-  for (const name of names) {
+  for (const name of names)
     try {
-      const resp = await configs2.octokit.request(
+      const resp = await configs.octokit.request(
         'DELETE /repos/{owner}/{repo}/labels/{name}',
         {
-          owner: configs2.owner,
-          repo: configs2.repo,
+          owner: configs.owner,
+          repo: configs.repo,
           name,
         },
       )
@@ -422,22 +455,28 @@ const deleteLabels = async (configs2) => {
         typeof error === 'object' &&
         'status' in error &&
         error.status === 404
-      ) {
+      )
         log$4(chalk.red(`404: Label "${name}" not found`))
-      } else {
+      else
         log$4(
           chalk.red(
             `Error deleting label "${name}": ${error instanceof Error ? error.message : 'Unknown error'}`,
           ),
         )
-      }
     }
-  }
   log$4(chalk.blue('Finished deleting labels'))
   log$4(chalk.bgBlueBright(extraGuideText))
-  return { deleted, failed }
+  return {
+    deleted,
+    failed,
+  }
 }
-class CryptoUtils {
+//#endregion
+//#region src/config/cryptoUtils.ts
+/**
+ * Utility class for encrypting and decrypting sensitive data like tokens
+ */
+var CryptoUtils = class {
   static {
     this.ALGORITHM = 'aes-256-cbc'
   }
@@ -482,13 +521,9 @@ class CryptoUtils {
    */
   static decryptToken(encryptedToken) {
     try {
-      if (!encryptedToken.includes(':')) {
-        return encryptedToken
-      }
+      if (!encryptedToken.includes(':')) return encryptedToken
       const [ivHex, encrypted] = encryptedToken.split(':')
-      if (!ivHex || !encrypted) {
-        return encryptedToken
-      }
+      if (!ivHex || !encrypted) return encryptedToken
       const key = this.generateMachineKey()
       const iv = Buffer.from(ivHex, this.ENCODING)
       const decipher = createDecipheriv(this.ALGORITHM, key, iv)
@@ -514,16 +549,15 @@ class CryptoUtils {
    * @returns Obfuscated token string
    */
   static obfuscateToken(token) {
-    if (!token || token.length < 8) {
-      return '***'
-    }
+    if (!token || token.length < 8) return '***'
     const start = token.substring(0, 4)
     const end = token.substring(token.length - 4)
-    const middle = '*'.repeat(Math.min(token.length - 8, 20))
-    return `${start}${middle}${end}`
+    return `${start}${'*'.repeat(Math.min(token.length - 8, 20))}${end}`
   }
 }
-class ConfigError extends Error {
+//#endregion
+//#region src/config/configManager.ts
+var ConfigError = class extends Error {
   constructor(type, message, originalError) {
     super(message)
     this.type = type
@@ -531,7 +565,7 @@ class ConfigError extends Error {
     this.name = 'ConfigError'
   }
 }
-class ConfigManager {
+var ConfigManager = class ConfigManager {
   constructor() {
     this.configDir = join(homedir(), '.config', 'github-label-manager')
     this.configPath = join(this.configDir, 'config.json')
@@ -545,21 +579,24 @@ class ConfigManager {
    */
   async loadConfig() {
     const locations = [
-      { path: this.configPath, name: 'primary' },
-      { path: this.fallbackConfigPath, name: 'fallback' },
+      {
+        path: this.configPath,
+        name: 'primary',
+      },
+      {
+        path: this.fallbackConfigPath,
+        name: 'fallback',
+      },
     ]
-    for (const location of locations) {
+    for (const location of locations)
       try {
         if (await this.fileExists(location.path)) {
           const config = await this.loadConfigFromPath(location.path)
-          if (config) {
-            return config
-          }
+          if (config) return config
         }
       } catch (error) {
         await this.handleConfigLoadError(error, location.path, location.name)
       }
-    }
     return null
   }
   /**
@@ -568,9 +605,8 @@ class ConfigManager {
   async loadConfigFromPath(configPath) {
     try {
       const data = await promises.readFile(configPath, 'utf-8')
-      if (!data.trim()) {
+      if (!data.trim())
         throw new ConfigError('CORRUPTED_FILE', 'Configuration file is empty')
-      }
       let config
       try {
         config = JSON.parse(data)
@@ -581,37 +617,31 @@ class ConfigManager {
           parseError,
         )
       }
-      if (await this.validateConfig(config)) {
-        const decryptedConfig = {
+      if (await this.validateConfig(config))
+        return {
           ...config,
           token: CryptoUtils.decryptToken(config.token),
         }
-        return decryptedConfig
-      } else {
+      else
         throw new ConfigError(
           'INVALID_FORMAT',
           'Configuration file has invalid format or missing required fields',
         )
-      }
     } catch (error) {
-      if (error instanceof ConfigError) {
-        throw error
-      }
+      if (error instanceof ConfigError) throw error
       const nodeError = error
-      if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+      if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM')
         throw new ConfigError(
           'PERMISSION_DENIED',
           `Permission denied accessing configuration file: ${configPath}`,
           nodeError,
         )
-      }
-      if (nodeError.code === 'ENOENT') {
+      if (nodeError.code === 'ENOENT')
         throw new ConfigError(
           'FILE_NOT_FOUND',
           `Configuration file not found: ${configPath}`,
           nodeError,
         )
-      }
       throw new ConfigError(
         'UNKNOWN_ERROR',
         `Unexpected error loading configuration: ${nodeError.message}`,
@@ -623,7 +653,7 @@ class ConfigManager {
    * Handle configuration loading errors with user-friendly messages
    */
   async handleConfigLoadError(error, configPath, locationName) {
-    if (error instanceof ConfigError) {
+    if (error instanceof ConfigError)
       switch (error.type) {
         case 'CORRUPTED_FILE':
           console.warn(
@@ -660,7 +690,7 @@ class ConfigManager {
           )
           console.warn(`   File: ${configPath}`)
       }
-    } else {
+    else {
       console.warn(
         `⚠️  Unexpected error loading configuration from ${locationName} location.`,
       )
@@ -694,7 +724,7 @@ class ConfigManager {
     try {
       await this.ensureConfigDirectory()
       await promises.writeFile(this.configPath, configJson, { mode: 384 })
-      if (await this.fileExists(this.fallbackConfigPath)) {
+      if (await this.fileExists(this.fallbackConfigPath))
         try {
           await promises.unlink(this.fallbackConfigPath)
         } catch {
@@ -702,7 +732,6 @@ class ConfigManager {
             `⚠️  Could not remove old fallback configuration file: ${this.fallbackConfigPath}`,
           )
         }
-      }
       return
     } catch (primaryError) {
       const nodeError = primaryError
@@ -712,12 +741,12 @@ class ConfigManager {
         )
         console.warn(`   Attempted path: ${this.configPath}`)
         console.warn(`   Trying fallback location...`)
-      } else if (nodeError.code === 'ENOSPC') {
+      } else if (nodeError.code === 'ENOSPC')
         throw new ConfigError(
           'UNKNOWN_ERROR',
           'Insufficient disk space to save configuration',
         )
-      } else {
+      else {
         console.warn(
           `⚠️  Failed to save configuration to primary location: ${nodeError.message}`,
         )
@@ -736,20 +765,18 @@ class ConfigManager {
         if (
           fallbackNodeError.code === 'EACCES' ||
           fallbackNodeError.code === 'EPERM'
-        ) {
+        )
           throw new ConfigError(
             'PERMISSION_DENIED',
             'Permission denied: Cannot save configuration to any location. Please check file permissions or run with appropriate privileges.',
             fallbackNodeError,
           )
-        }
-        if (fallbackNodeError.code === 'ENOSPC') {
+        if (fallbackNodeError.code === 'ENOSPC')
           throw new ConfigError(
             'UNKNOWN_ERROR',
             'Insufficient disk space to save configuration',
             fallbackNodeError,
           )
-        }
         throw new ConfigError(
           'UNKNOWN_ERROR',
           `Failed to save configuration to any location. Primary error: ${nodeError.message}. Fallback error: ${fallbackNodeError.message}`,
@@ -772,40 +799,30 @@ class ConfigManager {
    * Get the path to the configuration file
    */
   getConfigPath() {
-    if (existsSync(this.configPath)) {
-      return this.configPath
-    }
-    if (existsSync(this.fallbackConfigPath)) {
-      return this.fallbackConfigPath
-    }
+    if (existsSync(this.configPath)) return this.configPath
+    if (existsSync(this.fallbackConfigPath)) return this.fallbackConfigPath
     return this.configPath
   }
   /**
    * Validate configuration data format
    */
   async validateConfig(config) {
-    if (!config || typeof config !== 'object') {
-      return false
-    }
+    if (!config || typeof config !== 'object') return false
     if (
       !config.token ||
       typeof config.token !== 'string' ||
       config.token.trim() === ''
-    ) {
+    )
       return false
-    }
     if (
       !config.owner ||
       typeof config.owner !== 'string' ||
       config.owner.trim() === ''
-    ) {
+    )
       return false
-    }
     const actualToken = CryptoUtils.decryptToken(config.token)
-    const tokenPattern = /^(ghp_|gho_|ghu_|ghs_)[a-zA-Z0-9]{36}$/
-    if (!tokenPattern.test(actualToken)) {
+    if (!/^(ghp_|gho_|ghu_|ghs_)[a-zA-Z0-9]{36}$/.test(actualToken))
       return false
-    }
     return true
   }
   /**
@@ -813,13 +830,11 @@ class ConfigManager {
    */
   async validateCredentials(config) {
     try {
-      const { Octokit: Octokit2 } = await import('@octokit/core')
-      const decryptedToken = CryptoUtils.decryptToken(config.token)
-      const octokit = new Octokit2({
-        auth: decryptedToken,
-      })
-      const response = await octokit.request('GET /user')
-      if (response.data.login.toLowerCase() !== config.owner.toLowerCase()) {
+      const { Octokit } = await import('@octokit/core')
+      const response = await new Octokit({
+        auth: CryptoUtils.decryptToken(config.token),
+      }).request('GET /user')
+      if (response.data.login.toLowerCase() !== config.owner.toLowerCase())
         return {
           isValid: false,
           error: new ConfigError(
@@ -827,11 +842,10 @@ class ConfigManager {
             `Token belongs to user '${response.data.login}' but configuration is for '${config.owner}'`,
           ),
         }
-      }
       return { isValid: true }
     } catch (error) {
       const apiError = error
-      if (apiError.status === 401) {
+      if (apiError.status === 401)
         return {
           isValid: false,
           error: new ConfigError(
@@ -839,8 +853,7 @@ class ConfigManager {
             'GitHub token is invalid or has expired',
           ),
         }
-      }
-      if (apiError.status === 403) {
+      if (apiError.status === 403)
         return {
           isValid: false,
           error: new ConfigError(
@@ -848,12 +861,11 @@ class ConfigManager {
             'GitHub token has insufficient permissions or rate limit exceeded',
           ),
         }
-      }
       if (
         apiError.code === 'ENOTFOUND' ||
         apiError.code === 'ECONNREFUSED' ||
         apiError.code === 'ETIMEDOUT'
-      ) {
+      )
         return {
           isValid: false,
           error: new ConfigError(
@@ -861,7 +873,6 @@ class ConfigManager {
             'Unable to connect to GitHub API. Please check your internet connection.',
           ),
         }
-      }
       return {
         isValid: false,
         error: new ConfigError(
@@ -876,12 +887,8 @@ class ConfigManager {
    */
   async migrateToEncrypted() {
     const config = await this.loadConfig()
-    if (!config) {
-      return
-    }
-    if (CryptoUtils.isTokenEncrypted(config.token)) {
-      return
-    }
+    if (!config) return
+    if (CryptoUtils.isTokenEncrypted(config.token)) return
     console.log('🔒 Migrating configuration to encrypted format...')
     try {
       await this.saveConfig(config)
@@ -898,13 +905,17 @@ class ConfigManager {
    */
   async loadValidatedConfig() {
     const config = await this.loadConfig()
-    if (!config) {
-      return { config: null, shouldPromptForCredentials: true }
-    }
+    if (!config)
+      return {
+        config: null,
+        shouldPromptForCredentials: true,
+      }
     const validation = await this.validateCredentials(config)
-    if (validation.isValid) {
-      return { config, shouldPromptForCredentials: false }
-    }
+    if (validation.isValid)
+      return {
+        config,
+        shouldPromptForCredentials: false,
+      }
     const preservedData = {}
     if (validation.error) {
       console.warn(`⚠️  ${ConfigManager.getErrorMessage(validation.error)}`)
@@ -930,70 +941,64 @@ class ConfigManager {
    */
   async clearConfig() {
     const errors = []
-    if (await this.fileExists(this.configPath)) {
+    if (await this.fileExists(this.configPath))
       try {
         await promises.unlink(this.configPath)
       } catch (error) {
         const nodeError = error
-        if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+        if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM')
           errors.push(
             `Permission denied removing primary config file: ${this.configPath}`,
           )
-        } else {
+        else
           errors.push(
             `Failed to remove primary config file: ${nodeError.message}`,
           )
-        }
       }
-    }
-    if (await this.fileExists(this.fallbackConfigPath)) {
+    if (await this.fileExists(this.fallbackConfigPath))
       try {
         await promises.unlink(this.fallbackConfigPath)
       } catch (error) {
         const nodeError = error
-        if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+        if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM')
           errors.push(
             `Permission denied removing fallback config file: ${this.fallbackConfigPath}`,
           )
-        } else {
+        else
           errors.push(
             `Failed to remove fallback config file: ${nodeError.message}`,
           )
-        }
       }
-    }
-    if (errors.length > 0) {
+    if (errors.length > 0)
       throw new ConfigError(
         'PERMISSION_DENIED',
         `Failed to clear configuration: ${errors.join('; ')}`,
       )
-    }
   }
   /**
    * Ensure configuration directory exists with proper permissions
    */
   async ensureConfigDirectory() {
     try {
-      await promises.mkdir(this.configDir, { recursive: true, mode: 448 })
+      await promises.mkdir(this.configDir, {
+        recursive: true,
+        mode: 448,
+      })
     } catch (error) {
       const nodeError = error
-      if (nodeError.code === 'EEXIST') {
-        return
-      }
-      if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM') {
+      if (nodeError.code === 'EEXIST') return
+      if (nodeError.code === 'EACCES' || nodeError.code === 'EPERM')
         throw new ConfigError(
           'PERMISSION_DENIED',
           `Permission denied creating configuration directory: ${this.configDir}`,
           nodeError,
         )
-      }
-      if (nodeError.code === 'ENOSPC') {
+      if (nodeError.code === 'ENOSPC')
         throw new ConfigError(
           'UNKNOWN_ERROR',
           'Insufficient disk space to create configuration directory',
           nodeError,
         )
-      }
       throw new ConfigError(
         'UNKNOWN_ERROR',
         `Failed to create configuration directory: ${nodeError.message}`,
@@ -1004,9 +1009,9 @@ class ConfigManager {
   /**
    * Check if file exists
    */
-  async fileExists(path2) {
+  async fileExists(path) {
     try {
-      await promises.access(path2)
+      await promises.access(path)
       return true
     } catch {
       return false
@@ -1027,7 +1032,6 @@ class ConfigManager {
         return 'Configuration file has invalid format. You will be prompted to enter your credentials again.'
       case 'NETWORK_ERROR':
         return 'Network error occurred while validating credentials. Please check your internet connection.'
-      case 'UNKNOWN_ERROR':
       default:
         return `An unexpected error occurred: ${error.message}`
     }
@@ -1036,22 +1040,19 @@ class ConfigManager {
    * Check if an error is recoverable (user can continue with prompts)
    */
   static isRecoverableError(error) {
-    return [
-      'FILE_NOT_FOUND',
-      'CORRUPTED_FILE',
-      'INVALID_FORMAT',
-      /* INVALID_FORMAT */
-    ].includes(error.type)
+    return ['FILE_NOT_FOUND', 'CORRUPTED_FILE', 'INVALID_FORMAT'].includes(
+      error.type,
+    )
   }
 }
-const OPEN_TUI_INPUT_TIMEOUT_MS = 3e4
-const ESCAPE_SELECTION_VALUE = 99
-let opentuiLoadAttempted = false
-let opentuiModule = null
-const loadOpenTui = async () => {
-  if (opentuiLoadAttempted) {
-    return opentuiModule
-  }
+//#endregion
+//#region src/cli/promptClient.ts
+var OPEN_TUI_INPUT_TIMEOUT_MS = 3e4
+var ESCAPE_SELECTION_VALUE = 99
+var opentuiLoadAttempted = false
+var opentuiModule = null
+var loadOpenTui = async () => {
+  if (opentuiLoadAttempted) return opentuiModule
   opentuiLoadAttempted = true
   try {
     const loaded = await import('@opentui/core')
@@ -1062,79 +1063,68 @@ const loadOpenTui = async () => {
     return null
   }
 }
-const question = async (message) => {
-  const rl = createInterface({ input: stdin, output: stdout })
+var question = async (message) => {
+  const rl = createInterface({
+    input: stdin,
+    output: stdout,
+  })
   try {
-    const answer = await rl.question(`${message}: `)
-    return answer.trim()
+    return (await rl.question(`${message}: `)).trim()
   } finally {
     rl.close()
   }
 }
-const askText = async (message, options = {}) => {
+var askText = async (message, options = {}) => {
   const core = await loadOpenTui()
   if (core) {
     const result = await askTextWithOpenTui(core, message, options)
-    if (result !== null) {
-      return result
-    }
+    if (result !== null) return result
   }
   const answer = await question(message)
-  if (answer.length === 0 && options.initial !== void 0) {
-    return options.initial
-  }
+  if (answer.length === 0 && options.initial !== void 0) return options.initial
   return answer
 }
-const askPassword = async (message) => {
+var askPassword = async (message) => {
   const masked = await askPasswordWithRawInput(message)
-  if (masked !== null) {
-    return masked
-  }
+  if (masked !== null) return masked
   return askText(message)
 }
-const askConfirm = async (message, initial = true) => {
+var askConfirm = async (message, initial = true) => {
   const value = await askSelect(message, [
-    { title: initial ? 'yes (default)' : 'yes', value: 1 },
-    { title: initial ? 'no' : 'no (default)', value: 0 },
+    {
+      title: initial ? 'yes (default)' : 'yes',
+      value: 1,
+    },
+    {
+      title: initial ? 'no' : 'no (default)',
+      value: 0,
+    },
   ])
-  if (value === 1) {
-    return true
-  }
-  if (value === 0) {
-    return false
-  }
-  if (value === ESCAPE_SELECTION_VALUE) {
-    return false
-  }
+  if (value === 1) return true
+  if (value === 0) return false
+  if (value === ESCAPE_SELECTION_VALUE) return false
   return initial
 }
-const askSelect = async (message, choices) => {
+var askSelect = async (message, choices) => {
   const core = await loadOpenTui()
   if (core) {
     const selected = await askSelectWithOpenTui(core, message, choices)
-    if (selected !== null) {
-      return selected
-    }
+    if (selected !== null) return selected
   }
-  stdout.write(`${message}
-`)
+  stdout.write(`${message}\n`)
   choices.forEach((choice, index) => {
-    stdout.write(`  ${index + 1}. ${choice.title}
-`)
+    stdout.write(`  ${index + 1}. ${choice.title}\n`)
   })
   const rawSelected = await askSelectWithRawInput(choices)
-  if (rawSelected !== null) {
-    return rawSelected
-  }
+  if (rawSelected !== null) return rawSelected
   while (true) {
     const answer = await question('Select number')
     const normalized = answer.toLowerCase()
-    if (normalized === 'esc' || normalized === 'escape') {
+    if (normalized === 'esc' || normalized === 'escape')
       return (
-        choices.find((choice2) => choice2.title.toLowerCase() === 'exit')
+        choices.find((choice) => choice.title.toLowerCase() === 'exit')
           ?.value ?? 99
       )
-    }
     const parsed = Number.parseInt(answer, 10)
     if (Number.isNaN(parsed)) {
       stdout.write('Please enter a valid number.\n')
@@ -1148,13 +1138,11 @@ const askSelect = async (message, choices) => {
     return choice.value
   }
 }
-const askSelectWithOpenTui = async (core, message, choices) => {
+var askSelectWithOpenTui = async (core, message, choices) => {
   const renderer = await core.createCliRenderer({ exitOnCtrlC: true })
   let destroyed = false
   const destroyRenderer = async () => {
-    if (destroyed) {
-      return
-    }
+    if (destroyed) return
     destroyed = true
     await renderer.destroy()
   }
@@ -1190,9 +1178,7 @@ const askSelectWithOpenTui = async (core, message, choices) => {
     return await new Promise((resolve) => {
       let resolved = false
       const resolveOnce = async (value) => {
-        if (resolved) {
-          return
-        }
+        if (resolved) return
         resolved = true
         await destroyRenderer()
         resolve(value)
@@ -1218,9 +1204,8 @@ const askSelectWithOpenTui = async (core, message, choices) => {
           key !== null &&
           'name' in key &&
           (key.name === 'escape' || key.name === 'esc')
-        ) {
+        )
           await resolveOnce(escapeValue)
-        }
       })
     })
   } catch {
@@ -1228,10 +1213,8 @@ const askSelectWithOpenTui = async (core, message, choices) => {
     return null
   }
 }
-const askSelectWithRawInput = async (choices) => {
-  if (!stdin.isTTY || typeof stdin.setRawMode !== 'function') {
-    return null
-  }
+var askSelectWithRawInput = async (choices) => {
+  if (!stdin.isTTY || typeof stdin.setRawMode !== 'function') return null
   const escapeValue =
     choices.find((choice) => choice.title.toLowerCase() === 'exit')?.value ?? 99
   stdout.write('Select number (or Esc to exit): ')
@@ -1241,12 +1224,8 @@ const askSelectWithRawInput = async (choices) => {
     const wasPaused = stdin.isPaused()
     const cleanup = () => {
       stdin.removeListener('keypress', onKeypress)
-      if (!wasRaw) {
-        stdin.setRawMode(false)
-      }
-      if (wasPaused) {
-        stdin.pause()
-      }
+      if (!wasRaw) stdin.setRawMode(false)
+      if (wasPaused) stdin.pause()
       stdout.write('\n')
     }
     const resolveValue = (value) => {
@@ -1254,9 +1233,7 @@ const askSelectWithRawInput = async (choices) => {
       resolve(value)
     }
     const onKeypress = (str, key) => {
-      if (!key) {
-        return
-      }
+      if (!key) return
       if (key.name === 'escape' || key.name === 'esc') {
         resolveValue(escapeValue)
         return
@@ -1295,10 +1272,8 @@ const askSelectWithRawInput = async (choices) => {
     stdin.on('keypress', onKeypress)
   })
 }
-const askPasswordWithRawInput = async (message) => {
-  if (!stdin.isTTY || typeof stdin.setRawMode !== 'function') {
-    return null
-  }
+var askPasswordWithRawInput = async (message) => {
+  if (!stdin.isTTY || typeof stdin.setRawMode !== 'function') return null
   stdout.write(`${message}: `)
   return await new Promise((resolve) => {
     let value = ''
@@ -1306,12 +1281,8 @@ const askPasswordWithRawInput = async (message) => {
     const wasPaused = stdin.isPaused()
     const cleanup = () => {
       stdin.removeListener('keypress', onKeypress)
-      if (!wasRaw) {
-        stdin.setRawMode(false)
-      }
-      if (wasPaused) {
-        stdin.pause()
-      }
+      if (!wasRaw) stdin.setRawMode(false)
+      if (wasPaused) stdin.pause()
       stdout.write('\n')
     }
     const resolveValue = (password) => {
@@ -1319,9 +1290,7 @@ const askPasswordWithRawInput = async (message) => {
       resolve(password)
     }
     const onKeypress = (str, key) => {
-      if (!key) {
-        return
-      }
+      if (!key) return
       if (key.name === 'return' || key.name === 'enter') {
         resolveValue(value)
         return
@@ -1348,14 +1317,12 @@ const askPasswordWithRawInput = async (message) => {
     stdin.on('keypress', onKeypress)
   })
 }
-const askTextWithOpenTui = async (core, message, options) => {
+var askTextWithOpenTui = async (core, message, options) => {
   const renderer = await core.createCliRenderer({ exitOnCtrlC: true })
   let destroyed = false
   let currentValue = options.initial ?? ''
   const destroyRenderer = async () => {
-    if (destroyed) {
-      return
-    }
+    if (destroyed) return
     destroyed = true
     await renderer.destroy()
   }
@@ -1380,9 +1347,7 @@ const askTextWithOpenTui = async (core, message, options) => {
       return null
     }
     inputField.on(core.InputRenderableEvents.CHANGE, (nextValue) => {
-      if (typeof nextValue === 'string') {
-        currentValue = nextValue
-      }
+      if (typeof nextValue === 'string') currentValue = nextValue
     })
     root.add(title)
     root.add(inputField)
@@ -1395,17 +1360,13 @@ const askTextWithOpenTui = async (core, message, options) => {
     return await new Promise((resolve) => {
       let settled = false
       const timer = setTimeout(async () => {
-        if (settled) {
-          return
-        }
+        if (settled) return
         settled = true
         await destroyRenderer()
         resolve(null)
       }, OPEN_TUI_INPUT_TIMEOUT_MS)
       renderer.keyInput?.on?.('keypress', async (key) => {
-        if (settled) {
-          return
-        }
+        if (settled) return
         if (
           typeof key === 'object' &&
           key !== null &&
@@ -1428,14 +1389,20 @@ const askTextWithOpenTui = async (core, message, options) => {
     return null
   }
 }
-const getConfirmation = async () => {
+//#endregion
+//#region src/cli/confirmToken.ts
+var getConfirmation = async () => {
   return askConfirm(holdToken.message, holdToken.initial)
 }
-const getDryRunChoice = async () => {
+//#endregion
+//#region src/cli/dryRunPrompt.ts
+var getDryRunChoice = async () => {
   return askConfirm(dryRunToggle.message, dryRunToggle.initial)
 }
-const log$3 = console.log
-const generateSampleJson = async () => {
+//#endregion
+//#region src/labels/generateSampleJson.ts
+var log$3 = console.log
+var generateSampleJson = async () => {
   try {
     const outputPath = './hyouji.json'
     const jsonContent = JSON.stringify(sampleData, null, 2)
@@ -1449,46 +1416,45 @@ const generateSampleJson = async () => {
   } catch (error) {
     if (error instanceof Error) {
       const nodeError = error
-      if (nodeError.code === 'EACCES') {
+      if (nodeError.code === 'EACCES')
         log$3(
           chalk.red(
             '❌ Error generating sample JSON file: Permission denied. Please check write permissions for the current directory.',
           ),
         )
-      } else if (nodeError.code === 'ENOSPC') {
+      else if (nodeError.code === 'ENOSPC')
         log$3(
           chalk.red(
             '❌ Error generating sample JSON file: Insufficient disk space.',
           ),
         )
-      } else if (nodeError.code === 'EROFS') {
+      else if (nodeError.code === 'EROFS')
         log$3(
           chalk.red(
             '❌ Error generating sample JSON file: Read-only file system.',
           ),
         )
-      } else {
+      else
         log$3(
           chalk.red(`❌ Error generating sample JSON file: ${error.message}`),
         )
-      }
-    } else {
+    } else
       log$3(
         chalk.red(
           '❌ An unexpected error occurred while generating the sample JSON file',
         ),
       )
-    }
   }
 }
-const log$2 = console.log
-const generateSampleYaml = async () => {
+//#endregion
+//#region src/labels/generateSampleYaml.ts
+var log$2 = console.log
+var generateSampleYaml = async () => {
   try {
     const outputPath = './hyouji.yaml'
     const yamlContent = YAML.stringify(sampleData, {
       indent: 2,
       singleQuote: false,
-      // Use double quotes for strings
     })
     log$2(chalk.blue('Generating sample YAML file...'))
     fs.writeFileSync(outputPath, yamlContent, 'utf8')
@@ -1500,41 +1466,45 @@ const generateSampleYaml = async () => {
   } catch (error) {
     if (error instanceof Error) {
       const nodeError = error
-      if (nodeError.code === 'EACCES') {
+      if (nodeError.code === 'EACCES')
         log$2(
           chalk.red(
             '❌ Error generating sample YAML file: Permission denied. Please check write permissions for the current directory.',
           ),
         )
-      } else if (nodeError.code === 'ENOSPC') {
+      else if (nodeError.code === 'ENOSPC')
         log$2(
           chalk.red(
             '❌ Error generating sample YAML file: Insufficient disk space.',
           ),
         )
-      } else if (nodeError.code === 'EROFS') {
+      else if (nodeError.code === 'EROFS')
         log$2(
           chalk.red(
             '❌ Error generating sample YAML file: Read-only file system.',
           ),
         )
-      } else {
+      else
         log$2(
           chalk.red(`❌ Error generating sample YAML file: ${error.message}`),
         )
-      }
-    } else {
+    } else
       log$2(
         chalk.red(
           '❌ An unexpected error occurred while generating the sample YAML file',
         ),
       )
-    }
   }
 }
-const detectFileFormat = (filePath) => {
-  const extension = path.extname(filePath).toLowerCase()
-  switch (extension) {
+//#endregion
+//#region src/utils/fileFormatUtils.ts
+/**
+ * Detects file format based on file extension
+ * @param filePath - Path to the file
+ * @returns The detected format or null if unsupported
+ */
+var detectFileFormat = (filePath) => {
+  switch (path.extname(filePath).toLowerCase()) {
     case '.json':
       return 'json'
     case '.yaml':
@@ -1544,27 +1514,47 @@ const detectFileFormat = (filePath) => {
       return null
   }
 }
-const parseJsonContent = (content) => {
+/**
+ * Parses JSON content from a string
+ * @param content - The JSON content as string
+ * @returns Parsed JSON data
+ * @throws Error if JSON parsing fails
+ */
+var parseJsonContent = (content) => {
   return JSON.parse(content)
 }
-const parseYamlContent = (content) => {
+/**
+ * Parses YAML content from a string
+ * @param content - The YAML content as string
+ * @returns Parsed YAML data
+ * @throws Error if YAML parsing fails
+ */
+var parseYamlContent = (content) => {
   try {
     return YAML.parse(content)
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`YAML Error: ${error.message}`)
-    }
+    if (error instanceof Error) throw new Error(`YAML Error: ${error.message}`)
     throw error
   }
 }
-const getSupportedExtensions = () => {
+/**
+ * Gets a list of supported file extensions
+ * @returns Array of supported file extensions
+ */
+var getSupportedExtensions = () => {
   return ['.json', '.yaml', '.yml']
 }
-const formatSupportedExtensions = () => {
+/**
+ * Formats supported extensions for user-friendly display
+ * @returns Formatted string of supported extensions
+ */
+var formatSupportedExtensions = () => {
   return getSupportedExtensions().join(', ')
 }
-const log$1 = console.log
-const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
+//#endregion
+//#region src/labels/importLabels.ts
+var log$1 = console.log
+var importLabelsFromFile = async (configs, filePath, dryRun = false) => {
   const summary = {
     attempted: 0,
     succeeded: 0,
@@ -1590,11 +1580,8 @@ const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
     const fileContent = fs.readFileSync(filePath, 'utf8')
     let parsedData
     try {
-      if (format === 'json') {
-        parsedData = parseJsonContent(fileContent)
-      } else if (format === 'yaml') {
-        parsedData = parseYamlContent(fileContent)
-      }
+      if (format === 'json') parsedData = parseJsonContent(fileContent)
+      else if (format === 'yaml') parsedData = parseYamlContent(fileContent)
     } catch (parseError) {
       const formatName = format.toUpperCase()
       log$1(
@@ -1677,18 +1664,15 @@ const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
       const unknownFields = Object.keys(labelObj).filter(
         (key) => !knownFields.includes(key),
       )
-      if (unknownFields.length > 0) {
+      if (unknownFields.length > 0)
         log$1(
           chalk.yellow(
             `Warning: Item at index ${i} contains unknown fields that will be ignored: ${unknownFields.join(', ')}`,
           ),
         )
-      }
       const validLabel = {
         name: labelObj.name.trim(),
-        ...(labelObj.color !== void 0 && {
-          color: labelObj.color.trim(),
-        }),
+        ...(labelObj.color !== void 0 && { color: labelObj.color.trim() }),
         ...(labelObj.description !== void 0 && {
           description: labelObj.description,
         }),
@@ -1722,7 +1706,7 @@ const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
       const progress = `[${i + 1}/${validLabels.length}]`
       try {
         log$1(chalk.cyan(`${progress} Processing: ${label.name}`))
-        await createLabel(configs2, label)
+        await createLabel(configs, label)
         successCount++
       } catch (error) {
         errorCount++
@@ -1759,17 +1743,19 @@ const importLabelsFromFile = async (configs2, filePath, dryRun = false) => {
   }
   return summary
 }
-const getTargetLabel = async () => {
+//#endregion
+//#region src/labels/inputDeleteLabel.ts
+var getTargetLabel = async () => {
   while (true) {
     const name = (await askText(deleteLabel$1.message)).trim()
-    if (name.length > 0) {
-      return [name]
-    }
+    if (name.length > 0) return [name]
     console.log(chalk.yellow('Label name cannot be empty. Please try again.'))
   }
 }
-const GIT_COMMAND_TIMEOUT_MS = 5e3
-class GitRepositoryDetector {
+//#endregion
+//#region src/github/gitRepositoryDetector.ts
+var GIT_COMMAND_TIMEOUT_MS = 5e3
+var GitRepositoryDetector = class {
   static {
     this.execAsyncInternal = promisify(exec)
   }
@@ -1798,45 +1784,42 @@ class GitRepositoryDetector {
           error instanceof Error ? error.message : 'Unknown error occurred',
       }
     }
-    if (!gitRoot) {
+    if (!gitRoot)
       return {
         isGitRepository: false,
         error: 'Not a Git repository',
       }
-    }
     const remotesResult = await this.getAllRemotes(gitRoot)
-    if ('error' in remotesResult) {
-      return { isGitRepository: false, error: remotesResult.error }
-    }
+    if ('error' in remotesResult)
+      return {
+        isGitRepository: false,
+        error: remotesResult.error,
+      }
     const remotes = remotesResult.remotes
-    if (remotes.length === 0) {
+    if (remotes.length === 0)
       return {
         isGitRepository: true,
         error: 'No remotes configured',
       }
-    }
     let remoteUrl = null
     let detectionMethod = 'origin'
-    if (remotes.includes('origin')) {
+    if (remotes.includes('origin'))
       remoteUrl = await this.getRemoteUrl(gitRoot, 'origin')
-    }
     if (!remoteUrl && remotes.length > 0) {
       remoteUrl = await this.getRemoteUrl(gitRoot, remotes[0])
       detectionMethod = 'first-remote'
     }
-    if (!remoteUrl) {
+    if (!remoteUrl)
       return {
         isGitRepository: true,
         error: 'Could not retrieve remote URL',
       }
-    }
     const parsedUrl = this.parseGitUrl(remoteUrl)
-    if (!parsedUrl) {
+    if (!parsedUrl)
       return {
         isGitRepository: true,
         error: 'Could not parse remote URL',
       }
-    }
     return {
       isGitRepository: true,
       repositoryInfo: {
@@ -1855,15 +1838,10 @@ class GitRepositoryDetector {
   static async findGitRoot(startPath) {
     let currentPath = startPath
     while (currentPath !== dirname(currentPath)) {
-      const gitPath = join(currentPath, '.git')
-      if (existsSync(gitPath)) {
-        return currentPath
-      }
+      if (existsSync(join(currentPath, '.git'))) return currentPath
       currentPath = dirname(currentPath)
     }
-    if (existsSync(join(currentPath, '.git'))) {
-      return currentPath
-    }
+    if (existsSync(join(currentPath, '.git'))) return currentPath
     return null
   }
   /**
@@ -1874,14 +1852,14 @@ class GitRepositoryDetector {
    */
   static async getRemoteUrl(gitRoot, remoteName) {
     try {
-      const { stdout: stdout2 } = await this.execAsyncInternal(
+      const { stdout } = await this.execAsyncInternal(
         `git remote get-url ${remoteName}`,
         {
           cwd: gitRoot,
           timeout: GIT_COMMAND_TIMEOUT_MS,
         },
       )
-      return stdout2.trim() || null
+      return stdout.trim() || null
     } catch {
       return null
     }
@@ -1892,9 +1870,7 @@ class GitRepositoryDetector {
    * @returns Object with owner and repo or null if parsing fails
    */
   static parseGitUrl(url) {
-    if (!url || typeof url !== 'string' || url.trim().length === 0) {
-      return null
-    }
+    if (!url || typeof url !== 'string' || url.trim().length === 0) return null
     const trimmedUrl = url.trim()
     try {
       const sshMatch = trimmedUrl.match(
@@ -1906,9 +1882,11 @@ class GitRepositoryDetector {
         if (
           this.isValidGitHubIdentifier(owner) &&
           this.isValidGitHubIdentifier(repo)
-        ) {
-          return { owner, repo }
-        }
+        )
+          return {
+            owner,
+            repo,
+          }
       }
       const httpsMatch = trimmedUrl.match(
         /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/,
@@ -1919,9 +1897,11 @@ class GitRepositoryDetector {
         if (
           this.isValidGitHubIdentifier(owner) &&
           this.isValidGitHubIdentifier(repo)
-        ) {
-          return { owner, repo }
-        }
+        )
+          return {
+            owner,
+            repo,
+          }
       }
       const httpMatch = trimmedUrl.match(
         /^http:\/\/github\.com\/([^/\s]+)\/([^/\s]+?)(?:\.git)?(?:\/)?$/,
@@ -1932,9 +1912,11 @@ class GitRepositoryDetector {
         if (
           this.isValidGitHubIdentifier(owner) &&
           this.isValidGitHubIdentifier(repo)
-        ) {
-          return { owner, repo }
-        }
+        )
+          return {
+            owner,
+            repo,
+          }
       }
     } catch {
       return null
@@ -1947,14 +1929,11 @@ class GitRepositoryDetector {
    * @returns boolean - True if valid, false otherwise
    */
   static isValidGitHubIdentifier(identifier) {
-    if (!identifier || typeof identifier !== 'string') {
-      return false
-    }
-    const GITHUB_IDENTIFIER_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/
+    if (!identifier || typeof identifier !== 'string') return false
     return (
       identifier.length >= 1 &&
       identifier.length <= 39 &&
-      GITHUB_IDENTIFIER_REGEX.test(identifier) &&
+      /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(identifier) &&
       !identifier.includes('--')
     )
   }
@@ -1965,59 +1944,53 @@ class GitRepositoryDetector {
    */
   static async getAllRemotes(gitRoot) {
     try {
-      const { stdout: stdout2 } = await this.execAsyncInternal('git remote', {
+      const { stdout } = await this.execAsyncInternal('git remote', {
         cwd: gitRoot,
         timeout: GIT_COMMAND_TIMEOUT_MS,
       })
       return {
-        remotes: stdout2
+        remotes: stdout
           .trim()
           .split('\n')
           .filter((remote) => remote.length > 0),
       }
     } catch (err) {
       const error = err
-      if (error.code === 'ENOENT') {
-        return { error: 'Git command not available' }
-      }
+      if (error.code === 'ENOENT') return { error: 'Git command not available' }
       if (
         error instanceof Error &&
         (error.message.includes('not a git repository') ||
           error.message.includes('Not a git repository'))
-      ) {
+      )
         return { error: 'Not a Git repository' }
-      }
       return { remotes: [] }
     }
   }
 }
-const askRequiredValue = async (ask, fieldName) => {
+//#endregion
+//#region src/config/inputGitHubConfig.ts
+var askRequiredValue = async (ask, fieldName) => {
   while (true) {
     const rawValue = await ask()
-    if (rawValue === null) {
+    if (rawValue === null)
       throw new Error(`${fieldName} input was canceled by user.`)
-    }
     const value = rawValue.trim()
-    if (value.length > 0) {
-      return value
-    }
+    if (value.length > 0) return value
     console.log(
       chalk.yellow(`⚠️  ${fieldName} cannot be empty. Please try again.`),
     )
   }
 }
-const getGitHubConfigs = async () => {
-  const configManager2 = new ConfigManager()
+var getGitHubConfigs = async () => {
+  const configManager = new ConfigManager()
   let validationResult = {
     config: null,
     shouldPromptForCredentials: true,
     preservedData: void 0,
   }
   try {
-    const result = await configManager2.loadValidatedConfig()
-    if (result) {
-      validationResult = result
-    }
+    const result = await configManager.loadValidatedConfig()
+    if (result) validationResult = result
   } catch {
     validationResult = {
       config: null,
@@ -2039,11 +2012,8 @@ const getGitHubConfigs = async () => {
             `  Detection method: ${detectionResult.repositoryInfo.detectionMethod === 'origin' ? 'origin remote' : 'first available remote'}`,
           ),
         )
-        const octokit3 = new Octokit({
-          auth: validationResult.config.token,
-        })
         return {
-          octokit: octokit3,
+          octokit: new Octokit({ auth: validationResult.config.token }),
           owner: detectionResult.repositoryInfo.owner,
           repo: detectionResult.repositoryInfo.repo,
           fromSavedConfig: true,
@@ -2051,13 +2021,12 @@ const getGitHubConfigs = async () => {
           detectionMethod: detectionResult.repositoryInfo.detectionMethod,
         }
       } else {
-        if (detectionResult.error) {
+        if (detectionResult.error)
           console.log(
             chalk.yellow(
               `⚠️  Repository auto-detection failed: ${detectionResult.error}`,
             ),
           )
-        }
         console.log(chalk.gray('  Falling back to manual input...'))
       }
     } catch (error) {
@@ -2066,23 +2035,18 @@ const getGitHubConfigs = async () => {
           '⚠️  Repository auto-detection failed, falling back to manual input',
         ),
       )
-      if (error instanceof Error) {
+      if (error instanceof Error)
         console.log(chalk.gray(`  Error: ${error.message}`))
-      }
     }
-    const repoPrompt2 = githubConfigs.find((prompt) => prompt.name === 'repo')
-    const repo2 = await askRequiredValue(
-      () =>
-        askText(repoPrompt2?.message ?? 'Please type your target repo name'),
+    const repoPrompt = githubConfigs.find((prompt) => prompt.name === 'repo')
+    const repo = await askRequiredValue(
+      () => askText(repoPrompt?.message ?? 'Please type your target repo name'),
       'Repository name',
     )
-    const octokit2 = new Octokit({
-      auth: validationResult.config.token,
-    })
     return {
-      octokit: octokit2,
+      octokit: new Octokit({ auth: validationResult.config.token }),
       owner: validationResult.config.owner,
-      repo: repo2,
+      repo,
       fromSavedConfig: true,
       autoDetected: false,
       detectionMethod: 'manual',
@@ -2108,7 +2072,7 @@ const getGitHubConfigs = async () => {
     'Repository name',
   )
   try {
-    await configManager2.saveConfig({
+    await configManager.saveConfig({
       token: octokitToken,
       owner,
       lastUpdated: /* @__PURE__ */ new Date().toISOString(),
@@ -2116,31 +2080,24 @@ const getGitHubConfigs = async () => {
     if (
       validationResult.preservedData?.owner &&
       validationResult.preservedData.owner !== owner
-    ) {
+    )
       console.log('✓ Configuration updated with new credentials')
-    } else {
-      console.log('✓ Configuration saved successfully')
-    }
+    else console.log('✓ Configuration saved successfully')
   } catch (error) {
     if (error instanceof ConfigError) {
       console.error(`❌ ${ConfigManager.getErrorMessage(error)}`)
-      if (!ConfigManager.isRecoverableError(error)) {
+      if (!ConfigManager.isRecoverableError(error))
         console.error(
           '   This may affect future sessions. Please resolve the issue or contact support.',
         )
-      }
-    } else {
+    } else
       console.warn(
         '⚠️  Failed to save configuration:',
         error instanceof Error ? error.message : 'Unknown error',
       )
-    }
   }
-  const octokit = new Octokit({
-    auth: octokitToken,
-  })
   return {
-    octokit,
+    octokit: new Octokit({ auth: octokitToken }),
     owner,
     repo,
     fromSavedConfig: false,
@@ -2148,41 +2105,42 @@ const getGitHubConfigs = async () => {
     detectionMethod: 'manual',
   }
 }
-const getLabelFilePath = async () => {
+//#endregion
+//#region src/labels/inputLabelFile.ts
+var getLabelFilePath = async () => {
   while (true) {
     const filePath = (await askText(labelFilePath.message)).trim()
-    if (filePath.length > 0) {
-      return filePath
-    }
+    if (filePath.length > 0) return filePath
     console.log('File path cannot be empty. Please try again.')
   }
 }
-const getPromptMessage = (field, fallback) => {
+//#endregion
+//#region src/labels/inputNewLabel.ts
+var getPromptMessage = (field, fallback) => {
   return newLabel.find((prompt) => prompt.name === field)?.message ?? fallback
 }
-const getNewLabel = async () => {
-  const name = await askText(
-    getPromptMessage('name', 'Please type new label name'),
-  )
-  const color = await askText(
-    getPromptMessage('color', 'Please type label color without "#" '),
-  )
-  const description = await askText(
-    getPromptMessage('description', 'Please type label description'),
-  )
+var getNewLabel = async () => {
   return {
-    name,
-    color,
-    description,
+    name: await askText(getPromptMessage('name', 'Please type new label name')),
+    color: await askText(
+      getPromptMessage('color', 'Please type label color without "#" '),
+    ),
+    description: await askText(
+      getPromptMessage('description', 'Please type label description'),
+    ),
   }
 }
-const selectAction = async () => {
+//#endregion
+//#region src/cli/selectPrompts.ts
+var selectAction = async () => {
   return askSelect(actionSelector.message, actionSelector.choices)
 }
-const log = console.log
-let firstStart = true
-const configManager = new ConfigManager()
-const displaySettings = async () => {
+//#endregion
+//#region src/index.ts
+var log = console.log
+var firstStart = true
+var configManager = new ConfigManager()
+var displaySettings = async () => {
   log(chalk.cyan('\n=== Current Settings ==='))
   const configPath = configManager.getConfigPath()
   log(chalk.blue(`Configuration file path: ${configPath}`))
@@ -2202,17 +2160,14 @@ const displaySettings = async () => {
     }
     log(chalk.green(`GitHub account: ${config.owner}`))
     if (config.token) {
-      const isEncrypted = CryptoUtils.isTokenEncrypted(config.token)
-      const tokenStatus = isEncrypted
+      const tokenStatus = CryptoUtils.isTokenEncrypted(config.token)
         ? '✓ Saved and encrypted'
         : '✓ Saved (plain text)'
       log(chalk.green(`Personal token: ${tokenStatus}`))
       const actualToken = CryptoUtils.decryptToken(config.token)
       const obfuscatedToken = CryptoUtils.obfuscateToken(actualToken)
       log(chalk.blue(`Token preview: ${obfuscatedToken}`))
-    } else {
-      log(chalk.red('Personal token: ✗ Not saved'))
-    }
+    } else log(chalk.red('Personal token: ✗ Not saved'))
     if (config.lastUpdated) {
       const lastUpdated = new Date(config.lastUpdated)
       log(chalk.blue(`Last updated: ${lastUpdated.toLocaleString()}`))
@@ -2226,27 +2181,24 @@ const displaySettings = async () => {
   }
   log(chalk.cyan('========================\n'))
 }
-let configs
-const initializeConfigs = async () => {
+var configs
+var initializeConfigs = async () => {
   let hasValidConfig = false
-  if (configManager.configExists()) {
+  if (configManager.configExists())
     try {
       const existingConfig = await configManager.loadValidatedConfig()
       if (
         existingConfig &&
         existingConfig.config &&
         !existingConfig.shouldPromptForCredentials
-      ) {
+      )
         hasValidConfig = true
-      }
     } catch (error) {
       console.error('Error loading config:', error)
       hasValidConfig = false
     }
-  }
   if (!hasValidConfig) {
-    const confirmation = await getConfirmation()
-    if (!confirmation) {
+    if (!(await getConfirmation())) {
       log(
         chalk.redBright(
           `Please go to ${linkToPersonalToken} and generate a personal token!`,
@@ -2257,22 +2209,17 @@ const initializeConfigs = async () => {
   }
   try {
     const asciiText = await getAsciiText()
-    if (asciiText != null) {
-      log(asciiText)
-    }
+    if (asciiText != null) log(asciiText)
   } catch (error) {
     console.warn('Failed to display ASCII art, continuing...')
     console.error('Error:', error)
   }
   try {
     console.log(initialText)
-    if (firstStart) {
-      await configManager.migrateToEncrypted()
-    }
+    if (firstStart) await configManager.migrateToEncrypted()
     const config = await getGitHubConfigs()
-    if (!config.octokit || !config.owner || !config.repo) {
+    if (!config.octokit || !config.owner || !config.repo)
       throw new Error('Invalid configuration: missing required fields')
-    }
     try {
       await config.octokit.request('GET /user')
     } catch (error) {
@@ -2289,9 +2236,8 @@ const initializeConfigs = async () => {
         `GitHub API authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )
     }
-    if (config.fromSavedConfig) {
+    if (config.fromSavedConfig)
       log(chalk.green(`✓ Using saved configuration for ${config.owner}`))
-    }
     if (config.autoDetected) {
       log(
         chalk.green(
@@ -2319,21 +2265,16 @@ const initializeConfigs = async () => {
     return null
   }
 }
-const makeSummary = () => ({
+var makeSummary = () => ({
   created: 0,
   deleted: 0,
   skipped: 0,
   failed: 0,
   notes: [],
 })
-const printSummary = (action, summary, dryRun) => {
-  log(
-    chalk.cyan(`
-=== ${action} summary ===`),
-  )
-  if (dryRun) {
-    log(chalk.yellow('Mode: dry run (no API calls executed)'))
-  }
+var printSummary = (action, summary, dryRun) => {
+  log(chalk.cyan(`\n=== ${action} summary ===`))
+  if (dryRun) log(chalk.yellow('Mode: dry run (no API calls executed)'))
   log(
     chalk.green(`Created: ${summary.created}`) +
       chalk.red(`  Failed: ${summary.failed}`) +
@@ -2341,26 +2282,21 @@ const printSummary = (action, summary, dryRun) => {
       chalk.yellow(`  Skipped: ${summary.skipped}`),
   )
   summary.notes.forEach((note) => log(chalk.gray(`- ${note}`)))
-  if (summary.failed > 0 && !dryRun) {
+  if (summary.failed > 0 && !dryRun)
     log(
       chalk.yellow(
         'Some operations failed. Re-run the command or check your credentials/permissions.',
       ),
     )
-  }
   log(chalk.cyan('========================\n'))
 }
-const main = async () => {
+var main = async () => {
   if (firstStart) {
     configs = await initializeConfigs()
-    if (!configs) {
-      return
-    }
+    if (!configs) return
   }
   let selectedIndex = await selectAction()
-  while (selectedIndex == 99) {
-    selectedIndex = await selectAction()
-  }
+  while (selectedIndex == 99) selectedIndex = await selectAction()
   if (selectedIndex === 8) {
     console.log('exit')
     process.exit(0)
@@ -2371,22 +2307,16 @@ const main = async () => {
   switch (selectedIndex) {
     case 0: {
       const summary = makeSummary()
-      const newLabel2 = await getNewLabel()
+      const newLabel = await getNewLabel()
       if (dryRun) {
         log(
           chalk.yellow(
-            `[dry-run] Would create label "${newLabel2.name}" with color "${newLabel2.color ?? 'N/A'}"`,
+            `[dry-run] Would create label "${newLabel.name}" with color "${newLabel.color ?? 'N/A'}"`,
           ),
         )
         summary.skipped += 1
-      } else {
-        const ok = await createLabel(configs, newLabel2)
-        if (ok) {
-          summary.created += 1
-        } else {
-          summary.failed += 1
-        }
-      }
+      } else if (await createLabel(configs, newLabel)) summary.created += 1
+      else summary.failed += 1
       printSummary('Create a label', summary, dryRun)
       firstStart = firstStart && false
       break
@@ -2473,7 +2403,7 @@ const main = async () => {
       firstStart = firstStart && false
       break
     }
-    case 5: {
+    case 5:
       try {
         await generateSampleJson()
       } catch (error) {
@@ -2485,8 +2415,7 @@ const main = async () => {
       }
       firstStart = firstStart && false
       break
-    }
-    case 6: {
+    case 6:
       try {
         await generateSampleYaml()
       } catch (error) {
@@ -2498,23 +2427,20 @@ const main = async () => {
       }
       firstStart = firstStart && false
       break
-    }
-    case 7: {
+    case 7:
       await displaySettings()
       firstStart = firstStart && false
       break
-    }
-    case 8: {
+    case 8:
       console.log('exit')
       process.exit(0)
       return
-    }
-    // eslint-disable-next-line no-fallthrough
-    default: {
+    default:
       console.log('invalid input')
       break
-    }
   }
   main()
 }
 main()
+//#endregion
+export {}
